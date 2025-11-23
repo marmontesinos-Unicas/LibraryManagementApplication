@@ -98,6 +98,7 @@ public class MainApp extends Application {
     /**
      * Closes the application.
      */
+    // message box to confirm exit
     public void handleExit() {
         Alert alert = new Alert(Alert.AlertType.ERROR);
         alert.setTitle("Are you sure?");
@@ -132,7 +133,8 @@ public class MainApp extends Application {
 
             // Give the controller access to the main app.
             ColleghiOverviewController controller = loader.getController();
-            controller.setMainApp(this);
+            controller.setMainApp(this); //search what it means exactly
+            // it adds the reference of MainApp to the controller
 
         } catch (IOException e) {
             e.printStackTrace();

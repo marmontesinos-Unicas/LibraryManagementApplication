@@ -28,7 +28,7 @@ public class RootLayoutController {
      */
     public void setMainApp(MainApp mainApp) {
         this.mainApp = mainApp;
-    }
+    } //the controller creates a reference to the main app
 
     /**
      * Creates an empty address book.

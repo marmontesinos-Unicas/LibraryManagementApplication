@@ -16,11 +16,12 @@
                             </accelerator>
                         </MenuItem>
                         <MenuItem mnemonicParsing="false" onAction="#handleExit" text="Exit" />
+                        <MenuItem mnemonicParsing="false" onAction="#handleShowBirthdayStatistics" text="Show Statistics" />
                     </items>
                 </Menu>
                 <Menu mnemonicParsing="false" text="Statistics">
                     <items>
-                        <MenuItem mnemonicParsing="false" onAction="#handleShowBirthdayStatistics" text="Show Statistics" />
+                  <MenuItem mnemonicParsing="false" text="Unspecified Action" />
                     </items>
                 </Menu>
                 <Menu mnemonicParsing="false" text="Help">

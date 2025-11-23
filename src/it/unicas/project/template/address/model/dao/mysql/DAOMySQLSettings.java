@@ -8,9 +8,9 @@ public class DAOMySQLSettings {
 
     public final static String DRIVERNAME = "com.mysql.cj.jdbc.Driver";
     public final static String HOST = "localhost";
-    public final static String USERNAME = "amici";
-    public final static String PWD = "$$Amici2024$$";
-    public final static String SCHEMA = "amici";
+    public final static String USERNAME = "mar";
+    public final static String PWD = "CatalunyA-1234-CatalunyA";
+    public final static String SCHEMA = "pipo";
     public final static String PARAMETERS = "?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC";
 
 
@@ -20,9 +20,9 @@ public class DAOMySQLSettings {
 
     //private String driverName = "com.mysql.cj.jdbc.Driver";
     private String host = "localhost";
-    private String userName = "amici";
-    private String pwd = "$Prova2022$";
-    private String schema = "amici";
+    private String userName = "mar";
+    private String pwd = "CatalunyA-1234-CatalunyA";
+    private String schema = "pipo";
 
 
     public String getHost() {
