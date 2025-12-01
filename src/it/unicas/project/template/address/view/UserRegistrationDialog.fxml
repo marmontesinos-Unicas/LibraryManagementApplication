@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<AnchorPane prefHeight="450.0" prefWidth="600.0"
+            xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="it.unicas.project.template.address.view.UserRegistrationController">
+
+    <GridPane layoutX="20.0" layoutY="20.0" AnchorPane.leftAnchor="20.0" AnchorPane.rightAnchor="20.0" AnchorPane.topAnchor="20.0">
+        <columnConstraints>
+            <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="150.0" />
+            <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="350.0" />
+        </columnConstraints>
+        <rowConstraints>
+            <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+            <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+            <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+            <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+            <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+            <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+            <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+        </rowConstraints>
+
+        <padding>
+            <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+        </padding>
+
+        <Label text="Name:" GridPane.columnIndex="0" GridPane.rowIndex="0" />
+        <Label text="Surname:" GridPane.columnIndex="0" GridPane.rowIndex="1" />
+        <Label text="ID (National ID):" GridPane.columnIndex="0" GridPane.rowIndex="2" />
+        <Label text="Postal Code:" GridPane.columnIndex="0" GridPane.rowIndex="3" />
+        <Label text="Username:" GridPane.columnIndex="0" GridPane.rowIndex="4" />
+        <Label text="Password:" GridPane.columnIndex="0" GridPane.rowIndex="5" />
+        <Label text="Email:" GridPane.columnIndex="0" GridPane.rowIndex="6" />
+
+        <TextField fx:id="nameField" GridPane.columnIndex="1" GridPane.rowIndex="0" promptText="Enter Name" />
+        <TextField fx:id="surnameField" GridPane.columnIndex="1" GridPane.rowIndex="1" promptText="Enter Surname" />
+        <TextField fx:id="nationalIDField" GridPane.columnIndex="1" GridPane.rowIndex="2" promptText="Enter National ID" />
+        <TextField fx:id="postalCodeField" GridPane.columnIndex="1" GridPane.rowIndex="3" promptText="Enter Postal Code" />
+        <TextField fx:id="usernameField" GridPane.columnIndex="1" GridPane.rowIndex="4" promptText="Enter Username" />
+        <PasswordField fx:id="passwordField" GridPane.columnIndex="1" GridPane.rowIndex="5" promptText="Enter Password" />
+        <TextField fx:id="emailField" GridPane.columnIndex="1" GridPane.rowIndex="6" promptText="Enter Email" />
+
+    </GridPane>
+
+    <HBox alignment="CENTER" spacing="15.0" AnchorPane.bottomAnchor="20.0" AnchorPane.leftAnchor="20.0" AnchorPane.rightAnchor="20.0">
+        <Button mnemonicParsing="false" text="Register User" onAction="#handleRegisterUser" />
+        <Button mnemonicParsing="false" text="Cancel" onAction="#handleCancel" />
+    </HBox>
+
+</AnchorPane>

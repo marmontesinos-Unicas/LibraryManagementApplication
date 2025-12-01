@@ -13,7 +13,7 @@ import java.util.logging.Logger;
 
 public class UserDAOMySQLImpl implements DAO<User> {
 
-    private UserDAOMySQLImpl(){}
+    protected UserDAOMySQLImpl(){}
 
     private static DAO dao = null;
     private static Logger logger = null;
