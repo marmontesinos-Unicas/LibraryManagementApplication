@@ -29,7 +29,7 @@ public class UserDAOMySQLImpl implements DAO<User> {
     @Override
     public List<User> select(User u) throws DAOException {
         if (u == null){
-            u = new User("", "", "", "", "", "", "", null);
+            u = new User(null, "", "", "", "", "", "", null);
         }
         ArrayList<User> list = new ArrayList<>();
         try{
