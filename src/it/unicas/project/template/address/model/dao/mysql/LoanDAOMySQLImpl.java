@@ -1,13 +1,11 @@
 package it.unicas.project.template.address.model.dao.mysql;
 
-import it.unicas.project.template.address.model.Hold;
 import it.unicas.project.template.address.model.Loan;
-import it.unicas.project.template.address.model.Material;
-import it.unicas.project.template.address.model.MaterialGenre;
 import it.unicas.project.template.address.model.dao.DAO;
 import it.unicas.project.template.address.model.dao.DAOException;
 
 import java.sql.*;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
@@ -68,17 +66,7 @@ public class LoanDAOMySQLImpl implements DAO<Loan> {
     }
 
     @Override
-    public void insert(MaterialGenre mg) throws DAOException {
-
-    }
-
-    @Override
-    public void insert(Hold h) throws DAOException {
-
-    }
-
-    @Override
-    public void insert(Material l) throws DAOException {
+    public void insert(Loan l) throws DAOException {
         verifyObject(l);
         String sql = "INSERT INTO loans (idUser, idMaterial, start_date, due_date, return_date) VALUES (?, ?, ?, ?, ?)";
 
@@ -128,11 +116,6 @@ public class LoanDAOMySQLImpl implements DAO<Loan> {
         } catch (SQLException e) {
             throw new DAOException("In update(): " + e.getMessage());
         }
-    }
-
-    @Override
-    public void insert(Loan a) throws DAOException {
-
     }
 
     @Override
