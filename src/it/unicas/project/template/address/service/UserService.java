@@ -31,7 +31,7 @@ public class UserService {
         }
 
         // Check if the user already exists by National ID using the DAO's select method.
-        User filter = new User(null, "", "", "", newUser.getNationalID(), "", "", null);
+        User filter = new User(null, "", "", "", newUser.getNationalID(), null, "", "", null);
 
         if (!userDAO.select(filter).isEmpty()) {
             throw new ServiceException("Error: The National ID is already registered in the system.");

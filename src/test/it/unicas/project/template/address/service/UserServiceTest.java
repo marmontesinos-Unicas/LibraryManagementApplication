@@ -3,6 +3,7 @@ package it.unicas.project.template.address.service;
 import it.unicas.project.template.address.model.User;
 import it.unicas.project.template.address.model.dao.DAOException;
 import it.unicas.project.template.address.model.dao.mysql.UserDAOMySQLImpl;
+import java.time.LocalDate;
 import it.unicas.project.template.address.service.ServiceException;
 import it.unicas.project.template.address.service.UserService;
 import org.junit.jupiter.api.BeforeEach;
@@ -51,6 +52,7 @@ public class UserServiceTest {
 
     private FakeUserDAO fakeDao;
     private UserService userService;
+    LocalDate birthday = LocalDate.of(2002, 10, 20);
 
     @BeforeEach
     public void setUp() {
@@ -63,7 +65,7 @@ public class UserServiceTest {
         // Arrange: no existing users
         fakeDao.setSelectResult(new ArrayList<>());
 
-        User newUser = new User(null, "John", "Doe", "jdoe", "NID123", "pass", "jdoe@example.com", 1);
+        User newUser = new User(null, "John", "Doe", "jdoe", "NID123", birthday, "pass", "jdoe@example.com", 1);
         // String postalCode = "12345";
 
         // Act
@@ -79,7 +81,7 @@ public class UserServiceTest {
     @Test
     public void testRegisterUserMissingNameThrowsServiceException() {
         // Arrange: name is missing
-        User newUser = new User(null, "", "Doe", "jdoe", "NID123", "pass", "jdoe@example.com", 1);
+        User newUser = new User(null, "", "Doe", "jdoe", "NID123", birthday, "pass", "jdoe@example.com", 1);
         String postalCode = "12345";
 
         // Act & Assert
@@ -92,10 +94,10 @@ public class UserServiceTest {
     public void testRegisterUserDuplicateNationalIdThrowsServiceException() {
         // Arrange: select returns a non-empty list -> duplicate national ID
         List<User> existing = new ArrayList<>();
-        existing.add(new User(1, "Existing", "User", "exist", "NID123", "pw", "e@e.com", 1));
+        existing.add(new User(1, "Existing", "User", "exist", "NID123", birthday, "pw", "e@e.com", 1));
         fakeDao.setSelectResult(existing);
 
-        User newUser = new User(null, "John", "Doe", "jdoe", "NID123", "pass", "jdoe@example.com", 1);
+        User newUser = new User(null, "John", "Doe", "jdoe", "NID123", birthday, "pass", "jdoe@example.com", 1);
         //String postalCode = "12345";
 
         // Act & Assert
