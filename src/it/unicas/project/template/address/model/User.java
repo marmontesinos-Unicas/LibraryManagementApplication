@@ -30,7 +30,7 @@ public class User {
         this.birthdate = new SimpleObjectProperty<>(birthdate);
         this.password = new SimpleStringProperty(password);
         this.email = new SimpleStringProperty(email);
-        this.idRole = new SimpleIntegerProperty(idRole); // tabla fija
+        this.idRole = idRole != null ? new SimpleIntegerProperty(idRole) : null; // tabla fija
     }
 
     // GETTERS y SETTERS con Property

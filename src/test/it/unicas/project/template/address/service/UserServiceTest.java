@@ -66,7 +66,7 @@ public class UserServiceTest {
         fakeDao.setSelectResult(new ArrayList<>());
 
         // Use a password that satisfies the policy: >=8 chars, 1 uppercase, 1 digit
-        User newUser = new User(null, "John", "Doe", "jdoe", "NID123", birthday, "Password1", "jdoe@example.com", 1);
+        User newUser = new User(null, "John", "Doe", "jdoe", "NID123", birthday, "Password1", "jdoe@example.com", null);
 
         // Act
         userService.registerUser(newUser);
@@ -81,7 +81,7 @@ public class UserServiceTest {
     @Test
     public void testRegisterUserMissingNameThrowsServiceException() {
         // Arrange: name is missing; password still valid to avoid masking other validations
-        User newUser = new User(null, "", "Doe", "jdoe", "NID123", birthday, "Password1", "jdoe@example.com", 1);
+        User newUser = new User(null, "", "Doe", "jdoe", "NID123", birthday, "Password1", "jdoe@example.com", null);
 
         // Act & Assert
         Exception ex = assertThrows(UserServiceException.class, () -> userService.registerUser(newUser));
@@ -93,10 +93,10 @@ public class UserServiceTest {
     public void testRegisterUserDuplicateNationalIdThrowsServiceException() {
         // Arrange: select returns a non-empty list -> duplicate national ID
         List<User> existing = new ArrayList<>();
-        existing.add(new User(1, "Existing", "User", "exist", "NID123", birthday, "Password1", "e@e.com", 1));
+        existing.add(new User(1, "Existing", "User", "exist", "NID123", birthday, "Password1", "e@e.com", null));
         fakeDao.setSelectResult(existing);
 
-        User newUser = new User(null, "John", "Doe", "jdoe", "NID123", birthday, "Password1", "jdoe@example.com", 1);
+        User newUser = new User(null, "John", "Doe", "jdoe", "NID123", birthday, "Password1", "jdoe@example.com", null);
 
         // Act & Assert
         Exception ex = assertThrows(UserServiceException.class, () -> userService.registerUser(newUser));
@@ -110,7 +110,7 @@ public class UserServiceTest {
         fakeDao.setSelectResult(new ArrayList<>());
 
         // invalid password: all lowercase, no digit, length >= 8 but misses uppercase/digit
-        User newUser = new User(null, "Alice", "Smith", "asmith", "NID999", birthday, "password", "alice@example.com", 1);
+        User newUser = new User(null, "Alice", "Smith", "asmith", "NID999", birthday, "password", "alice@example.com", null);
 
         // Act & Assert: password policy should trigger UserServiceException
         Exception ex = assertThrows(UserServiceException.class, () -> userService.registerUser(newUser));

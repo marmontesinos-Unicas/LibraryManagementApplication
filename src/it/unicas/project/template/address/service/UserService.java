@@ -37,6 +37,9 @@ public class UserService {
         if (newUser.getPassword() == null || newUser.getPassword().trim().isEmpty()) {
             throw new UserServiceException("Error: Password is mandatory.");
         }
+        if (newUser.getIdRole() == null || newUser.getIdRole().toString().trim().isEmpty()) {
+            throw new UserServiceException("Error: Role is mandatory.");
+        }
 
         // Validate Password Format: at least 8 characters, 1 uppercase, 1 digit
         String password = newUser.getPassword();
@@ -47,14 +50,14 @@ public class UserService {
         // Validate Birth Date
         Object bdObj = newUser.getBirthdate();
         if (bdObj == null) {
-            throw new UserServiceException("Error: User Birth Date is mandatory.");
+            throw new UserServiceException("Error: Birth Date is mandatory.");
         }
         if (bdObj instanceof LocalDate) {
             // OK: already a LocalDate
         } else {
             String bdStr = bdObj.toString();
             if (bdStr == null || bdStr.trim().isEmpty()) {
-                throw new UserServiceException("Error: User Birth Date is mandatory.");
+                throw new UserServiceException("Error: Birth Date is mandatory.");
             }
             try {
                 LocalDate.parse(bdStr.trim()); // expects yyyy-MM-dd (ISO)

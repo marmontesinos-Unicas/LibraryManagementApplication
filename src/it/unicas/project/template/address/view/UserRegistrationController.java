@@ -5,11 +5,8 @@ import it.unicas.project.template.address.model.dao.DAOException;
 import it.unicas.project.template.address.service.UserServiceException;
 import it.unicas.project.template.address.service.UserService;
 import javafx.fxml.FXML;
-import javafx.scene.control.Alert;
+import javafx.scene.control.*;
 import javafx.scene.control.Alert.AlertType;
-import javafx.scene.control.TextField;
-import javafx.scene.control.PasswordField;
-import javafx.scene.control.DatePicker; // <-- added
 import javafx.stage.Stage;
 import javafx.stage.Window; // <-- added
 import javafx.event.ActionEvent;
@@ -34,6 +31,8 @@ public class UserRegistrationController {
     private PasswordField passwordField; // changed to PasswordField to match FXML
     @FXML
     private TextField emailField; // Assuming your User model requires email/username/password
+    @FXML
+    public ComboBox roleComboBox;
 
     // Instance of the Service Layer (The bridge to the business logic)
     private UserService userService = new UserService();
@@ -93,13 +92,16 @@ public class UserRegistrationController {
                 showAlert("Validation Error", "Missing Password", "Please enter a password.", AlertType.ERROR);
             } else if (msg.toLowerCase().contains("password must be") || msg.toLowerCase().contains("at least 8")) {
                 showAlert("Validation Error", "Invalid Password Format", "Password must be at least 8 characters long and include at least one uppercase letter and one number.", AlertType.ERROR);
-            } else if (msg.contains("User Birth Date is mandatory") || msg.toLowerCase().contains("birth date is mandatory")) {
+            } else if (msg.contains("Birth Date is mandatory") || msg.toLowerCase().contains("birth date is mandatory")) {
                 showAlert("Validation Error", "Missing Birthdate", "Please provide the user's birthdate.", AlertType.ERROR);
             } else if (msg.contains("yyyy-MM-dd") || msg.toLowerCase().contains("birth date must be")) {
                 showAlert("Validation Error", "Invalid Birthdate Format", "Birthdate must be in yyyy-MM-dd format.", AlertType.ERROR);
             } else if (msg.toLowerCase().contains("already registered") || msg.toLowerCase().contains("already")) {
                 showAlert("Duplicate Error", "National ID Already Registered", "The provided national ID is already registered in the system.", AlertType.ERROR);
-            } else {
+            } else if (msg.contains("Role is mandatory") || msg.toLowerCase().contains("role") && msg.toLowerCase().contains("mandatory")) {
+                showAlert("Validation Error", "Missing Role", "Please enter the user's role.", AlertType.ERROR);
+            }
+            else {
                 // Fallback generic message
                 showAlert("Validation Error", "Cannot Register User", msg.isEmpty() ? "Validation failed." : msg, AlertType.ERROR);
             }
