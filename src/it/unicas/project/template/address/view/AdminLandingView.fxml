@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+
+<BorderPane prefHeight="500.0" prefWidth="700.0" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="it.unicas.project.template.address.view.AdminLandingController">
+    <top>
+        <HBox alignment="CENTER_RIGHT" prefHeight="50.0" spacing="10.0" BorderPane.alignment="CENTER">
+            <padding>
+                <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+            </padding>
+            <Label prefHeight="35.0" prefWidth="435.0" text="Administration Panel" HBox.hgrow="ALWAYS">
+                <font>
+                    <Font size="24.0" />
+                </font>
+                <HBox.margin>
+                    <Insets left="20.0" />
+                </HBox.margin>
+            </Label>
+        </HBox>
+    </top>
+    <center>
+        <GridPane alignment="CENTER" hgap="30.0" vgap="30.0" BorderPane.alignment="CENTER">
+            <columnConstraints>
+                <javafx.scene.layout.ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+                <javafx.scene.layout.ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+            </columnConstraints>
+            <rowConstraints>
+                <javafx.scene.layout.RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                <javafx.scene.layout.RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+            </rowConstraints>
+            <children>
+                <!-- Button 1: Add material -->
+                <Button fx:id="addMaterialButton" alignment="CENTER" mnemonicParsing="false" onAction="#handleAddMaterial" prefHeight="100.0" prefWidth="250.0" text="Add Material" GridPane.halignment="CENTER" GridPane.valignment="CENTER">
+                    <font>
+                        <Font size="18.0" />
+                    </font>
+                </Button>
+                <!-- Button 2: Add/Remove Users -->
+                <Button fx:id="manageUsersButton" alignment="CENTER" mnemonicParsing="false" onAction="#handleManageUsers" prefHeight="100.0" prefWidth="250.0" text="User Management" GridPane.columnIndex="1" GridPane.halignment="CENTER" GridPane.valignment="CENTER">
+                    <font>
+                        <Font size="18.0" />
+                    </font>
+                </Button>
+                <!-- Button 3: Loan/Return -->
+                <Button fx:id="loanReturnButton" alignment="CENTER" mnemonicParsing="false" onAction="#handleLoanReturn" prefHeight="100.0" prefWidth="250.0" text="Loan and Return" GridPane.halignment="CENTER" GridPane.rowIndex="1" GridPane.valignment="CENTER">
+                    <font>
+                        <Font size="18.0" />
+                    </font>
+                </Button>
+                <!-- Button 4: Search -->
+                <Button fx:id="searchButton" alignment="CENTER" mnemonicParsing="false" onAction="#handleSearch" prefHeight="100.0" prefWidth="250.0" text="Search Material" GridPane.columnIndex="1" GridPane.halignment="CENTER" GridPane.rowIndex="1" GridPane.valignment="CENTER">
+                    <font>
+                        <Font size="18.0" />
+                    </font>
+                </Button>
+            </children>
+            <BorderPane.margin>
+                <Insets bottom="50.0" left="50.0" right="50.0" top="50.0" />
+            </BorderPane.margin>
+        </GridPane>
+    </center>
+    <padding>
+        <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+    </padding>
+</BorderPane>
