@@ -87,5 +87,6 @@
         <SOURCES />
       </library>
     </orderEntry>
+    <orderEntry type="library" name="junit.jupiter.engine" level="project" />
   </component>
 </module>
