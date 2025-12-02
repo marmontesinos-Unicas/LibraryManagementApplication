@@ -131,6 +131,11 @@ public class LoanDAOMySQLImpl implements DAO<Loan> {
     }
 
     @Override
+    public void insert(Loan a) throws DAOException {
+
+    }
+
+    @Override
     public void delete(Loan l) throws DAOException {
         if (l == null || l.getIdLoan() == -1) {
             throw new DAOException("In delete: idLoan cannot be null");

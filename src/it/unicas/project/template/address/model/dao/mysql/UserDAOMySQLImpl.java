@@ -1,11 +1,11 @@
 package it.unicas.project.template.address.model.dao.mysql;
 
-import it.unicas.project.template.address.model.Material;
 import it.unicas.project.template.address.model.User;
 import it.unicas.project.template.address.model.dao.DAO;
 import it.unicas.project.template.address.model.dao.DAOException;
 
 import java.sql.*;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
@@ -71,7 +71,7 @@ public class UserDAOMySQLImpl implements DAO<User> {
     }
 
     @Override
-    public void insert(Material u) throws DAOException {
+    public void insert(User u) throws DAOException {
         verifyObject(u);
         String sql = "INSERT INTO users (name, surname, username, nationalID, birthdate, password, email, idRole) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
 

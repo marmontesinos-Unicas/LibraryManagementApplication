@@ -1,7 +1,6 @@
 package it.unicas.project.template.address.model.dao.mysql;
 
 import it.unicas.project.template.address.model.Material;
-import it.unicas.project.template.address.model.MaterialGenre;
 import it.unicas.project.template.address.model.dao.DAO;
 import it.unicas.project.template.address.model.dao.DAOException;
 
@@ -59,11 +58,6 @@ public class MaterialDAOMySQLImpl implements DAO<Material> {
             throw new DAOException("In select(): " + e.getMessage());
         }
         return list;
-    }
-
-    @Override
-    public void insert(MaterialGenre mg) throws DAOException {
-
     }
 
     @Override
