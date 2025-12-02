@@ -7,136 +7,174 @@ import it.unicas.project.template.address.model.MaterialType;
 import it.unicas.project.template.address.model.dao.DAO;
 import it.unicas.project.template.address.model.dao.DAOException;
 import it.unicas.project.template.address.model.dao.GenreDAO;
+import it.unicas.project.template.address.model.dao.mysql.GenreDAOMySQLImpl;
 import it.unicas.project.template.address.model.dao.mysql.MaterialDAOMySQLImpl;
 import it.unicas.project.template.address.model.dao.mysql.MaterialGenreDAOMySQLImpl;
+import it.unicas.project.template.address.model.dao.mysql.MaterialTypeDAOMySQLImpl;
 import it.unicas.project.template.address.service.MaterialService;
-
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
-import javafx.scene.control.*;
-import javafx.scene.layout.AnchorPane;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.ListView;
+import javafx.scene.control.SelectionMode;
+import javafx.scene.control.TextField;
 
 import java.util.List;
 
 public class AddMaterialController {
 
-    @FXML private AnchorPane rootPane;
-
     @FXML private TextField titleField;
     @FXML private TextField authorField;
-    @FXML private TextField yearField;
     @FXML private TextField isbnField;
+    @FXML private TextField yearField;
 
     @FXML private ComboBox<MaterialType> materialTypeComboBox;
+    @FXML private ListView<Genre> genreListView;
 
-    @FXML private ListView<Genre> genreListView;  // <-- NUEVO
     @FXML private TextField newGenreField;
     @FXML private Button addGenreButton;
 
-    // DAOs
+    // --- Use the concrete / generic types that exist in your project ---
     private final DAO<Material> materialDAO = MaterialDAOMySQLImpl.getInstance();
     private final MaterialService materialService = new MaterialService(materialDAO);
 
-    private final DAO<MaterialGenre> materialGenreDAO = MaterialGenreDAOMySQLImpl.getInstance();
     private final MaterialTypeDAOMySQLImpl materialTypeDAO = MaterialTypeDAOMySQLImpl.getInstance();
     private final GenreDAO genreDAO = GenreDAOMySQLImpl.getInstance();
 
+    // MaterialGenre DAO also implements DAO<MaterialGenre>
+    private final DAO<MaterialGenre> materialGenreDAO = MaterialGenreDAOMySQLImpl.getInstance();
+
+    // Called automatically by JavaFX after FXML is loaded
     @FXML
     public void initialize() {
+        // Load material types and genres
         loadMaterialTypes();
         loadGenres();
 
+        // allow multi-selection for genres
         genreListView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
 
-        addGenreButton.setOnAction(e -> handleAddOtherGenre());
+        // simple wiring for "Add Genre" button
+        addGenreButton.setOnAction(e -> handleAddGenre());
     }
 
     private void loadMaterialTypes() {
-        try {
-            List<MaterialType> types = materialTypeDAO.selectAll();
-            materialTypeComboBox.getItems().setAll(types);
-        } catch (DAOException e) {
-            showError("Error loading types", e.getMessage());
-        }
+        List<MaterialType> types = materialTypeDAO.selectAll();           // must exist
+        ObservableList<MaterialType> obs = FXCollections.observableArrayList(types);
+        materialTypeComboBox.setItems(obs);
     }
 
     private void loadGenres() {
-        List<Genre> genres = genreDAO.selectAll();
-        genreListView.getItems().setAll(genres);
+        List<Genre> list = genreDAO.selectAll();                          // must exist
+        ObservableList<Genre> obs = FXCollections.observableArrayList(list);
+        genreListView.setItems(obs);
     }
 
-    private void handleAddOtherGenre() {
+    private void handleAddGenre() {
         String name = newGenreField.getText().trim();
-        if (name.isEmpty()) return;
+        if (name.isEmpty()) {
+            show(Alert.AlertType.WARNING, "Enter a genre name");
+            return;
+        }
 
+        // check duplicate (GenreDAO.findIdByName should return Integer or null)
+        Integer existing = genreDAO.findIdByName(name);
+        if (existing != null) {
+            show(Alert.AlertType.INFORMATION, "Genre already exists");
+            return;
+        }
+
+        // your Genre constructor expects (Integer, String) — give a dummy id (-1)
+        Genre g = new Genre(-1, name);
         try {
-            Genre newGenre = new Genre(null, name);
-            genreDAO.insert(newGenre);
+            genreDAO.insert(g);    // throws DAOException in your design
             newGenreField.clear();
             loadGenres();
-
-        } catch (DAOException e) {
-            showError("Error Adding Genre", e.getMessage());
+            show(Alert.AlertType.INFORMATION, "Genre added");
+        } catch (DAOException ex) {
+            show(Alert.AlertType.ERROR, "DB error: " + ex.getMessage());
         }
     }
 
+    // wired from FXML: onAction="#handleSaveMaterial"
     @FXML
     private void handleSaveMaterial() {
+        String title = titleField.getText().trim();
+        if (title.isEmpty()) {
+            show(Alert.AlertType.WARNING, "Title is required");
+            return;
+        }
+
+        MaterialType mt = materialTypeComboBox.getValue();
+        if (mt == null) {
+            show(Alert.AlertType.WARNING, "Material type is required");
+            return;
+        }
+
+        Material m = new Material();
+        m.setTitle(title);
+        m.setAuthor(authorField.getText().trim());
+        m.setISBN(isbnField.getText().trim());
+
+        // year validation (Material.setYear expects Integer)
+        String ytxt = yearField.getText().trim();
+        if (ytxt.isEmpty()) {
+            show(Alert.AlertType.WARNING, "Year is required");
+            return;
+        }
         try {
-            String title = titleField.getText().trim();
-            String author = authorField.getText().trim();
-            Integer year = Integer.parseInt(yearField.getText().trim());
-            String isbn = isbnField.getText().trim();
-            MaterialType selectedType = materialTypeComboBox.getValue();
+            int year = Integer.parseInt(ytxt);
+            m.setYear(year);
+        } catch (NumberFormatException nfe) {
+            show(Alert.AlertType.WARNING, "Year must be an integer");
+            return;
+        }
 
-            if (title.isEmpty() || selectedType == null) {
-                showError("Validation Error", "Title and material type required.");
-                return;
-            }
+        m.setIdMaterialType(mt.getIdMaterialType());
+        // Do NOT set material_status here — MaterialService.save() will set the default
 
-            Material m = new Material(title, author, year, isbn, selectedType.getIdMaterialType(), "available");
+        try {
+            // save via service (service calls DAO.insert and sets generated id on the model)
             materialService.save(m);
 
-            // ⬇ Guardar múltiples géneros
-            List<Genre> selectedGenres = genreListView.getSelectionModel().getSelectedItems();
-            for (Genre g : selectedGenres) {
-                MaterialGenre mg = new MaterialGenre(m.getIdMaterial(), g.getIdGenre());
-                materialGenreDAO.insert(mg);
+            // get generated id from material object (your DAO sets it)
+            int newId = m.getIdMaterial();
+
+            // persist selected genres into join table
+            ObservableList<Genre> selected = genreListView.getSelectionModel().getSelectedItems();
+            if (selected != null && !selected.isEmpty()) {
+                for (Genre g : selected) {
+                    MaterialGenre mg = new MaterialGenre(newId, g.getIdGenre());
+                    materialGenreDAO.insert(mg);   // throws DAOException
+                }
             }
 
-            showInfo("Success", "Material saved correctly.");
+            show(Alert.AlertType.INFORMATION, "Material saved");
             clearForm();
 
-        } catch (NumberFormatException e) {
-            showError("Validation Error", "Year must be numeric.");
-        } catch (DAOException e) {
-            showError("Database Error", e.getMessage());
+        } catch (DAOException ex) {
+            show(Alert.AlertType.ERROR, "DB error: " + ex.getMessage());
+        } catch (Exception ex) {
+            show(Alert.AlertType.ERROR, "Unexpected error: " + ex.getMessage());
         }
     }
 
     private void clearForm() {
         titleField.clear();
         authorField.clear();
-        yearField.clear();
         isbnField.clear();
+        yearField.clear();
         materialTypeComboBox.getSelectionModel().clearSelection();
         genreListView.getSelectionModel().clearSelection();
-        newGenreField.clear();
     }
 
-    private void showError(String title, String message) {
-        Alert a = new Alert(Alert.AlertType.ERROR);
-        a.setTitle(title);
-        a.setHeaderText(null);
-        a.setContentText(message);
-        a.showAndWait();
-    }
-
-    private void showInfo(String title, String message) {
-        Alert a = new Alert(Alert.AlertType.INFORMATION);
-        a.setTitle(title);
+    private void show(Alert.AlertType type, String message) {
+        Alert a = new Alert(type);
         a.setHeaderText(null);
         a.setContentText(message);
         a.showAndWait();
     }
 }
-
