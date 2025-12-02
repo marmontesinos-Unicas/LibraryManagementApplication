@@ -1,5 +1,6 @@
 package it.unicas.project.template.address.model.dao.mysql;
 
+import it.unicas.project.template.address.model.Material;
 import it.unicas.project.template.address.model.MaterialGenre;
 import it.unicas.project.template.address.model.dao.DAO;
 import it.unicas.project.template.address.model.dao.DAOException;
@@ -76,6 +77,11 @@ public class MaterialGenreDAOMySQLImpl implements DAO<MaterialGenre> {
     public void update(MaterialGenre mg) throws DAOException {
         // No se puede hacer update porque la PK es compuesta
         throw new DAOException("Update no soportado para MaterialGenre (PK compuesta)");
+    }
+
+    @Override
+    public void insert(Material m) throws DAOException {
+
     }
 
     @Override

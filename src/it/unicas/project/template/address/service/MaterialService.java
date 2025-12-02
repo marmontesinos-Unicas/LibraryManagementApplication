@@ -1,27 +1,23 @@
-package it.unicas.project.template.address;
-import it.unicas.project.template.address.model.Materialmar;
+package it.unicas.project.template.address.service;
+
+import it.unicas.project.template.address.model.Material;
 import it.unicas.project.template.address.model.dao.DAO;
 import it.unicas.project.template.address.model.dao.DAOException;
 
 public class MaterialService {
-    private final DAO<Materialmar> materialDao;
 
-    public MaterialService(DAO<Materialmar> materialDao) {
+    private final DAO<Material> materialDao;
+
+    public MaterialService(DAO<Material> materialDao) {
         this.materialDao = materialDao;
     }
 
-    public Materialmar save(Materialmar m) throws DAOException {
+    public Material save(Material m) throws DAOException {
         if (m.getTitle() == null || m.getTitle().trim().isEmpty()) {
             throw new IllegalArgumentException("Title is required");
         }
-        if (m.getAuthor() == null || m.getAuthor().trim().isEmpty()) {
-            throw new IllegalArgumentException("Author is required");
-        }
         if (m.getYear() == null) {
             throw new IllegalArgumentException("Year is required");
-        }
-        if (m.getISBN() == null || m.getISBN().trim().isEmpty()) {
-            throw new IllegalArgumentException("ISBN is required");
         }
         if (m.getIdMaterialType() == null) {
             throw new IllegalArgumentException("Material type is required");
@@ -36,3 +32,4 @@ public class MaterialService {
         return m;
     }
 }
+

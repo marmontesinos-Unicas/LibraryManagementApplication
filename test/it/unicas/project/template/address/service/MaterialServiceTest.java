@@ -1,8 +1,8 @@
-package it.unicas.project.template.adress;
+package it.unicas.project.template.address.service;
 
-import it.unicas.project.template.address.MaterialService;
+import it.unicas.project.template.address.service.MaterialService;
 import it.unicas.project.template.address.FakeMaterialDAO;
-import it.unicas.project.template.address.model.Materialmar;
+import it.unicas.project.template.address.model.Material;
 import it.unicas.project.template.address.model.dao.DAOException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -21,14 +21,14 @@ public class MaterialServiceTest {
 
     @Test
     public void save_validMaterial_setsStatusAndAssignsId() throws DAOException {
-        Materialmar m = new Materialmar();
+        Material m = new Material();
         m.setTitle("Test Title");
         m.setAuthor("Author");
         m.setYear(2023);
         m.setISBN("ISBN-001");
         m.setIdMaterialType(1);
 
-        Materialmar saved = service.save(m);
+        Material saved = service.save(m);
 
         assertEquals("available", saved.getMaterial_status());
         assertNotNull(saved.getIdMaterial());
@@ -37,7 +37,7 @@ public class MaterialServiceTest {
 
     @Test
     public void save_missingTitle_throwsIllegalArgument() {
-        Materialmar m = new Materialmar();
+        Material m = new Material();
         m.setAuthor("A");
         m.setYear(2023);
         m.setISBN("I");

@@ -1,11 +1,12 @@
 package it.unicas.project.template.address.model.dao.mysql;
 
 import it.unicas.project.template.address.model.Hold;
+import it.unicas.project.template.address.model.Material;
+import it.unicas.project.template.address.model.MaterialGenre;
 import it.unicas.project.template.address.model.dao.DAO;
 import it.unicas.project.template.address.model.dao.DAOException;
 
 import java.sql.*;
-import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
@@ -65,6 +66,11 @@ public class HoldDAOMySQLImpl implements DAO<Hold> {
     }
 
     @Override
+    public void insert(MaterialGenre mg) throws DAOException {
+
+    }
+
+    @Override
     public void insert(Hold h) throws DAOException {
         verifyObject(h);
         String sql = "INSERT INTO holds (idUser, idMaterial, hold_date, hold_status) VALUES (?, ?, ?, ?)";
@@ -103,6 +109,11 @@ public class HoldDAOMySQLImpl implements DAO<Hold> {
         } catch (SQLException e) {
             throw new DAOException("In update(): " + e.getMessage());
         }
+    }
+
+    @Override
+    public void insert(Material m) throws DAOException {
+
     }
 
     @Override
