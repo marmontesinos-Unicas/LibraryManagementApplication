@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<GridPane alignment="CENTER"
+          hgap="10" vgap="10"
+          prefHeight="420" prefWidth="540"
+          xmlns="http://javafx.com/javafx"
+          xmlns:fx="http://javafx.com/fxml"
+          fx:controller="it.unicas.project.template.address.view.AddMaterialController">
+
+    <padding>
+        <Insets top="20" bottom="20" left="20" right="20"/>
+    </padding>
+
+    <Label text="Title *:" GridPane.columnIndex="0" GridPane.rowIndex="0"/>
+    <TextField fx:id="titleField" GridPane.columnIndex="1" GridPane.rowIndex="0"/>
+
+    <Label text="Author:" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
+    <TextField fx:id="authorField" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
+
+    <Label text="ISBN:" GridPane.columnIndex="0" GridPane.rowIndex="2"/>
+    <TextField fx:id="isbnField" GridPane.columnIndex="1" GridPane.rowIndex="2"/>
+
+    <Label text="Year:" GridPane.columnIndex="0" GridPane.rowIndex="3"/>
+    <TextField fx:id="yearField" GridPane.columnIndex="1" GridPane.rowIndex="3"/>
+
+    <Label text="Material Type *:" GridPane.columnIndex="0" GridPane.rowIndex="4"/>
+    <ComboBox fx:id="materialTypeComboBox"
+              prefWidth="220"
+              GridPane.columnIndex="1"
+              GridPane.rowIndex="4"/>
+
+    <Label text="Genres:" GridPane.columnIndex="0" GridPane.rowIndex="5"/>
+
+    <!-- Scrollable ListView -->
+    <ListView fx:id="genreListView"
+              prefWidth="220"
+              prefHeight="140"
+              maxHeight="200"
+              GridPane.columnIndex="1"
+              GridPane.rowIndex="5"/>
+
+    <HBox spacing="10" GridPane.columnIndex="1" GridPane.rowIndex="6">
+        <TextField fx:id="newGenreField" promptText="Add new genre (optional)"/>
+        <Button fx:id="addGenreButton" text="Add Genre"/>
+    </HBox>
+
+    <Button text="Save Material"
+            onAction="#handleSaveMaterial"
+            GridPane.columnIndex="1"
+            GridPane.rowIndex="7"
+            GridPane.halignment="RIGHT"/>
+
+</GridPane>
+
