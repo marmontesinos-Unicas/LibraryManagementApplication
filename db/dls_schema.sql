@@ -1,6 +1,6 @@
 -- MySQL dump 10.13  Distrib 8.0.44, for Win64 (x86_64)
 --
--- Host: localhost    Database: dls_schema
+-- Host: 127.0.0.1    Database: dls_schema
 -- ------------------------------------------------------
 -- Server version	8.0.44
 
@@ -111,7 +111,7 @@ CREATE TABLE `material_type` (
   `idMaterialType` int NOT NULL AUTO_INCREMENT,
   `material_type` varchar(45) NOT NULL,
   PRIMARY KEY (`idMaterialType`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb3;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -120,6 +120,7 @@ CREATE TABLE `material_type` (
 
 LOCK TABLES `material_type` WRITE;
 /*!40000 ALTER TABLE `material_type` DISABLE KEYS */;
+INSERT INTO `material_type` VALUES (1,'book'),(2,'CD'),(3,'movie'),(4,'magazine');
 /*!40000 ALTER TABLE `material_type` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -132,19 +133,16 @@ DROP TABLE IF EXISTS `materials`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `materials` (
   `idMaterial` int NOT NULL AUTO_INCREMENT,
-  `title` varchar(45) NOT NULL,
+  `title` varchar(255) NOT NULL,
   `author` varchar(45) DEFAULT NULL,
   `year` int DEFAULT NULL,
   `ISBN` varchar(45) DEFAULT NULL,
-  `idGenre` int DEFAULT NULL,
   `idMaterialType` int DEFAULT NULL,
   `material_status` varchar(45) NOT NULL,
   PRIMARY KEY (`idMaterial`),
-  KEY `idGenre_idx` (`idGenre`),
   KEY `idMaterialType_idx` (`idMaterialType`),
-  CONSTRAINT `idGenre_FK` FOREIGN KEY (`idGenre`) REFERENCES `genre` (`idGenre`),
   CONSTRAINT `idMaterialType_FK` FOREIGN KEY (`idMaterialType`) REFERENCES `material_type` (`idMaterialType`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
+) ENGINE=InnoDB AUTO_INCREMENT=37 DEFAULT CHARSET=utf8mb3;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -153,7 +151,35 @@ CREATE TABLE `materials` (
 
 LOCK TABLES `materials` WRITE;
 /*!40000 ALTER TABLE `materials` DISABLE KEYS */;
+INSERT INTO `materials` VALUES (1,'Pride and Prejudice','Jane Austen',1813,'67967966766',1,'available'),(2,'The Way of Kings','Brandon Sanderson',2010,'9781429992800',1,'available'),(3,'The Name of the Wind','Patrick Rothfuss ',2007,'575081384',1,'available'),(4,'The Name of the Wind','Patrick Rothfuss ',2007,'575081384',1,'available'),(5,'The Great Gatsby','F. Scott Fitzgerald',1925,'4375687624324',1,'available'),(6,'Harry Potter and the Sorcerer Stone','J.K. Rowling',1997,'34578736345',1,'available'),(7,'Harry Potter and the Sorcerer Stone','J.K. Rowling',1997,'34578736345',1,'available'),(8,'Harry Potter and the Sorcerer Stone','J.K. Rowling',1997,'34578736345',1,'available'),(9,'It','Stephen King',1986,'345463346',1,'available'),(10,'Treasure Island','Robert Louis Stevenson',1883,'4537768',1,'available'),(11,'Hamlet','William Shakespeare',1603,'3567568879',1,'available'),(12,'Sapiens: A Brief History of Humankind','Yuval Noah Harari',2011,'46765885665',1,'available'),(13,'A Brief History of Time','Stephen Hawking',1988,'6588795879',1,'available'),(14,'Charlotte\'s Web','E.B. White',1952,'6798757768',1,'available'),(15,'Kind of Blue','Miles Davis',1959,NULL,2,'available'),(16,'Blue Train','John Coltrane',1957,NULL,2,'available'),(17,'Abbey Road','The Beatles',1969,NULL,2,'available'),(18,'Thriller','Michael Jackson',1982,NULL,2,'available'),(19,'Legend','Bob Marley',1984,NULL,2,'available'),(20,'La Traviata','Giuseppe Verdi',1853,NULL,2,'available'),(21,'Map of the Soul: 7','BTS',2020,NULL,2,'available'),(22,'The Notebook','Nick Cassavetes',2004,NULL,3,'available'),(23,'Inception','Christopher Nolan',2010,NULL,3,'available'),(24,'The Lord of the Rings: The Fellowship of the Ring','Peter Jackson',2001,NULL,3,'available'),(25,'It','Andy Muschietti',2017,NULL,3,'available'),(26,'Pirates of the Caribbean: The Curse of the Black Pearl','Gore Verbinski',2003,NULL,3,'available'),(27,'The Godfather','Francis Ford Coppola',1972,NULL,3,'available'),(28,'Gladiator','Ridley Scott',2000,NULL,3,'available'),(29,'Interstellar','Christopher Nolan',2014,NULL,3,'available'),(30,'Frozen','Chris Buck & Jennifer Lee',2013,NULL,3,'available'),(31,'The Daily News','Global Press',2024,NULL,3,'available'),(32,'Vogue','Condé Nast',2024,NULL,3,'available'),(33,'Sports Illustrated','SI Media',2024,NULL,3,'available'),(34,'Bon Appétit','Condé Nast',2024,NULL,3,'available'),(35,'Men\'s Health','Hearst',2024,NULL,3,'available'),(36,'Better Homes & Gardens','Meredith',2024,NULL,3,'available');
 /*!40000 ALTER TABLE `materials` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `materials_genres`
+--
+
+DROP TABLE IF EXISTS `materials_genres`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `materials_genres` (
+  `idMaterial` int NOT NULL,
+  `idGenre` int NOT NULL,
+  PRIMARY KEY (`idMaterial`,`idGenre`),
+  KEY `idGenre` (`idGenre`),
+  CONSTRAINT `materials_genres_ibfk_1` FOREIGN KEY (`idMaterial`) REFERENCES `materials` (`idMaterial`) ON DELETE CASCADE,
+  CONSTRAINT `materials_genres_ibfk_2` FOREIGN KEY (`idGenre`) REFERENCES `genre` (`idGenre`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `materials_genres`
+--
+
+LOCK TABLES `materials_genres` WRITE;
+/*!40000 ALTER TABLE `materials_genres` DISABLE KEYS */;
+INSERT INTO `materials_genres` VALUES (22,1),(23,2),(29,2),(24,3),(25,4),(26,5),(27,6),(28,6),(30,9),(15,11),(16,11),(17,12),(18,13),(19,14),(20,15),(21,16),(31,17),(32,18),(33,19),(34,20),(35,21),(36,22);
+/*!40000 ALTER TABLE `materials_genres` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -167,7 +193,7 @@ CREATE TABLE `roles` (
   `idRole` int NOT NULL AUTO_INCREMENT,
   `admin_type` varchar(45) NOT NULL,
   PRIMARY KEY (`idRole`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb3;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -176,6 +202,7 @@ CREATE TABLE `roles` (
 
 LOCK TABLES `roles` WRITE;
 /*!40000 ALTER TABLE `roles` DISABLE KEYS */;
+INSERT INTO `roles` VALUES (1,'admin'),(2,'user');
 /*!40000 ALTER TABLE `roles` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -192,13 +219,14 @@ CREATE TABLE `users` (
   `surname` varchar(45) NOT NULL,
   `username` varchar(45) NOT NULL,
   `nationalID` varchar(45) NOT NULL,
+  `birthdate` date DEFAULT NULL,
   `password` varchar(45) NOT NULL,
   `email` varchar(45) DEFAULT NULL,
   `idRole` int NOT NULL,
   PRIMARY KEY (`idUser`),
   KEY `isAdmin_idx` (`idRole`),
   CONSTRAINT `idRole_FK` FOREIGN KEY (`idRole`) REFERENCES `roles` (`idRole`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb3;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -207,6 +235,7 @@ CREATE TABLE `users` (
 
 LOCK TABLES `users` WRITE;
 /*!40000 ALTER TABLE `users` DISABLE KEYS */;
+INSERT INTO `users` VALUES (1,'Carla','Ramirez','crami','24433365K','1967-01-12','45464','cramirez@gmail.com',1),(2,'Maria','Castro','mcastro','23456793I','2002-12-03','mcastro111','mcastro@gmail.com',2),(3,'Pablo','Garcia','pgarcia','45653567G','1998-05-20','pgarcia111','pgarcia@gmail.com',2),(4,'Marc','Roig','mroig','98936489Y','1997-06-26','mroig111','mroig@gmail.com',2),(5,'Carles','Pujalte','cpujalte','45653567G','1978-09-10','cpujalte111','cpujalte@gmail.com',2);
 /*!40000 ALTER TABLE `users` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
@@ -219,4 +248,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2025-12-01 16:23:05
+-- Dump completed on 2025-12-01 19:22:56
