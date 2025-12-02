@@ -2,30 +2,36 @@ package it.unicas.project.template.address.view;
 
 import it.unicas.project.template.address.model.User;
 import it.unicas.project.template.address.model.dao.DAOException;
-import it.unicas.project.template.address.service.ServiceException;
+import it.unicas.project.template.address.service.UserServiceException;
 import it.unicas.project.template.address.service.UserService;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.TextField;
+import javafx.scene.control.PasswordField;
+import javafx.scene.control.DatePicker; // <-- added
 import javafx.stage.Stage;
+import javafx.stage.Window; // <-- added
 import javafx.event.ActionEvent;
+import java.time.LocalDate;
 
 public class UserRegistrationController {
 
-    // UI Elements (must match fx:id in your FXML file - Tarea #55)
+    // UI Elements (must match fx:id in your FXML file)
     @FXML
     private TextField nameField;
     @FXML
     private TextField surnameField;
     @FXML
     private TextField nationalIDField; // User ID
+    @FXML
+    private DatePicker birthdateField; // <-- changed type to DatePicker
     //@FXML
     //private TextField postalCodeField; // Required by User Story #42
     @FXML
     private TextField usernameField;
     @FXML
-    private TextField passwordField;
+    private PasswordField passwordField; // changed to PasswordField to match FXML
     @FXML
     private TextField emailField; // Assuming your User model requires email/username/password
 
@@ -41,16 +47,22 @@ public class UserRegistrationController {
         String name = nameField.getText();
         String surname = surnameField.getText();
         String nationalID = nationalIDField.getText();
-        //String postalCode = postalCodeField.getText();
+        LocalDate birthdate = birthdateField.getValue(); // <-- obtain LocalDate directly
 
         // --- NOTE: Add logic to get username, password, and email based on your FXML ---
         String username = usernameField.getText();
         String password = passwordField.getText();
         String email = emailField.getText();
 
+        // Validate birthdate presence
+        if (birthdate == null) {
+            showAlert("Validation Error", "Missing Birthdate", "Birthdate is required.", AlertType.ERROR);
+            return;
+        }
+
         // 2. Build the User object (idUser=null as it's a new record)
-        // idRole=1 is assumed for a default role
-        User newUser = new User(null, name, surname, username, nationalID, password, email, 1);
+        // idRole=2 is assumed for a default role (i.e. regular user)
+        User newUser = new User(null, name, surname, username, nationalID, birthdate, password, email, 2);
 
         try {
             // 3. Call the Business Logic (Service Layer)
@@ -62,9 +74,35 @@ public class UserRegistrationController {
             // Clear fields after successful registration
             clearFields();
 
-        } catch (ServiceException e) {
-            // 5. Validation/Business Error Feedback (Acceptance Criteria 2)
-            showAlert("Validation Error", "Cannot Register User", e.getMessage(), AlertType.ERROR);
+        } catch (UserServiceException e) {
+
+            //showAlert("Validation Error", "Could not perform the registration", "The registration of the new user could not be completed: " + e.getMessage(), AlertType.ERROR);
+
+            // Map known service errors to more specific alerts
+            String msg = e.getMessage() != null ? e.getMessage() : "";
+
+            if (msg.contains("Name is mandatory") || msg.toLowerCase().contains("name") && msg.toLowerCase().contains("mandatory")) {
+                showAlert("Validation Error", "Missing Name", "Please enter the user's name.", AlertType.ERROR);
+            } else if (msg.contains("Surname is mandatory") || msg.toLowerCase().contains("surname")) {
+                showAlert("Validation Error", "Missing Surname", "Please enter the user's surname.", AlertType.ERROR);
+            } else if (msg.contains("National ID is mandatory") || msg.toLowerCase().contains("national id")) {
+                showAlert("Validation Error", "Missing National ID", "Please enter the user's national ID.", AlertType.ERROR);
+            } else if (msg.contains("Username is mandatory") || msg.toLowerCase().contains("username")) {
+                showAlert("Validation Error", "Missing Username", "Please enter a username.", AlertType.ERROR);
+            } else if (msg.contains("Password is mandatory") || msg.toLowerCase().contains("password is mandatory")) {
+                showAlert("Validation Error", "Missing Password", "Please enter a password.", AlertType.ERROR);
+            } else if (msg.toLowerCase().contains("password must be") || msg.toLowerCase().contains("at least 8")) {
+                showAlert("Validation Error", "Invalid Password Format", "Password must be at least 8 characters long and include at least one uppercase letter and one number.", AlertType.ERROR);
+            } else if (msg.contains("User Birth Date is mandatory") || msg.toLowerCase().contains("birth date is mandatory")) {
+                showAlert("Validation Error", "Missing Birthdate", "Please provide the user's birthdate.", AlertType.ERROR);
+            } else if (msg.contains("yyyy-MM-dd") || msg.toLowerCase().contains("birth date must be")) {
+                showAlert("Validation Error", "Invalid Birthdate Format", "Birthdate must be in yyyy-MM-dd format.", AlertType.ERROR);
+            } else if (msg.toLowerCase().contains("already registered") || msg.toLowerCase().contains("already")) {
+                showAlert("Duplicate Error", "National ID Already Registered", "The provided national ID is already registered in the system.", AlertType.ERROR);
+            } else {
+                // Fallback generic message
+                showAlert("Validation Error", "Cannot Register User", msg.isEmpty() ? "Validation failed." : msg, AlertType.ERROR);
+            }
 
         } catch (DAOException e) {
             // 6. System/DB Error Feedback (Acceptance Criteria 2)
@@ -80,6 +118,15 @@ public class UserRegistrationController {
         alert.setTitle(title);
         alert.setHeaderText(header);
         alert.setContentText(content);
+
+        Window owner = null;
+        if (nameField != null && nameField.getScene() != null) {
+            owner = nameField.getScene().getWindow();
+        }
+        if (owner != null) {
+            alert.initOwner(owner);
+        }
+
         alert.showAndWait();
     }
 
@@ -90,6 +137,7 @@ public class UserRegistrationController {
         nameField.setText("");
         surnameField.setText("");
         nationalIDField.setText("");
+        birthdateField.setValue(null);
         //postalCodeField.setText("");
         usernameField.setText("");
         passwordField.setText("");
@@ -112,3 +160,4 @@ public class UserRegistrationController {
         stage.close();
     }
 }
+

@@ -4,8 +4,7 @@ import it.unicas.project.template.address.model.User;
 import it.unicas.project.template.address.model.dao.DAOException;
 import it.unicas.project.template.address.model.dao.mysql.UserDAOMySQLImpl;
 import java.time.LocalDate;
-import it.unicas.project.template.address.service.ServiceException;
-import it.unicas.project.template.address.service.UserService;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -22,7 +21,9 @@ public class UserServiceTest {
         private boolean insertCalled = false;
         private User lastInserted = null;
 
-        public FakeUserDAO() { super(); // may call the parent constructor; adjust if parent requires params
+        public FakeUserDAO() {
+            super();
+            // may call the parent constructor; adjust if parent requires params
         }
 
         public void setSelectResult(List<User> res) {
@@ -64,8 +65,8 @@ public class UserServiceTest {
         // Arrange: no existing users
         fakeDao.setSelectResult(new ArrayList<>());
 
-        User newUser = new User(null, "John", "Doe", "jdoe", "NID123", birthday, "pass", "jdoe@example.com", 1);
-        // String postalCode = "12345";
+        // Use a password that satisfies the policy: >=8 chars, 1 uppercase, 1 digit
+        User newUser = new User(null, "John", "Doe", "jdoe", "NID123", birthday, "Password1", "jdoe@example.com", 1);
 
         // Act
         userService.registerUser(newUser);
@@ -79,12 +80,11 @@ public class UserServiceTest {
 
     @Test
     public void testRegisterUserMissingNameThrowsServiceException() {
-        // Arrange: name is missing
-        User newUser = new User(null, "", "Doe", "jdoe", "NID123", birthday, "pass", "jdoe@example.com", 1);
-        String postalCode = "12345";
+        // Arrange: name is missing; password still valid to avoid masking other validations
+        User newUser = new User(null, "", "Doe", "jdoe", "NID123", birthday, "Password1", "jdoe@example.com", 1);
 
         // Act & Assert
-        Exception ex = assertThrows(ServiceException.class, () -> userService.registerUser(newUser));
+        Exception ex = assertThrows(UserServiceException.class, () -> userService.registerUser(newUser));
         String msg = ex.getMessage();
         assertTrue(msg != null && (msg.toLowerCase().contains("name") || msg.toLowerCase().contains("mandatory")));
     }
@@ -93,16 +93,28 @@ public class UserServiceTest {
     public void testRegisterUserDuplicateNationalIdThrowsServiceException() {
         // Arrange: select returns a non-empty list -> duplicate national ID
         List<User> existing = new ArrayList<>();
-        existing.add(new User(1, "Existing", "User", "exist", "NID123", birthday, "pw", "e@e.com", 1));
+        existing.add(new User(1, "Existing", "User", "exist", "NID123", birthday, "Password1", "e@e.com", 1));
         fakeDao.setSelectResult(existing);
 
-        User newUser = new User(null, "John", "Doe", "jdoe", "NID123", birthday, "pass", "jdoe@example.com", 1);
-        //String postalCode = "12345";
+        User newUser = new User(null, "John", "Doe", "jdoe", "NID123", birthday, "Password1", "jdoe@example.com", 1);
 
         // Act & Assert
-        Exception ex = assertThrows(ServiceException.class, () -> userService.registerUser(newUser));
+        Exception ex = assertThrows(UserServiceException.class, () -> userService.registerUser(newUser));
         String msg = ex.getMessage();
         assertTrue(msg != null && (msg.toLowerCase().contains("already") || msg.toLowerCase().contains("registered")));
     }
-}
 
+    @Test
+    public void testRegisterUserInvalidPasswordThrowsServiceException() {
+        // Arrange: ensure no existing users (so password validation is reached)
+        fakeDao.setSelectResult(new ArrayList<>());
+
+        // invalid password: all lowercase, no digit, length >= 8 but misses uppercase/digit
+        User newUser = new User(null, "Alice", "Smith", "asmith", "NID999", birthday, "password", "alice@example.com", 1);
+
+        // Act & Assert: password policy should trigger UserServiceException
+        Exception ex = assertThrows(UserServiceException.class, () -> userService.registerUser(newUser));
+        String msg = ex.getMessage();
+        assertTrue(msg != null && (msg.toLowerCase().contains("password") || msg.toLowerCase().contains("at least")));
+    }
+}
