@@ -1,6 +1,6 @@
 package it.unicas.project.template.address.model.dao.mysql;
 
-import it.unicas.project.template.address.model.Material;
+import it.unicas.project.template.address.model.Materialmar;
 import it.unicas.project.template.address.model.dao.DAO;
 import it.unicas.project.template.address.model.dao.DAOException;
 
@@ -11,27 +11,27 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 
-public class MaterialDAOMySQLImpl implements DAO<Material> {
+public class MaterialDAOMySQLImplmar implements DAO<Materialmar> {
 
-    private MaterialDAOMySQLImpl(){}
+    private MaterialDAOMySQLImplmar(){}
 
     private static DAO dao = null;
     private static Logger logger = null;
 
     public static DAO getInstance(){
         if(dao == null){
-            dao = new MaterialDAOMySQLImpl();
-            logger = Logger.getLogger(MaterialDAOMySQLImpl.class.getName());
+            dao = new MaterialDAOMySQLImplmar();
+            logger = Logger.getLogger(MaterialDAOMySQLImplmar.class.getName());
         }
         return dao;
     }
 
     @Override
-    public List<Material> select(Material m) throws DAOException {
+    public List<Materialmar> select(Materialmar m) throws DAOException {
         if(m == null){
-            m = new Material("", "", null, "", null, null, "");
+            m = new Materialmar("", "", null, "", null, null, "");
         }
-        ArrayList<Material> list = new ArrayList<>();
+        ArrayList<Materialmar> list = new ArrayList<>();
         try{
             Statement st = DAOMySQLSettings.getStatement();
             String sql = "SELECT * FROM materials WHERE title LIKE '" + m.getTitle() + "%'" +
@@ -39,13 +39,12 @@ public class MaterialDAOMySQLImpl implements DAO<Material> {
             logger.info("SQL: " + sql);
             ResultSet rs = st.executeQuery(sql);
             while(rs.next()){
-                list.add(new Material(
+                list.add(new Materialmar(
                         rs.getInt("idMaterial"),
                         rs.getString("title"),
                         rs.getString("author"),
                         rs.getInt("year"),
                         rs.getString("ISBN"),
-                        rs.getInt("idGenre"),
                         rs.getInt("idMaterialType"),
                         rs.getString("material_status")
                 ));
@@ -58,20 +57,32 @@ public class MaterialDAOMySQLImpl implements DAO<Material> {
     }
 
     @Override
-    public void insert(Material m) throws DAOException {
+    public void insert(Materialmar m) throws DAOException {
         verifyObject(m);
-        String sql = "INSERT INTO materials (title, author, year, ISBN, idGenre, idMaterialType, material_status) VALUES ('" +
+        String sql = "INSERT INTO materials (title, author, year, ISBN, idMaterialType, material_status) VALUES ('" +
                 m.getTitle() + "', '" + m.getAuthor() + "', " + m.getYear() + ", '" + m.getISBN() + "', " +
-                m.getIdGenre() + ", " + m.getIdMaterialType() + ", '" + m.getMaterial_status() + "')";
+                m.getIdMaterialType() + ", '" + m.getMaterial_status() + "')";
         logger.info("SQL: " + sql);
-        executeUpdate(sql);
+
+        try {
+            Statement st = DAOMySQLSettings.getStatement();
+            st.executeUpdate(sql, Statement.RETURN_GENERATED_KEYS);
+            var rs = st.getGeneratedKeys();
+            if (rs.next()) {
+                m.setIdMaterial(rs.getInt(1)); // assign the auto-generated ID
+            }
+            DAOMySQLSettings.closeStatement(st);
+        } catch(SQLException e){
+            throw new DAOException("In insert(): " + e.getMessage());
+        }
     }
 
+
     @Override
-    public void update(Material m) throws DAOException {
+    public void update(Materialmar m) throws DAOException {
         verifyObject(m);
         String sql = "UPDATE materials SET title='" + m.getTitle() + "', author='" + m.getAuthor() +
-                "', year=" + m.getYear() + ", ISBN='" + m.getISBN() + "', idGenre=" + m.getIdGenre() +
+                "', year=" + m.getYear() + ", ISBN='" + m.getISBN() +
                 ", idMaterialType=" + m.getIdMaterialType() + ", material_status='" + m.getMaterial_status() +
                 "' WHERE idMaterial=" + m.getIdMaterial();
         logger.info("SQL: " + sql);
@@ -79,7 +90,7 @@ public class MaterialDAOMySQLImpl implements DAO<Material> {
     }
 
     @Override
-    public void delete(Material m) throws DAOException {
+    public void delete(Materialmar m) throws DAOException {
         if(m == null || m.getIdMaterial() == null){
             throw new DAOException("In delete: idMaterial cannot be null");
         }
@@ -88,10 +99,9 @@ public class MaterialDAOMySQLImpl implements DAO<Material> {
         executeUpdate(sql);
     }
 
-    private void verifyObject(Material m) throws DAOException {
-        if(m == null || m.getTitle() == null || m.getAuthor() == null || m.getYear() == null ||
-                m.getISBN() == null || m.getIdGenre() == null || m.getIdMaterialType() == null ||
-                m.getMaterial_status() == null){
+    private void verifyObject(Materialmar m) throws DAOException {
+        if(m == null || m.getTitle() == null || m.getAuthor() == null || m.getIdMaterialType() == null
+                || m.getMaterial_status() == null){
             throw new DAOException("In verifyObject: all fields must be non-null");
         }
     }

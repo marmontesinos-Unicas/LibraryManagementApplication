@@ -1,33 +1,31 @@
 package it.unicas.project.template.address.model;
 
-public class Material {
+public class Materialmar {
 
     private Integer idMaterial;
     private String title;
     private String author;
     private Integer year;
     private String ISBN;
-    private Integer idGenre;
     private Integer idMaterialType;
     private String material_status;
 
-    public Material() {}
+    public Materialmar() {}
 
-    public Material(Integer idMaterial, String title, String author, Integer year,
-                    String ISBN, Integer idGenre, Integer idMaterialType, String material_status) {
+    public Materialmar(Integer idMaterial, String title, String author, Integer year,
+                       String ISBN, Integer idMaterialType, String material_status) {
         this.idMaterial = idMaterial;
         this.title = title;
         this.author = author;
         this.year = year;
         this.ISBN = ISBN;
-        this.idGenre = idGenre;
         this.idMaterialType = idMaterialType;
         this.material_status = material_status;
     }
 
-    public Material(String title, String author, Integer year,
-                    String ISBN, Integer idGenre, Integer idMaterialType, String material_status) {
-        this(null, title, author, year, ISBN, idGenre, idMaterialType, material_status);
+    public Materialmar(String title, String author, Integer year,
+                       String ISBN, Integer idGenre, Integer idMaterialType, String material_status) {
+        this(null, title, author, year, ISBN, idMaterialType, material_status);
     }
 
     // GETTERS & SETTERS
@@ -45,9 +43,6 @@ public class Material {
 
     public String getISBN() { return ISBN; }
     public void setISBN(String ISBN) { this.ISBN = ISBN; }
-
-    public Integer getIdGenre() { return idGenre; }
-    public void setIdGenre(Integer idGenre) { this.idGenre = idGenre; }
 
     public Integer getIdMaterialType() { return idMaterialType; }
     public void setIdMaterialType(Integer idMaterialType) { this.idMaterialType = idMaterialType; }
