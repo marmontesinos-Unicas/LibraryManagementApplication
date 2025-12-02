@@ -22,8 +22,7 @@ public class UserServiceTest {
         private boolean insertCalled = false;
         private User lastInserted = null;
 
-        public FakeUserDAO() {
-            super(); // may call the parent constructor; adjust if parent requires params
+        public FakeUserDAO() { super(); // may call the parent constructor; adjust if parent requires params
         }
 
         public void setSelectResult(List<User> res) {

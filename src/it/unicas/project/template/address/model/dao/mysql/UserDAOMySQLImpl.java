@@ -15,7 +15,7 @@ public class UserDAOMySQLImpl implements DAO<User> {
     private static DAO<User> dao = null;
     private static Logger logger = null;
 
-    private UserDAOMySQLImpl() {}
+    protected UserDAOMySQLImpl() {}
 
     public static DAO<User> getInstance() {
         if (dao == null) {
