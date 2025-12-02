@@ -4,22 +4,23 @@ import it.unicas.project.template.address.model.Loan;
 import it.unicas.project.template.address.model.dao.DAO;
 import it.unicas.project.template.address.model.dao.DAOException;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 
 public class LoanDAOMySQLImpl implements DAO<Loan> {
 
-    private LoanDAOMySQLImpl(){}
-
-    private static DAO dao = null;
+    private static DAO<Loan> dao = null;
     private static Logger logger = null;
+    private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
-    public static DAO getInstance(){
-        if(dao == null){
+    private LoanDAOMySQLImpl() {}
+
+    public static DAO<Loan> getInstance() {
+        if (dao == null) {
             dao = new LoanDAOMySQLImpl();
             logger = Logger.getLogger(LoanDAOMySQLImpl.class.getName());
         }
@@ -28,76 +29,115 @@ public class LoanDAOMySQLImpl implements DAO<Loan> {
 
     @Override
     public List<Loan> select(Loan l) throws DAOException {
-        if(l == null){
-            l = new Loan(null, null, "", "", "");
-        }
-        ArrayList<Loan> list = new ArrayList<>();
-        try{
-            Statement st = DAOMySQLSettings.getStatement();
-            String sql = "SELECT * FROM loans WHERE start_date LIKE '" + l.getStart_date() + "%'";
-            logger.info("SQL: " + sql);
-            ResultSet rs = st.executeQuery(sql);
-            while(rs.next()){
-                list.add(new Loan(
+        List<Loan> list = new ArrayList<>();
+        if (l == null) l = new Loan(null, null, null, null, null);
+
+        String sql = "SELECT * FROM loans WHERE 1=1";
+        if (l.getIdLoan() != -1) sql += " AND idLoan=?";
+        if (l.getIdUser() != -1) sql += " AND idUser=?";
+        if (l.getIdMaterial() != -1) sql += " AND idMaterial=?";
+        if (l.getStart_date() != null) sql += " AND start_date LIKE ?";
+
+        try (PreparedStatement ps = DAOMySQLSettings.getConnection().prepareStatement(sql)) {
+            int index = 1;
+            if (l.getIdLoan() != -1) ps.setInt(index++, l.getIdLoan());
+            if (l.getIdUser() != -1) ps.setInt(index++, l.getIdUser());
+            if (l.getIdMaterial() != -1) ps.setInt(index++, l.getIdMaterial());
+            if (l.getStart_date() != null) ps.setString(index++, l.getStart_date().format(FORMATTER) + "%");
+
+            logger.info("SQL: " + ps);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                Loan loan = new Loan(
                         rs.getInt("idLoan"),
                         rs.getInt("idUser"),
                         rs.getInt("idMaterial"),
-                        rs.getString("start_date"),
-                        rs.getString("due_date"),
-                        rs.getString("return_date")
-                ));
+                        rs.getTimestamp("start_date") != null ? rs.getTimestamp("start_date").toLocalDateTime() : null,
+                        rs.getTimestamp("due_date") != null ? rs.getTimestamp("due_date").toLocalDateTime() : null,
+                        rs.getTimestamp("return_date") != null ? rs.getTimestamp("return_date").toLocalDateTime() : null
+                );
+                list.add(loan);
             }
-            DAOMySQLSettings.closeStatement(st);
-        } catch(SQLException e){
+        } catch (SQLException e) {
             throw new DAOException("In select(): " + e.getMessage());
         }
+
         return list;
     }
 
     @Override
     public void insert(Loan l) throws DAOException {
         verifyObject(l);
-        String sql = "INSERT INTO loans (idUser, idMaterial, start_date, due_date, return_date) VALUES (" +
-                l.getIdUser() + ", " + l.getIdMaterial() + ", '" + l.getStart_date() + "', '" +
-                l.getDue_date() + "', '" + l.getReturn_date() + "')";
-        logger.info("SQL: " + sql);
-        executeUpdate(sql);
+        String sql = "INSERT INTO loans (idUser, idMaterial, start_date, due_date, return_date) VALUES (?, ?, ?, ?, ?)";
+
+        try (PreparedStatement ps = DAOMySQLSettings.getConnection()
+                .prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+
+            ps.setInt(1, l.getIdUser());
+            ps.setInt(2, l.getIdMaterial());
+            ps.setString(3, l.getStart_date().format(FORMATTER));
+            ps.setString(4, l.getDue_date().format(FORMATTER));
+            if (l.getReturn_date() != null) {
+                ps.setString(5, l.getReturn_date().format(FORMATTER));
+            } else {
+                ps.setNull(5, Types.TIMESTAMP);
+            }
+
+            logger.info("SQL: " + ps);
+            ps.executeUpdate();
+
+            // Obtener idLoan generado automáticamente
+            ResultSet rs = ps.getGeneratedKeys();
+            if (rs.next()) l.setIdLoan(rs.getInt(1));
+        } catch (SQLException e) {
+            throw new DAOException("In insert(): " + e.getMessage());
+        }
     }
 
     @Override
     public void update(Loan l) throws DAOException {
         verifyObject(l);
-        String sql = "UPDATE loans SET idUser=" + l.getIdUser() + ", idMaterial=" + l.getIdMaterial() +
-                ", start_date='" + l.getStart_date() + "', due_date='" + l.getDue_date() +
-                "', return_date='" + l.getReturn_date() + "' WHERE idLoan=" + l.getIdLoan();
-        logger.info("SQL: " + sql);
-        executeUpdate(sql);
+        String sql = "UPDATE loans SET idUser=?, idMaterial=?, start_date=?, due_date=?, return_date=? WHERE idLoan=?";
+
+        try (PreparedStatement ps = DAOMySQLSettings.getConnection().prepareStatement(sql)) {
+            ps.setInt(1, l.getIdUser());
+            ps.setInt(2, l.getIdMaterial());
+            ps.setString(3, l.getStart_date().format(FORMATTER));
+            ps.setString(4, l.getDue_date().format(FORMATTER));
+            if (l.getReturn_date() != null) {
+                ps.setString(5, l.getReturn_date().format(FORMATTER));
+            } else {
+                ps.setNull(5, Types.TIMESTAMP);
+            }
+            ps.setInt(6, l.getIdLoan());
+
+            logger.info("SQL: " + ps);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new DAOException("In update(): " + e.getMessage());
+        }
     }
 
     @Override
     public void delete(Loan l) throws DAOException {
-        if(l == null || l.getIdLoan() == null){
+        if (l == null || l.getIdLoan() == -1) {
             throw new DAOException("In delete: idLoan cannot be null");
         }
-        String sql = "DELETE FROM loans WHERE idLoan=" + l.getIdLoan();
-        logger.info("SQL: " + sql);
-        executeUpdate(sql);
+
+        String sql = "DELETE FROM loans WHERE idLoan=?";
+        try (PreparedStatement ps = DAOMySQLSettings.getConnection().prepareStatement(sql)) {
+            ps.setInt(1, l.getIdLoan());
+            logger.info("SQL: " + ps);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new DAOException("In delete(): " + e.getMessage());
+        }
     }
 
     private void verifyObject(Loan l) throws DAOException {
-        if(l == null || l.getIdUser() == null || l.getIdMaterial() == null ||
-                l.getStart_date() == null || l.getDue_date() == null){
-            throw new DAOException("In verifyObject: required fields must be non-null");
-        }
-    }
-
-    private void executeUpdate(String sql) throws DAOException {
-        try{
-            Statement st = DAOMySQLSettings.getStatement();
-            st.executeUpdate(sql);
-            DAOMySQLSettings.closeStatement(st);
-        } catch(SQLException e){
-            throw new DAOException("In executeUpdate(): " + e.getMessage());
+        if (l == null || l.getIdUser() == -1 || l.getIdMaterial() == -1 ||
+                l.getStart_date() == null || l.getDue_date() == null) {
+            throw new DAOException("In verifyObject: required fields must be non-null or valid");
         }
     }
 }
