@@ -20,8 +20,8 @@ public class UserRegistrationController {
     private TextField surnameField;
     @FXML
     private TextField nationalIDField; // User ID
-    @FXML
-    private TextField postalCodeField; // Required by User Story #42
+    //@FXML
+    //private TextField postalCodeField; // Required by User Story #42
     @FXML
     private TextField usernameField;
     @FXML
@@ -41,7 +41,7 @@ public class UserRegistrationController {
         String name = nameField.getText();
         String surname = surnameField.getText();
         String nationalID = nationalIDField.getText();
-        String postalCode = postalCodeField.getText();
+        //String postalCode = postalCodeField.getText();
 
         // --- NOTE: Add logic to get username, password, and email based on your FXML ---
         String username = usernameField.getText();
@@ -54,7 +54,7 @@ public class UserRegistrationController {
 
         try {
             // 3. Call the Business Logic (Service Layer)
-            userService.registerUser(newUser, postalCode);
+            userService.registerUser(newUser);
 
             // 4. Success Feedback (Acceptance Criteria 3)
             showAlert("Success", "Registration Successful", "The user has been registered and can now borrow items.", AlertType.INFORMATION);
@@ -90,7 +90,7 @@ public class UserRegistrationController {
         nameField.setText("");
         surnameField.setText("");
         nationalIDField.setText("");
-        postalCodeField.setText("");
+        //postalCodeField.setText("");
         usernameField.setText("");
         passwordField.setText("");
         emailField.setText("");

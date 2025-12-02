@@ -18,10 +18,7 @@ public class UserService {
      * Registers a new user in the system.
      * Acceptance Criteria 1 & 2: Validates required fields and ensures uniqueness.
      */
-    public void registerUser(User newUser, String postalCode) throws ServiceException, DAOException {
-
-        // --- 1. Required Field Validation (Acceptance Criteria 2) ---
-        // Fields based on the User Story: name, surname, ID (nationalID), postal code
+    public void registerUser(User newUser) throws ServiceException, DAOException {
 
         if (newUser.getName() == null || newUser.getName().trim().isEmpty()) {
             throw new ServiceException("Error: User name is mandatory.");
@@ -32,13 +29,7 @@ public class UserService {
         if (newUser.getNationalID() == null || newUser.getNationalID().trim().isEmpty()) {
             throw new ServiceException("Error: User National ID is mandatory.");
         }
-        if (postalCode == null || postalCode.trim().isEmpty()) {
-            // Note: Postal code validation is handled here since it is a requirement
-            // but is not part of your existing User model class.
-            throw new ServiceException("Error: Postal Code is mandatory.");
-        }
 
-        // --- 2. Uniqueness Validation ---
         // Check if the user already exists by National ID using the DAO's select method.
         User filter = new User(null, "", "", "", newUser.getNationalID(), "", "", null);
 

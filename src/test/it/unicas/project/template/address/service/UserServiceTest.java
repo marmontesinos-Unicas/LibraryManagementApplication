@@ -64,10 +64,10 @@ public class UserServiceTest {
         fakeDao.setSelectResult(new ArrayList<>());
 
         User newUser = new User(null, "John", "Doe", "jdoe", "NID123", "pass", "jdoe@example.com", 1);
-        String postalCode = "12345";
+        // String postalCode = "12345";
 
         // Act
-        userService.registerUser(newUser, postalCode);
+        userService.registerUser(newUser);
 
         // Assert
         assertTrue(fakeDao.wasInsertCalled(), "Expected insert to be called on successful registration");
@@ -83,7 +83,7 @@ public class UserServiceTest {
         String postalCode = "12345";
 
         // Act & Assert
-        Exception ex = assertThrows(ServiceException.class, () -> userService.registerUser(newUser, postalCode));
+        Exception ex = assertThrows(ServiceException.class, () -> userService.registerUser(newUser));
         String msg = ex.getMessage();
         assertTrue(msg != null && (msg.toLowerCase().contains("name") || msg.toLowerCase().contains("mandatory")));
     }
@@ -96,10 +96,10 @@ public class UserServiceTest {
         fakeDao.setSelectResult(existing);
 
         User newUser = new User(null, "John", "Doe", "jdoe", "NID123", "pass", "jdoe@example.com", 1);
-        String postalCode = "12345";
+        //String postalCode = "12345";
 
         // Act & Assert
-        Exception ex = assertThrows(ServiceException.class, () -> userService.registerUser(newUser, postalCode));
+        Exception ex = assertThrows(ServiceException.class, () -> userService.registerUser(newUser));
         String msg = ex.getMessage();
         assertTrue(msg != null && (msg.toLowerCase().contains("already") || msg.toLowerCase().contains("registered")));
     }
