@@ -44,4 +44,15 @@ public class MaterialServiceTest {
 
         assertThrows(IllegalArgumentException.class, () -> service.save(m));
     }
+
+    @Test
+    public void save_illegalyear_throwsIllegalArgument() {
+        Material m = new Material();
+        m.setAuthor("A");
+        m.setYear(-2023);
+        m.setISBN("I");
+        m.setIdMaterialType(1);
+
+        assertThrows(IllegalArgumentException.class, () -> service.save(m));
+    }
 }
