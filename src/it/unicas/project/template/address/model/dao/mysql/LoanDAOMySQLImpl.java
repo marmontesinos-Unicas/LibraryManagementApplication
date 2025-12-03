@@ -140,4 +140,29 @@ public class LoanDAOMySQLImpl implements DAO<Loan> {
             throw new DAOException("In verifyObject: required fields must be non-null or valid");
         }
     }
+
+    // *** NEW METHOD ADDED FOR DELETION VALIDATION ***
+    /**
+     * Counts the number of loans associated with a user that have not yet been returned.
+     * An active loan is defined as one where the return_date is NULL.
+     * @param userId The ID of the user.
+     * @return The count of active loans.
+     * @throws DAOException if a database error occurs.
+     */
+    public int countActiveLoansByUserId(int userId) throws DAOException {
+        String sql = "SELECT COUNT(*) FROM loans WHERE idUser = ? AND return_date IS NULL";
+        int count = 0;
+        try (PreparedStatement ps = DAOMySQLSettings.getConnection().prepareStatement(sql)) {
+            ps.setInt(1, userId);
+
+            logger.info("SQL: " + ps);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                count = rs.getInt(1);
+            }
+        } catch (SQLException e) {
+            throw new DAOException("In countActiveLoansByUserId(): " + e.getMessage());
+        }
+        return count;
+    }
 }

@@ -83,4 +83,5 @@ public class User {
     public String toString() {
         return name.get() + " " + surname.get() + " (" + getIdUser() + ")";
     }
+
 }

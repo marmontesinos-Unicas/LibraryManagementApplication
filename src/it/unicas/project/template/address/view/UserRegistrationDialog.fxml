@@ -61,5 +61,4 @@
         <Button mnemonicParsing="false" onAction="#handleRegisterUser" prefHeight="26.0" prefWidth="86.0" text="Register User" />
         <Button mnemonicParsing="false" onAction="#handleCancel" text="Cancel" />
     </HBox>
-
 </AnchorPane>

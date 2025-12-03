@@ -5,56 +5,67 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.*?>
 
-<BorderPane prefHeight="500.0" prefWidth="700.0" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="it.unicas.project.template.address.view.AdminLandingController">
+<BorderPane prefHeight="520.0" prefWidth="800.0" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="it.unicas.project.template.address.view.AdminLandingController">
     <top>
-        <HBox alignment="CENTER_RIGHT" prefHeight="50.0" spacing="10.0" BorderPane.alignment="CENTER">
+        <!-- FIXED: HBox alignment changed to CENTER to ensure the contained Label is centered. -->
+        <HBox alignment="CENTER" prefHeight="50.0" BorderPane.alignment="CENTER">
             <padding>
                 <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
             </padding>
-            <Label prefHeight="35.0" prefWidth="435.0" text="Administration Panel" HBox.hgrow="ALWAYS">
+            <!-- FIXED: Removed prefWidth and HBox.margin, set Label alignment to CENTER, and enabled HGrow -->
+            <Label alignment="CENTER" text="Administration Panel" HBox.hgrow="ALWAYS">
                 <font>
                     <Font size="24.0" />
                 </font>
-                <HBox.margin>
-                    <Insets left="20.0" />
-                </HBox.margin>
             </Label>
         </HBox>
     </top>
     <center>
         <GridPane alignment="CENTER" hgap="30.0" vgap="30.0" BorderPane.alignment="CENTER">
             <columnConstraints>
-                <javafx.scene.layout.ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
-                <javafx.scene.layout.ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+                <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+                <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
             </columnConstraints>
             <rowConstraints>
-                <javafx.scene.layout.RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-                <javafx.scene.layout.RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
             </rowConstraints>
             <children>
-                <!-- Button 1: Add material -->
-                <Button fx:id="addMaterialButton" alignment="CENTER" mnemonicParsing="false" onAction="#handleAddMaterial" prefHeight="100.0" prefWidth="250.0" text="Add Material" GridPane.halignment="CENTER" GridPane.valignment="CENTER">
+                <!-- Button 1: Add material (Dark Green - 📚 Books Icon) -->
+                <Button fx:id="addMaterialButton" contentDisplay="TOP" alignment="CENTER" mnemonicParsing="false" onAction="#handleAddMaterial" prefHeight="100.0" prefWidth="250.0" text="Add Material" GridPane.halignment="CENTER" GridPane.valignment="CENTER" style="-fx-background-color: #006600; -fx-text-fill: white; -fx-background-radius: 8;">
                     <font>
                         <Font size="18.0" />
                     </font>
+                    <graphic>
+                        <Text fill="white" style="-fx-font-size: 28pt;" text="📚" />
+                    </graphic>
                 </Button>
-                <!-- Button 2: Add/Remove Users -->
-                <Button fx:id="manageUsersButton" alignment="CENTER" mnemonicParsing="false" onAction="#handleManageUsers" prefHeight="100.0" prefWidth="250.0" text="User Management" GridPane.columnIndex="1" GridPane.halignment="CENTER" GridPane.valignment="CENTER">
+                <!-- Button 2: Add/Remove Users (Navy Blue - 👥 Users Icon) -->
+                <Button fx:id="manageUsersButton" contentDisplay="TOP" alignment="CENTER" mnemonicParsing="false" onAction="#handleManageUsers" prefHeight="100.0" prefWidth="250.0" text="User Management" GridPane.columnIndex="1" GridPane.halignment="CENTER" GridPane.valignment="CENTER" style="-fx-background-color: #004080; -fx-text-fill: white; -fx-background-radius: 8;">
                     <font>
                         <Font size="18.0" />
                     </font>
+                    <graphic>
+                        <Text fill="white" style="-fx-font-size: 28pt;" text="👥" />
+                    </graphic>
                 </Button>
-                <!-- Button 3: Loan/Return -->
-                <Button fx:id="loanReturnButton" alignment="CENTER" mnemonicParsing="false" onAction="#handleLoanReturn" prefHeight="100.0" prefWidth="250.0" text="Loan and Return" GridPane.halignment="CENTER" GridPane.rowIndex="1" GridPane.valignment="CENTER">
+                <!-- Button 3: Loan/Return (Dark Red/Crimson - 🔄 Loan/Return Icon) -->
+                <Button fx:id="loanReturnButton" contentDisplay="TOP" alignment="CENTER" mnemonicParsing="false" onAction="#handleLoanReturn" prefHeight="100.0" prefWidth="250.0" text="Loan and Return" GridPane.halignment="CENTER" GridPane.rowIndex="1" GridPane.valignment="CENTER" style="-fx-background-color: #990000; -fx-text-fill: white; -fx-background-radius: 8;">
                     <font>
                         <Font size="18.0" />
                     </font>
+                    <graphic>
+                        <Text fill="white" style="-fx-font-size: 28pt;" text="🔄" />
+                    </graphic>
                 </Button>
-                <!-- Button 4: Search -->
-                <Button fx:id="searchButton" alignment="CENTER" mnemonicParsing="false" onAction="#handleSearch" prefHeight="100.0" prefWidth="250.0" text="Search Material" GridPane.columnIndex="1" GridPane.halignment="CENTER" GridPane.rowIndex="1" GridPane.valignment="CENTER">
+                <!-- Button 4: Search (Gold/Ochre - 🔍 Search Icon) -->
+                <Button fx:id="searchButton" contentDisplay="TOP" alignment="CENTER" mnemonicParsing="false" onAction="#handleSearch" prefHeight="100.0" prefWidth="250.0" text="Search Material" GridPane.columnIndex="1" GridPane.halignment="CENTER" GridPane.rowIndex="1" GridPane.valignment="CENTER" style="-fx-background-color: #CC9900; -fx-text-fill: black; -fx-background-radius: 8;">
                     <font>
                         <Font size="18.0" />
                     </font>
+                    <graphic>
+                        <Text fill="black" style="-fx-font-size: 28pt;" text="🔍" />
+                    </graphic>
                 </Button>
             </children>
             <BorderPane.margin>

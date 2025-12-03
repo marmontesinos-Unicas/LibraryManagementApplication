@@ -23,8 +23,7 @@ public class AdminLandingController {
         this.mainApp = mainApp;
     }
 
-    // References to the buttons, although not strictly necessary
-    // for the action methods, they are good FXML practice.
+    // References to the buttons
     @FXML
     private Button addMaterialButton;
     @FXML
@@ -34,55 +33,35 @@ public class AdminLandingController {
     @FXML
     private Button searchButton;
 
-    /**
-     * Handles the action for the "Add Material" button.
-     * Future logic: Open the view to add new books or resources.
-     * @param event The action event.
-     */
+    // ... (handleAddMaterial remains the same) ...
     @FXML
     protected void handleAddMaterial(ActionEvent event) {
         System.out.println("Acción: Añadir nuevo material (Pendiente de implementación).");
-        // The code to switch to the add material screen will go here.
     }
 
     /**
      * Handles the action for the "Manage Users" button.
-     * Future logic: Open the view to add, remove, or modify user profiles.
+     * Implemented logic: Calls MainApp to switch the scene to the User Management view.
      * @param event The action event.
      */
     @FXML
     protected void handleManageUsers(ActionEvent event) {
-        System.out.println("Acción: Gestionar usuarios (Pendiente de implementación).");
-        // The code to switch to the user management screen will go here.
+        if (mainApp != null) {
+            System.out.println("Acción: Gestionar usuarios. Cambiando a la vista User Management.");
+            mainApp.showUserManagement(); // CALL TO THE NEW METHOD
+        } else {
+            System.err.println("Error: MainApp reference is null. Cannot show User Management.");
+        }
     }
 
-    /**
-     * Handles the action for the "Loan / Return" button.
-     * Future logic: Open the view to register loans and returns.
-     * @param event The action event.
-     */
+    // ... (handleLoanReturn and handleSearch remain the same) ...
     @FXML
     protected void handleLoanReturn(ActionEvent event) {
         System.out.println("Acción: Registrar préstamo o devolución (Pendiente de implementación).");
-        // The code to switch to the transactions screen will go here.
     }
 
-    /**
-     * Handles the action for the "Advanced Search" button.
-     * Future logic: Open the view to perform detailed searches in the catalog.
-     * @param event The action event.
-     */
     @FXML
     protected void handleSearch(ActionEvent event) {
         System.out.println("Acción: Búsqueda avanzada de catálogo (Pendiente de implementación).");
-        // The code to switch to the search screen will go here.
     }
-
-    //@FXML
-    //protected void handleCloseButton(ActionEvent event) {
-        // Gets the window (Stage) from the button and closes it
-        //Stage stage = (Stage) ((Button) event.getSource()).getScene().getWindow();
-        //stage.close();
-        //mainApp.handleExit();
-    //}
 }
