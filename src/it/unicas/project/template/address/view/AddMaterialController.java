@@ -1,5 +1,6 @@
 package it.unicas.project.template.address.view;
 
+import it.unicas.project.template.address.MainApp;
 import it.unicas.project.template.address.model.Genre;
 import it.unicas.project.template.address.model.Material;
 import it.unicas.project.template.address.model.MaterialGenre;
@@ -16,18 +17,15 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.geometry.Insets;
 import javafx.scene.Node;
-import javafx.scene.control.Alert;
-import javafx.scene.control.Button;
-import javafx.scene.control.ButtonType;
-import javafx.scene.control.ComboBox;
-import javafx.scene.control.ListView;
-import javafx.scene.control.SelectionMode;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
+import javafx.scene.layout.FlowPane;
+import javafx.scene.layout.HBox;
 import javafx.stage.Stage;
 
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class AddMaterialController {
 
@@ -35,30 +33,31 @@ public class AddMaterialController {
     @FXML private TextField authorField;
     @FXML private TextField isbnField;
     @FXML private TextField yearField;
-
     @FXML private ComboBox<MaterialType> materialTypeComboBox;
-    @FXML private ListView<Genre> genreListView;
 
-    @FXML private TextField newGenreField;
+    // New Genre UI Components
+    @FXML private TextField genreSearchField;
+    @FXML private ListView<Genre> genreSearchResultsList;
+    @FXML private FlowPane selectedGenresPane;
 
+    private MainApp mainApp;
 
     private final DAO<Material> materialDAO = MaterialDAOMySQLImpl.getInstance();
     private final MaterialService materialService = new MaterialService(materialDAO);
-
     private final MaterialTypeDAOMySQLImpl materialTypeDAO = MaterialTypeDAOMySQLImpl.getInstance();
     private final GenreDAO genreDAO = GenreDAOMySQLImpl.getInstance();
-
     private final DAO<MaterialGenre> materialGenreDAO = MaterialGenreDAOMySQLImpl.getInstance();
+
+    private List<Genre> allGenres = new ArrayList<>();
+    private Set<Genre> selectedGenres = new HashSet<>();
 
     @FXML
     public void initialize() {
-        // Load material types and genres
+        System.out.println("AddMaterialController.initialize() called");
+
         loadMaterialTypes();
         loadGenres();
-
-        // allow multi-selection for genres
-        genreListView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
-        
+        setupGenreSearch();
     }
 
     private void loadMaterialTypes() {
@@ -68,37 +67,128 @@ public class AddMaterialController {
     }
 
     private void loadGenres() {
-        List<Genre> list = genreDAO.selectAll();
-        ObservableList<Genre> obs = FXCollections.observableArrayList(list);
-        genreListView.setItems(obs);
+        allGenres = genreDAO.selectAll();
     }
 
-    private void handleAddGenre() {
-        String name = newGenreField.getText().trim();
-        if (name.isEmpty()) {
-            show(Alert.AlertType.WARNING, "Enter a genre name");
-            return;
-        }
+    private void setupGenreSearch() {
+        // Setup search field listener
+        genreSearchField.textProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal == null || newVal.trim().isEmpty()) {
+                genreSearchResultsList.setVisible(false);
+                genreSearchResultsList.setManaged(false);
+            } else {
+                filterAndShowGenres(newVal.trim());
+            }
+        });
 
-        // check duplicate (GenreDAO.findIdByName should return Integer or null)
-        Integer existing = genreDAO.findIdByName(name);
-        if (existing != null) {
-            show(Alert.AlertType.INFORMATION, "Genre already exists");
-            return;
-        }
+        // Handle genre selection from list - use cell factory for better click handling
+        genreSearchResultsList.setCellFactory(lv -> {
+            ListCell<Genre> cell = new ListCell<>() {
+                @Override
+                protected void updateItem(Genre item, boolean empty) {
+                    super.updateItem(item, empty);
+                    setText(empty || item == null ? null : item.getGenre());
+                }
+            };
 
-        // your Genre constructor expects (Integer, String) — give a dummy id (-1)
-        Genre g = new Genre(-1, name);
-        try {
-            genreDAO.insert(g);    // throws DAOException in your design
-            newGenreField.clear();
-            loadGenres();
-            show(Alert.AlertType.INFORMATION, "Genre added");
-        } catch (DAOException ex) {
-            show(Alert.AlertType.ERROR, "DB error: " + ex.getMessage());
+            cell.setOnMouseClicked(event -> {
+                if (!cell.isEmpty()) {
+                    Genre selected = cell.getItem();
+                    if (selected != null) {
+                        addGenreTag(selected);
+                        genreSearchField.clear();
+                        genreSearchResultsList.setVisible(false);
+                        genreSearchResultsList.setManaged(false);
+                    }
+                }
+            });
+
+            return cell;
+        });
+
+        // Setup focus listener to hide results when focus is lost
+        genreSearchField.focusedProperty().addListener((obs, wasFocused, isNowFocused) -> {
+            if (!isNowFocused) {
+                // Delay hiding to allow click on list item
+                new Thread(() -> {
+                    try {
+                        Thread.sleep(200);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    javafx.application.Platform.runLater(() -> {
+                        if (!genreSearchResultsList.isFocused()) {
+                            genreSearchResultsList.setVisible(false);
+                            genreSearchResultsList.setManaged(false);
+                        }
+                    });
+                }).start();
+            }
+        });
+    }
+
+    private void filterAndShowGenres(String query) {
+        String lowerQuery = query.toLowerCase();
+
+        // Filter genres that match the search and aren't already selected
+        List<Genre> filtered = allGenres.stream()
+                .filter(g -> !selectedGenres.contains(g))
+                .filter(g -> g.getGenre().toLowerCase().contains(lowerQuery))
+                .collect(Collectors.toList());
+
+        if (filtered.isEmpty()) {
+            genreSearchResultsList.setVisible(false);
+            genreSearchResultsList.setManaged(false);
+        } else {
+            ObservableList<Genre> items = FXCollections.observableArrayList(filtered);
+            genreSearchResultsList.setItems(items);
+            genreSearchResultsList.setVisible(true);
+            genreSearchResultsList.setManaged(true);
         }
     }
 
+    private void addGenreTag(Genre genre) {
+        if (selectedGenres.contains(genre)) {
+            return; // Already selected
+        }
+
+        selectedGenres.add(genre);
+
+        // Create tag button
+        Button tagButton = new Button("× " + genre.getGenre());
+        tagButton.setStyle(
+                "-fx-background-color: #e0e0e0; " +
+                        "-fx-background-radius: 15; " +
+                        "-fx-padding: 5 10 5 10; " +
+                        "-fx-cursor: hand;"
+        );
+
+        // Hover effect
+        tagButton.setOnMouseEntered(e ->
+                tagButton.setStyle(
+                        "-fx-background-color: #d0d0d0; " +
+                                "-fx-background-radius: 15; " +
+                                "-fx-padding: 5 10 5 10; " +
+                                "-fx-cursor: hand;"
+                )
+        );
+        tagButton.setOnMouseExited(e ->
+                tagButton.setStyle(
+                        "-fx-background-color: #e0e0e0; " +
+                                "-fx-background-radius: 15; " +
+                                "-fx-padding: 5 10 5 10; " +
+                                "-fx-cursor: hand;"
+                )
+        );
+
+        // Remove genre when clicked
+        tagButton.setOnAction(e -> {
+            selectedGenres.remove(genre);
+            selectedGenresPane.getChildren().remove(tagButton);
+        });
+
+        selectedGenresPane.getChildren().add(tagButton);
+    }
 
     @FXML
     private void handleSaveMaterial() {
@@ -119,7 +209,7 @@ public class AddMaterialController {
         m.setAuthor(authorField.getText().trim());
         m.setISBN(isbnField.getText().trim());
 
-        // year validation (Material.setYear expects Integer)
+        // Year validation
         String ytxt = yearField.getText().trim();
         if (ytxt.isEmpty()) {
             show(Alert.AlertType.WARNING, "Year is required");
@@ -136,16 +226,13 @@ public class AddMaterialController {
         m.setIdMaterialType(mt.getIdMaterialType());
 
         try {
-            // save via service (service calls DAO.insert and sets generated id on the model)
+            // Save material
             materialService.save(m);
-
-            // get generated id from material object (your DAO sets it)
             int newId = m.getIdMaterial();
 
-            // persist selected genres into join table
-            ObservableList<Genre> selected = genreListView.getSelectionModel().getSelectedItems();
-            if (selected != null && !selected.isEmpty()) {
-                for (Genre g : selected) {
+            // Save selected genres
+            if (!selectedGenres.isEmpty()) {
+                for (Genre g : selectedGenres) {
                     MaterialGenre mg = new MaterialGenre(newId, g.getIdGenre());
                     materialGenreDAO.insert(mg);
                 }
@@ -161,7 +248,6 @@ public class AddMaterialController {
         }
     }
 
-    // Cancel button
     @FXML
     private void handleCancel(ActionEvent event) {
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
@@ -175,11 +261,8 @@ public class AddMaterialController {
 
         Optional<ButtonType> result = alert.showAndWait();
         if (result.isPresent() && result.get() == yes) {
-            // Closes the window
             Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
             stage.close();
-        } else {
-            // goes back to interface, does nothing
         }
     }
 
@@ -189,7 +272,9 @@ public class AddMaterialController {
         isbnField.clear();
         yearField.clear();
         materialTypeComboBox.getSelectionModel().clearSelection();
-        genreListView.getSelectionModel().clearSelection();
+        genreSearchField.clear();
+        selectedGenres.clear();
+        selectedGenresPane.getChildren().clear();
     }
 
     private void show(Alert.AlertType type, String message) {
@@ -197,5 +282,9 @@ public class AddMaterialController {
         a.setHeaderText(null);
         a.setContentText(message);
         a.showAndWait();
+    }
+
+    public void setMainApp(MainApp mainApp) {
+        this.mainApp = mainApp;
     }
 }

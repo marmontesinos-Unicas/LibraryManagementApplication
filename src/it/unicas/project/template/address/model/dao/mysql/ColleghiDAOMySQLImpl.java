@@ -1,18 +1,3 @@
-//package it.unicas.project.template.address.model.dao.mysql;
-
-import it.unicas.project.template.address.model.Amici;
-import it.unicas.project.template.address.model.Material;
-import it.unicas.project.template.address.model.dao.DAO;
-import it.unicas.project.template.address.model.dao.DAOException;
-
-
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.logging.Logger;
-
 //public class ColleghiDAOMySQLImpl implements DAO<Amici> {
 //
 //    private ColleghiDAOMySQLImpl(){}
@@ -31,7 +16,6 @@ import java.util.logging.Logger;
 //    public static void main(String args[]) throws DAOException {
 //        ColleghiDAOMySQLImpl c = new ColleghiDAOMySQLImpl();
 //
-//
 //        c.insert(new Amici("Mario", "Rossi", "0824981", "molinara@uni.it", "21-10-2017", null));
 //        c.insert(new Amici("Carlo", "Ciampi", "0824982", "ciampi@uni.it", "22-02-2017", null));
 //        c.insert(new Amici("Ornella", "Vaniglia", "0824983", "vaniglia@uni.it", "23-05-2017", null));
@@ -41,12 +25,10 @@ import java.util.logging.Logger;
 //        c.insert(new Amici("Mauro", "Cresta", "0824987", "cresta@uni.it", "27-12-2017", null));
 //        c.insert(new Amici("Andrea", "Coluccio", "0824988", "coluccio@uni.it", "28-01-2017", null));
 //
-//
 //        List<Amici> list = c.select(null);
 //        for(int i = 0; i < list.size(); i++){
 //            System.out.println(list.get(i));
 //        }
-//
 //
 //        Amici toDelete = new Amici();
 //        toDelete.setNome("");
@@ -122,9 +104,9 @@ import java.util.logging.Logger;
 //        String query = "DELETE FROM amici WHERE idAmici='" + a.getIdAmici() + "';";
 //
 //        try{
-//          logger.info("SQL: " + query);
+//            logger.info("SQL: " + query);
 //        } catch (NullPointerException nullPointerException){
-//          System.out.println("SQL: " + query);
+//            System.out.println("SQL: " + query);
 //        }
 //
 //        executeUpdate(query);
@@ -144,9 +126,9 @@ import java.util.logging.Logger;
 //                m.getTelefono() + "', '" + m.getEmail() + "', '" +
 //                m.getCompleanno() + "', NULL)";
 //        try {
-//          logger.info("SQL: " + query);
+//            logger.info("SQL: " + query);
 //        } catch (NullPointerException nullPointerException){
-//          System.out.println("SQL: " + query);
+//            System.out.println("SQL: " + query);
 //        }
 //        executeUpdate(query);
 //    }
@@ -167,25 +149,25 @@ import java.util.logging.Logger;
 //
 //
 //    private void verifyObject(Amici a) throws DAOException {
-//      if (a == null || a.getCognome() == null
-//        || a.getNome() == null
-//        || a.getEmail() == null
-//        || a.getCompleanno() == null
-//        || a.getTelefono() == null){
-//        throw new DAOException("In select: any field can be null");
-//      }
+//        if (a == null || a.getCognome() == null
+//                || a.getNome() == null
+//                || a.getEmail() == null
+//                || a.getCompleanno() == null
+//                || a.getTelefono() == null){
+//            throw new DAOException("In select: any field can be null");
+//        }
 //    }
 //
 //    private void executeUpdate(String query) throws DAOException{
-//      try {
-//        Statement st = DAOMySQLSettings.getStatement();
-//        int n = st.executeUpdate(query);
+//        try {
+//            Statement st = DAOMySQLSettings.getStatement();
+//            int n = st.executeUpdate(query);
 //
-//        DAOMySQLSettings.closeStatement(st);
+//            DAOMySQLSettings.closeStatement(st);
 //
-//      } catch (SQLException e) {
-//        throw new DAOException("In insert(): " + e.getMessage());
-//      }
+//        } catch (SQLException e) {
+//            throw new DAOException("In insert(): " + e.getMessage());
+//        }
 //    }
 //
 //

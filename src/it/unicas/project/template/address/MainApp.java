@@ -57,8 +57,8 @@ public class MainApp extends Application {
     primaryStage.getIcons().add(new Image("file:resources/images/address_book_32.png"));
 
     initRootLayout();
-    showColleghiOverview();
-
+    showAddMaterialView(); //chanaged to show the overview addmaterial at start
+    primaryStage.sizeToScene();
     primaryStage.show();
 
   }
@@ -121,24 +121,40 @@ public class MainApp extends Application {
     /**
      * Shows the Amici overview inside the root layout.
      */
-    public void showColleghiOverview() {
+//    public void showColleghiOverview() {
+//        try {
+//            // Load Amici overview.
+//            FXMLLoader loader = new FXMLLoader();
+//            loader.setLocation(MainApp.class.getResource("view/ColleghiOverview.fxml"));
+//
+//            // Set Amici overview into the center of root layout.
+//            rootLayout.setCenter(loader.load());
+//
+//            // Give the controller access to the main app.
+//            ColleghiOverviewController controller = loader.getController();
+//            controller.setMainApp(this); //search what it means exactly
+//            // it adds the reference of MainApp to the controller
+//
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+//    }
+    // show the AddMaterial view inside the root layout center
+    public void showAddMaterialView() {
         try {
-            // Load Amici overview.
             FXMLLoader loader = new FXMLLoader();
-            loader.setLocation(MainApp.class.getResource("view/ColleghiOverview.fxml"));
-
-            // Set Amici overview into the center of root layout.
+            loader.setLocation(MainApp.class.getResource("view/AddMaterial.fxml"));
+            // show AddMaterial inside root center (replace current center)
             rootLayout.setCenter(loader.load());
-
-            // Give the controller access to the main app.
-            ColleghiOverviewController controller = loader.getController();
-            controller.setMainApp(this); //search what it means exactly
-            // it adds the reference of MainApp to the controller
-
+            AddMaterialController controller = loader.getController();
+            // if your controller needs a reference to main app, add setMainApp(this) to it
+            controller.setMainApp(this);
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
+
+
 
     public boolean showSettingsEditDialog(DAOMySQLSettings daoMySQLSettings){
         try {
