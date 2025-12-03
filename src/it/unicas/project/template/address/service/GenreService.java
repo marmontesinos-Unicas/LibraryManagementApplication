@@ -1,5 +1,6 @@
 package it.unicas.project.template.address.service;
 import it.unicas.project.template.address.model.Genre;
+import it.unicas.project.template.address.model.dao.DAOException;
 import it.unicas.project.template.address.model.dao.GenreDAO;
 
 import java.util.List;
@@ -15,6 +16,10 @@ public class GenreService {
     public List<Genre> getAllGenres() {
         return dao.selectAll();
     }
+
+    private void printIO(String s) {
+    }
+
 
     public Integer getGenreId(String genreName) {
         return dao.findIdByName(genreName);

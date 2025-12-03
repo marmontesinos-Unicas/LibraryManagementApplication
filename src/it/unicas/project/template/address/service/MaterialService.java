@@ -19,6 +19,9 @@ public class MaterialService {
         if (m.getYear() == null) {
             throw new IllegalArgumentException("Year is required");
         }
+        if (m.getYear() <= 0) {
+            throw new IllegalArgumentException("Year must be a positive number");
+        }
         if (m.getIdMaterialType() == null) {
             throw new IllegalArgumentException("Material type is required");
         }

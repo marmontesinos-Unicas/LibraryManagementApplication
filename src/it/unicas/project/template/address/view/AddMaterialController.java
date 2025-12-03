@@ -14,15 +14,20 @@ import it.unicas.project.template.address.model.dao.mysql.MaterialTypeDAOMySQLIm
 import it.unicas.project.template.address.service.MaterialService;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.scene.Node;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.ListView;
 import javafx.scene.control.SelectionMode;
 import javafx.scene.control.TextField;
+import javafx.stage.Stage;
 
 import java.util.List;
+import java.util.Optional;
 
 public class AddMaterialController {
 
@@ -37,17 +42,15 @@ public class AddMaterialController {
     @FXML private TextField newGenreField;
     @FXML private Button addGenreButton;
 
-    // --- Use the concrete / generic types that exist in your project ---
+
     private final DAO<Material> materialDAO = MaterialDAOMySQLImpl.getInstance();
     private final MaterialService materialService = new MaterialService(materialDAO);
 
     private final MaterialTypeDAOMySQLImpl materialTypeDAO = MaterialTypeDAOMySQLImpl.getInstance();
     private final GenreDAO genreDAO = GenreDAOMySQLImpl.getInstance();
 
-    // MaterialGenre DAO also implements DAO<MaterialGenre>
     private final DAO<MaterialGenre> materialGenreDAO = MaterialGenreDAOMySQLImpl.getInstance();
 
-    // Called automatically by JavaFX after FXML is loaded
     @FXML
     public void initialize() {
         // Load material types and genres
@@ -57,18 +60,18 @@ public class AddMaterialController {
         // allow multi-selection for genres
         genreListView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
 
-        // simple wiring for "Add Genre" button
+        // simple wiring for "Add Genre" button-- optional
         addGenreButton.setOnAction(e -> handleAddGenre());
     }
 
     private void loadMaterialTypes() {
-        List<MaterialType> types = materialTypeDAO.selectAll();           // must exist
+        List<MaterialType> types = materialTypeDAO.selectAll();
         ObservableList<MaterialType> obs = FXCollections.observableArrayList(types);
         materialTypeComboBox.setItems(obs);
     }
 
     private void loadGenres() {
-        List<Genre> list = genreDAO.selectAll();                          // must exist
+        List<Genre> list = genreDAO.selectAll();
         ObservableList<Genre> obs = FXCollections.observableArrayList(list);
         genreListView.setItems(obs);
     }
@@ -99,7 +102,7 @@ public class AddMaterialController {
         }
     }
 
-    // wired from FXML: onAction="#handleSaveMaterial"
+
     @FXML
     private void handleSaveMaterial() {
         String title = titleField.getText().trim();
@@ -134,7 +137,6 @@ public class AddMaterialController {
         }
 
         m.setIdMaterialType(mt.getIdMaterialType());
-        // Do NOT set material_status here — MaterialService.save() will set the default
 
         try {
             // save via service (service calls DAO.insert and sets generated id on the model)
@@ -148,7 +150,7 @@ public class AddMaterialController {
             if (selected != null && !selected.isEmpty()) {
                 for (Genre g : selected) {
                     MaterialGenre mg = new MaterialGenre(newId, g.getIdGenre());
-                    materialGenreDAO.insert(mg);   // throws DAOException
+                    materialGenreDAO.insert(mg);
                 }
             }
 
@@ -159,6 +161,28 @@ public class AddMaterialController {
             show(Alert.AlertType.ERROR, "DB error: " + ex.getMessage());
         } catch (Exception ex) {
             show(Alert.AlertType.ERROR, "Unexpected error: " + ex.getMessage());
+        }
+    }
+
+    // Cancel button
+    @FXML
+    private void handleCancel(ActionEvent event) {
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle("Exit Confirmation");
+        alert.setHeaderText(null);
+        alert.setContentText("You are about to exit, are you sure you don't want to save the changes?");
+
+        ButtonType yes = new ButtonType("Yes");
+        ButtonType no = new ButtonType("No");
+        alert.getButtonTypes().setAll(yes, no);
+
+        Optional<ButtonType> result = alert.showAndWait();
+        if (result.isPresent() && result.get() == yes) {
+            // Closes the window
+            Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+            stage.close();
+        } else {
+            // goes back to interface, does nothing
         }
     }
 

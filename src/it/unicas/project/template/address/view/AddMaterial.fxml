@@ -48,11 +48,13 @@
         <Button fx:id="addGenreButton" text="Add Genre"/>
     </HBox>
 
-    <Button text="Save Material"
-            onAction="#handleSaveMaterial"
-            GridPane.columnIndex="1"
-            GridPane.rowIndex="7"
-            GridPane.halignment="RIGHT"/>
+    <!-- Reemplazar el botón único de "Save Material" por un HBox con Save y Cancel -->
+    <HBox spacing="10" GridPane.columnIndex="1" GridPane.rowIndex="7" GridPane.halignment="RIGHT" alignment="CENTER_RIGHT">
+        <Button text="Save Material"
+                onAction="#handleSaveMaterial"/>
+        <Button fx:id="cancelButton"
+                text="Cancel"
+                onAction="#handleCancel"/>
+    </HBox>
 
 </GridPane>
-
