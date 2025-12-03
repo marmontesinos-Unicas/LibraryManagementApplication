@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.*?>
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+
+<BorderPane prefHeight="500.0" prefWidth="800.0" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="it.unicas.project.template.address.view.UserLandingController">
+    <center>
+        <HBox spacing="10.0" BorderPane.alignment="CENTER">
+            <padding>
+                <Insets bottom="10.0" left="20.0" right="10.0" top="10.0" />
+            </padding>
+            <HBox alignment="TOP_CENTER" spacing="10.0" HBox.hgrow="ALWAYS">
+                <VBox style="-fx-border-color: gray; -fx-border-width: 1;" HBox.hgrow="ALWAYS">
+                    <Label text="My loans">
+                        <font>
+                            <Font size="20.0" />
+                        </font>
+                        <padding>
+                            <Insets bottom="5.0" left="10.0" right="10.0" top="10.0" />
+                        </padding>
+                    </Label>
+                    <ListView fx:id="myLoansList" VBox.vgrow="ALWAYS" />
+                    <HBox alignment="CENTER_LEFT">
+                        <padding>
+                            <Insets bottom="10.0" left="10.0" right="10.0" top="5.0" />
+                        </padding>
+                        <Button fx:id="deleteLoanButton" mnemonicParsing="false" onAction="#handleDeleteLoan" text="Delete">
+                            <styleClass>
+                                <String fx:value="button" />
+                                <String fx:value="button-danger" />
+                            </styleClass>
+                        </Button>
+                    </HBox>
+                </VBox>
+                <VBox style="-fx-border-color: gray; -fx-border-width: 1;" HBox.hgrow="ALWAYS">
+                    <Label text="My reservations">
+                        <font>
+                            <Font size="20.0" />
+                        </font>
+                        <padding>
+                            <Insets bottom="5.0" left="10.0" right="10.0" top="10.0" />
+                        </padding>
+                    </Label>
+                    <ListView fx:id="myReservationsList" VBox.vgrow="ALWAYS" />
+                    <HBox alignment="CENTER_LEFT">
+                        <padding>
+                            <Insets bottom="10.0" left="10.0" right="10.0" top="5.0" />
+                        </padding>
+                        <Button fx:id="deleteReservationButton" mnemonicParsing="false" onAction="#handleDeleteReservation" text="Delete">
+                            <styleClass>
+                                <String fx:value="button" />
+                                <String fx:value="button-danger" />
+                            </styleClass>
+                        </Button>
+                    </HBox>
+                </VBox>
+            </HBox>
+
+            <VBox alignment="TOP_CENTER" spacing="20.0">
+                <padding>
+                    <Insets top="10.0" />
+                </padding>
+                <Button fx:id="searchButton" alignment="CENTER" mnemonicParsing="false" onAction="#handleSearch" prefHeight="70.0" prefWidth="150.0" text="Search">
+                    <font>
+                        <Font size="18.0" />
+                    </font>
+                </Button>
+                <Button fx:id="notificationsButton" alignment="CENTER" mnemonicParsing="false" onAction="#handleNotifications" prefHeight="70.0" prefWidth="150.0" text="Notifications">
+                    <font>
+                        <Font size="18.0" />
+                    </font>
+                </Button>
+            </VBox>
+        </HBox>
+    </center>
+</BorderPane>
