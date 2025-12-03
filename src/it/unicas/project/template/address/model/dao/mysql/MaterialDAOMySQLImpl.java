@@ -126,8 +126,8 @@ public class MaterialDAOMySQLImpl implements DAO<Material> {
     }
 
     private void verifyObject(Material m) throws DAOException {
-        if (m == null || m.getTitle() == null || m.getAuthor() == null || m.getYear() == null ||
-                m.getISBN() == null || m.getIdMaterialType() == null || m.getMaterial_status() == null) {
+        if (m == null || m.getTitle() == null || m.getIdMaterialType() == null
+                || m.getMaterial_status() == null) {
             throw new DAOException("In verifyObject: all fields must be non-null");
         }
     }

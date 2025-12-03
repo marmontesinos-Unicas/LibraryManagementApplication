@@ -122,9 +122,9 @@ public class ColleghiDAOMySQLImpl implements DAO<Amici> {
         String query = "DELETE FROM amici WHERE idAmici='" + a.getIdAmici() + "';";
 
         try{
-          logger.info("SQL: " + query);
+            logger.info("SQL: " + query);
         } catch (NullPointerException nullPointerException){
-          System.out.println("SQL: " + query);
+            System.out.println("SQL: " + query);
         }
 
         executeUpdate(query);
@@ -144,9 +144,9 @@ public class ColleghiDAOMySQLImpl implements DAO<Amici> {
                 a.getTelefono() + "', '" + a.getEmail() + "', '" +
                 a.getCompleanno() + "', NULL)";
         try {
-          logger.info("SQL: " + query);
+            logger.info("SQL: " + query);
         } catch (NullPointerException nullPointerException){
-          System.out.println("SQL: " + query);
+            System.out.println("SQL: " + query);
         }
         executeUpdate(query);
     }
@@ -167,25 +167,25 @@ public class ColleghiDAOMySQLImpl implements DAO<Amici> {
 
 
     private void verifyObject(Amici a) throws DAOException {
-      if (a == null || a.getCognome() == null
-        || a.getNome() == null
-        || a.getEmail() == null
-        || a.getCompleanno() == null
-        || a.getTelefono() == null){
-        throw new DAOException("In select: any field can be null");
-      }
+        if (a == null || a.getCognome() == null
+                || a.getNome() == null
+                || a.getEmail() == null
+                || a.getCompleanno() == null
+                || a.getTelefono() == null){
+            throw new DAOException("In select: any field can be null");
+        }
     }
 
     private void executeUpdate(String query) throws DAOException{
-      try {
-        Statement st = DAOMySQLSettings.getStatement();
-        int n = st.executeUpdate(query);
+        try {
+            Statement st = DAOMySQLSettings.getStatement();
+            int n = st.executeUpdate(query);
 
-        DAOMySQLSettings.closeStatement(st);
+            DAOMySQLSettings.closeStatement(st);
 
-      } catch (SQLException e) {
-        throw new DAOException("In insert(): " + e.getMessage());
-      }
+        } catch (SQLException e) {
+            throw new DAOException("In insert(): " + e.getMessage());
+        }
     }
 
 

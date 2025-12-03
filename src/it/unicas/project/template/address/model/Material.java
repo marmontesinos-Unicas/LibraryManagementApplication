@@ -54,17 +54,23 @@ public class Material {
 
     // GETTERS & SETTERS
     public Integer getIdMaterial() {
-        if (idMaterial == null) idMaterial = new SimpleIntegerProperty(-1);
+        if (idMaterial == null){
+            idMaterial = new SimpleIntegerProperty(-1);
+        }
         return idMaterial.get();
     }
 
     public void setIdMaterial(Integer idMaterial) {
-        if (this.idMaterial == null) this.idMaterial = new SimpleIntegerProperty();
+        if (this.idMaterial == null){
+            this.idMaterial = new SimpleIntegerProperty();
+        }
         this.idMaterial.set(idMaterial);
     }
 
     public IntegerProperty idMaterialProperty() {
-        if (idMaterial == null) idMaterial = new SimpleIntegerProperty();
+        if (idMaterial == null){
+            idMaterial = new SimpleIntegerProperty();
+        }
         return idMaterial;
     }
 
