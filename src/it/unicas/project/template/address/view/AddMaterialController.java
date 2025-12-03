@@ -40,7 +40,6 @@ public class AddMaterialController {
     @FXML private ListView<Genre> genreListView;
 
     @FXML private TextField newGenreField;
-    @FXML private Button addGenreButton;
 
 
     private final DAO<Material> materialDAO = MaterialDAOMySQLImpl.getInstance();
@@ -59,9 +58,7 @@ public class AddMaterialController {
 
         // allow multi-selection for genres
         genreListView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
-
-        // simple wiring for "Add Genre" button-- optional
-        addGenreButton.setOnAction(e -> handleAddGenre());
+        
     }
 
     private void loadMaterialTypes() {

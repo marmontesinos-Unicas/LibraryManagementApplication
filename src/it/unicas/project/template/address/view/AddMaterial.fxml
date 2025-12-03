@@ -43,10 +43,6 @@
               GridPane.columnIndex="1"
               GridPane.rowIndex="5"/>
 
-    <HBox spacing="10" GridPane.columnIndex="1" GridPane.rowIndex="6">
-        <TextField fx:id="newGenreField" promptText="Add new genre (optional)"/>
-        <Button fx:id="addGenreButton" text="Add Genre"/>
-    </HBox>
 
     <!-- Reemplazar el botón único de "Save Material" por un HBox con Save y Cancel -->
     <HBox spacing="10" GridPane.columnIndex="1" GridPane.rowIndex="7" GridPane.halignment="RIGHT" alignment="CENTER_RIGHT">
