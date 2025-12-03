@@ -18,9 +18,12 @@ public class RootLayoutController {
     @FXML
     private void handleSettings() {
         DAOMySQLSettings daoMySQLSettings = DAOMySQLSettings.getCurrentDAOMySQLSettings();
+        // Comentado porque mainApp.showSettingsEditDialog ya no existe
+        /*
         if (mainApp.showSettingsEditDialog(daoMySQLSettings)){
             DAOMySQLSettings.setCurrentDAOMySQLSettings(daoMySQLSettings);
         }
+        */
     }
 
     @FXML
@@ -34,11 +37,13 @@ public class RootLayoutController {
 
     @FXML
     private void handleExit() {
-        mainApp.handleExit();
+        // Comentado porque mainApp.handleExit() ya no se quiere usar
+        // mainApp.handleExit();
     }
 
     @FXML
     private void handleShowBirthdayStatistics() {
-        mainApp.showBirthdayStatistics();
+        // Comentado porque mainApp.showBirthdayStatistics() ya no existe
+        // mainApp.showBirthdayStatistics();
     }
 }
