@@ -13,7 +13,7 @@ public class UserDAOMySQLImpl {
     private static UserDAOMySQLImpl instance = null;
     private static Logger logger = Logger.getLogger(UserDAOMySQLImpl.class.getName());
 
-    private UserDAOMySQLImpl() {}
+    protected UserDAOMySQLImpl() {}
 
     public static UserDAOMySQLImpl getInstance() {
         if (instance == null) {
