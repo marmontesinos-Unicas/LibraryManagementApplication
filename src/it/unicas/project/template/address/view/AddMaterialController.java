@@ -43,6 +43,7 @@ public class AddMaterialController {
     @FXML private TextField genreSearchField;
     @FXML private ListView<Genre> genreSearchResultsList;
     @FXML private FlowPane selectedGenresPane;
+    @FXML private Button goBackButton;
 
     private MainApp mainApp;
 
@@ -51,6 +52,8 @@ public class AddMaterialController {
     private final MaterialTypeDAOMySQLImpl materialTypeDAO = MaterialTypeDAOMySQLImpl.getInstance();
     private final GenreDAO genreDAO = GenreDAOMySQLImpl.getInstance();
     private final DAO<MaterialGenre> materialGenreDAO = MaterialGenreDAOMySQLImpl.getInstance();
+
+
 
     private List<Genre> allGenres = new ArrayList<>();
     private Set<Genre> selectedGenres = new HashSet<>();
@@ -315,19 +318,46 @@ public class AddMaterialController {
     }
 
     @FXML
-    private void handleCancel(ActionEvent event) {
-        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-        alert.setTitle("Exit Confirmation");
-        alert.setHeaderText(null);
-        alert.setContentText("You are about to exit, are you sure you don't want to save the changes?");
+    private void handleGoBack(ActionEvent event) {
+        // Check if any field has data
+        boolean hasUnsavedData = false;
 
-        ButtonType yes = new ButtonType("Yes");
-        ButtonType no = new ButtonType("No");
-        alert.getButtonTypes().setAll(yes, no);
+        if (!titleField.getText().trim().isEmpty() ||
+                !authorField.getText().trim().isEmpty() ||
+                !isbnField.getText().trim().isEmpty() ||
+                !yearField.getText().trim().isEmpty() ||
+                materialTypeComboBox.getValue() != null ||
+                !selectedGenres.isEmpty()) {
+            hasUnsavedData = true;
+        }
 
-        Optional<ButtonType> result = alert.showAndWait();
-        if (result.isPresent() && result.get() == yes) {
-            Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+        if (hasUnsavedData) {
+            // Show confirmation dialog
+            Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+            alert.setTitle("Go Back Confirmation");
+            alert.setHeaderText(null);
+            alert.setContentText("You have unsaved changes. Are you sure you want to go back?");
+
+            ButtonType yes = new ButtonType("Yes");
+            ButtonType no = new ButtonType("No");
+            alert.getButtonTypes().setAll(yes, no);
+
+            Optional<ButtonType> result = alert.showAndWait();
+            if (result.isPresent() && result.get() == yes) {
+                navigateBack();
+            }
+        } else {
+            // No unsaved data, go back directly
+            navigateBack();
+        }
+    }
+
+    private void navigateBack() {
+        if (mainApp != null) {
+            mainApp.showAdminLanding(); // Replace with your actual method name
+        } else {
+            // Fallback: close the current stage if mainApp is not set
+            Stage stage = (Stage) titleField.getScene().getWindow();
             stage.close();
         }
     }

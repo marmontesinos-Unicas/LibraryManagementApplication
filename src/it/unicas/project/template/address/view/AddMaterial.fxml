@@ -4,7 +4,12 @@
 <?import javafx.scene.layout.*?>
 
 <AnchorPane prefHeight="550.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="it.unicas.project.template.address.view.AddMaterialController">
-    <GridPane layoutX="20.0" layoutY="20.0" AnchorPane.leftAnchor="20.0" AnchorPane.rightAnchor="20.0" AnchorPane.topAnchor="20.0">
+
+    <!-- Go Back Button - Top Left -->
+    <Button mnemonicParsing="false" onAction="#handleGoBack" text="Go Back"
+            AnchorPane.leftAnchor="20.0" AnchorPane.topAnchor="20.0" />
+
+    <GridPane layoutX="20.0" layoutY="70.0" AnchorPane.leftAnchor="20.0" AnchorPane.rightAnchor="20.0" AnchorPane.topAnchor="70.0">
         <columnConstraints>
             <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="150.0" />
             <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="350.0" />
@@ -82,8 +87,7 @@
         </VBox>
     </GridPane>
 
-    <HBox alignment="CENTER" spacing="15.0" AnchorPane.bottomAnchor="20.0" AnchorPane.leftAnchor="20.0" AnchorPane.rightAnchor="20.0">
-        <Button mnemonicParsing="false" onAction="#handleSaveMaterial" prefHeight="26.0" prefWidth="100.0" text="Save Material" />
-        <Button mnemonicParsing="false" onAction="#handleCancel" text="Cancel" />
-    </HBox>
+    <!-- Save Material Button - Bottom Right -->
+    <Button mnemonicParsing="false" onAction="#handleSaveMaterial" prefHeight="26.0" prefWidth="120.0" text="Save Material"
+            AnchorPane.bottomAnchor="20.0" AnchorPane.rightAnchor="20.0" />
 </AnchorPane>
