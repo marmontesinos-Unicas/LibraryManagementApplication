@@ -9,15 +9,15 @@ public class DAOMySQLSettings {
 
     public final static String DRIVERNAME = "com.mysql.cj.jdbc.Driver";
     public final static String HOST = "localhost";
-    public final static String USERNAME = "mar";
-    public final static String PWD = "ProjectSE1234";
-    public final static String SCHEMA = "DLS";
+    public final static String USERNAME = "root";   //mar
+    public final static String PWD = "2003";  // ProjectSE1234
+    public final static String SCHEMA = "dls_schema";
     public final static String PARAMETERS = "?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC";
 
     private String host = "localhost";
-    private String userName = "mar";
-    private String pwd = "ProjectSE1234";
-    private String schema = "DLS";
+    private String userName = "root";  // mar
+    private String pwd = "2003";  // ProjectSE1234
+    private String schema = "dls_schema";
 
     public String getHost() { return host; }
     public String getUserName() { return userName; }
