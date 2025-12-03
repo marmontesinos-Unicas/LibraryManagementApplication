@@ -27,7 +27,7 @@ public class MaterialGenreDAOMySQLImpl implements DAO<MaterialGenre> {
     @Override
     public List<MaterialGenre> select(MaterialGenre mg) throws DAOException {
         List<MaterialGenre> list = new ArrayList<>();
-        String sql = "SELECT * FROM material_genres WHERE 1=1";
+        String sql = "SELECT * FROM materials_genres WHERE 1=1";
 
         if (mg != null) {
             if (mg.getIdMaterial() != -1) sql += " AND idMaterial=?";
@@ -59,7 +59,7 @@ public class MaterialGenreDAOMySQLImpl implements DAO<MaterialGenre> {
     @Override
     public void insert(MaterialGenre mg) throws DAOException {
         verifyObject(mg);
-        String sql = "INSERT INTO material_genres (idMaterial, idGenre) VALUES (?, ?)";
+        String sql = "INSERT INTO materials_genres (idMaterial, idGenre) VALUES (?, ?)";
 
         try (PreparedStatement ps = DAOMySQLSettings.getConnection().prepareStatement(sql)) {
             ps.setInt(1, mg.getIdMaterial());
@@ -84,7 +84,7 @@ public class MaterialGenreDAOMySQLImpl implements DAO<MaterialGenre> {
             throw new DAOException("In delete: idMaterial y idGenre no pueden ser nulos");
         }
 
-        String sql = "DELETE FROM material_genres WHERE idMaterial=? AND idGenre=?";
+        String sql = "DELETE FROM materials_genres WHERE idMaterial=? AND idGenre=?";
         try (PreparedStatement ps = DAOMySQLSettings.getConnection().prepareStatement(sql)) {
             ps.setInt(1, mg.getIdMaterial());
             ps.setInt(2, mg.getIdGenre());
