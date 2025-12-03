@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<AnchorPane prefHeight="520" prefWidth="800" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="it.unicas.project.template.address.view.LoadReturnController">
+
+    <VBox alignment="TOP_CENTER" spacing="20" style="-fx-padding: 20;" AnchorPane.bottomAnchor="0" AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0" AnchorPane.topAnchor="0">
+
+        <!-- SEARCH BAR -->
+        <HBox alignment="CENTER" spacing="10">
+            <TextField fx:id="searchField" prefWidth="450" promptText="Search loans..." />
+            <Button fx:id="searchButton" onAction="#handleSearch" prefWidth="100" text="Search" />
+        </HBox>
+
+        <!-- TABLE -->
+        <TableView fx:id="loansTable" prefHeight="380" prefWidth="720">
+            <columns>
+                <TableColumn fx:id="materialTypeColumn" prefWidth="124.00002098083496" text="Material Type" />
+                <TableColumn fx:id="titleColumn" prefWidth="332.4000244140625" text="Title" />
+                <TableColumn fx:id="userColumn" prefWidth="109.99996948242188" text="User" />
+                <TableColumn fx:id="dueDateColumn" prefWidth="103.0" text="Due Date" />
+                <TableColumn fx:id="delayedColumn" prefWidth="91.20001220703125" text="Delayed" />
+            </columns>
+        </TableView>
+
+        <!-- ADD BUTTON -->
+        <HBox alignment="CENTER" spacing="20">
+            <Button fx:id="addLoanButton" onAction="#handleAddLoan" prefWidth="150" text="Add Loan" />
+        </HBox>
+
+    </VBox>
+</AnchorPane>
