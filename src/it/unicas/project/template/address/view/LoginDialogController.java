@@ -24,6 +24,7 @@ public class LoginDialogController {
 
     private Stage dialogStage;
     private boolean loginSuccessful = false;
+    private String username; // guardamos el username logueado
 
     /**
      * Llamado desde MainApp para pasar la referencia del Stage
@@ -40,22 +41,32 @@ public class LoginDialogController {
     }
 
     /**
+     * Retorna el username del usuario logueado
+     */
+    public String getUsername() {
+        return username;
+    }
+
+    /**
      * Acción del botón Login
      */
     @FXML
     private void handleLogin() {
-        String username = usernameField.getText();
-        String password = passwordField.getText();
+        String inputUsername = usernameField.getText();
+        String inputPassword = passwordField.getText();
 
         try {
             // Obtenemos todos los usuarios desde la base de datos
             List<User> users = UserDAOMySQLImpl.getInstance().select(null);
 
-            boolean valid = users.stream()
-                    .anyMatch(u -> u.getUsername().equals(username) && u.getPassword().equals(password));
+            User matchedUser = users.stream()
+                    .filter(u -> u.getUsername().equals(inputUsername) && u.getPassword().equals(inputPassword))
+                    .findFirst()
+                    .orElse(null);
 
-            if (valid) {
+            if (matchedUser != null) {
                 loginSuccessful = true;
+                username = matchedUser.getUsername(); // guardamos el username
                 dialogStage.close(); // cerramos el login
             } else {
                 errorLabel.setText("Usuario o contraseña incorrectos");

@@ -6,6 +6,7 @@ import java.util.Optional;
 import java.util.prefs.Preferences;
 
 import it.unicas.project.template.address.model.Amici;
+import it.unicas.project.template.address.model.User;
 import it.unicas.project.template.address.model.dao.mysql.DAOMySQLSettings;
 import it.unicas.project.template.address.model.dao.mysql.UserDAOMySQLImpl;
 import it.unicas.project.template.address.model.dao.DAOException;
@@ -23,57 +24,44 @@ import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
-import javafx.stage.WindowEvent;
 
 public class MainApp extends Application {
 
     private Stage primaryStage;
     private BorderPane rootLayout;
+    private User loggedUser;
 
-    /**
-     * Constructor
-     */
-    public MainApp() {
-    }
-
-    /**
-     * The data as an observable list of Colleghis.
-     */
     private ObservableList<Amici> colleghiData = FXCollections.observableArrayList();
 
-    /**
-     * Returns the data as an observable list of Colleghis.
-     * @return
-     */
     public ObservableList<Amici> getColleghiData() {
         return colleghiData;
+    }
+
+    public User getLoggedUser() {
+        return loggedUser;
     }
 
     @Override
     public void start(Stage primaryStage) {
         this.primaryStage = primaryStage;
         this.primaryStage.setTitle("Amici app");
+        this.primaryStage.getIcons().add(new Image("file:resources/images/address_book_32.png"));
 
-        // Set the application icon.
-        primaryStage.getIcons().add(new Image("file:resources/images/address_book_32.png"));
-
-        // --- MOSTRAR LOGIN PRIMERO ---
         boolean loggedIn = showLoginDialog();
-
         if (loggedIn) {
-            // Si login correcto, inicializamos root layout y vista principal
-            initRootLayout();
-            showColleghiOverview();
+            // Dependiendo del rol, abrir la vista correspondiente
+            if (loggedUser.getIdRole() == 1) {
+                showAdminLanding();
+            } else {
+                initRootLayout();
+                showColleghiOverview();
+            }
             primaryStage.show();
         } else {
-            // Login cancelado o incorrecto → cerrar la app
             primaryStage.close();
         }
     }
 
-    /**
-     * Muestra la ventana de login y retorna true si el login fue exitoso
-     */
     private boolean showLoginDialog() {
         try {
             FXMLLoader loader = new FXMLLoader();
@@ -88,25 +76,25 @@ public class MainApp extends Application {
             dialogStage.setScene(scene);
             dialogStage.setResizable(false);
 
-            // Pasamos la referencia del Stage al controlador
             LoginDialogController controller = loader.getController();
             controller.setDialogStage(dialogStage);
 
-            // Mostramos y esperamos a que el usuario cierre el login
             dialogStage.showAndWait();
 
-            // Retornamos si el login fue exitoso
-            return controller.isLoginSuccessful();
-
-        } catch (IOException e) {
+            if (controller.isLoginSuccessful()) {
+                String username = controller.getUsername(); // necesitas agregar getter en LoginDialogController
+                loggedUser = UserDAOMySQLImpl.getInstance().getByUsername(username);
+                // Metodo que obtiene usuario completo con idRole
+                return true;
+            } else {
+                return false;
+            }
+        } catch (IOException | DAOException e) {
             e.printStackTrace();
             return false;
         }
     }
 
-    /**
-     * Initializes the root layout and tries to load the last opened Amici file.
-     */
     public void initRootLayout() {
         try {
             FXMLLoader loader = new FXMLLoader();
@@ -116,41 +104,14 @@ public class MainApp extends Application {
             Scene scene = new Scene(rootLayout);
             primaryStage.setScene(scene);
 
-            primaryStage.setOnCloseRequest(windowEvent -> {
-                windowEvent.consume();
-                handleExit();
-            });
-
             RootLayoutController controller = loader.getController();
             controller.setMainApp(this);
+
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    /**
-     * Closes the application.
-     */
-    public void handleExit() {
-        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-        alert.setTitle("Exit");
-        alert.setHeaderText("Are you sure?");
-        alert.setContentText("Exit from application.");
-
-        ButtonType yesButton = new ButtonType("Yes");
-        ButtonType cancelButton = new ButtonType("Cancel", ButtonBar.ButtonData.CANCEL_CLOSE);
-
-        alert.getButtonTypes().setAll(yesButton, cancelButton);
-
-        Optional<ButtonType> result = alert.showAndWait();
-        if (result.isPresent() && result.get() == yesButton) {
-            System.exit(0);
-        }
-    }
-
-    /**
-     * Shows the Amici overview inside the root layout.
-     */
     public void showColleghiOverview() {
         try {
             FXMLLoader loader = new FXMLLoader();
@@ -161,34 +122,6 @@ public class MainApp extends Application {
             controller.setMainApp(this);
         } catch (IOException e) {
             e.printStackTrace();
-        }
-    }
-
-    public boolean showSettingsEditDialog(DAOMySQLSettings daoMySQLSettings) {
-        try {
-            FXMLLoader loader = new FXMLLoader();
-            loader.setLocation(MainApp.class.getResource("view/SettingsEditDialog.fxml"));
-
-            Stage dialogStage = new Stage();
-            dialogStage.setTitle("DAO settings");
-            dialogStage.initModality(Modality.WINDOW_MODAL);
-            dialogStage.initOwner(primaryStage);
-            Scene scene = new Scene(loader.load());
-            dialogStage.setScene(scene);
-
-            SettingsEditDialogController controller = loader.getController();
-            controller.setDialogStage(dialogStage);
-            controller.setSettings(daoMySQLSettings);
-
-            dialogStage.getIcons().add(new Image("file:resources/images/edit.png"));
-
-            dialogStage.showAndWait();
-
-            return controller.isOkClicked();
-
-        } catch (IOException e) {
-            e.printStackTrace();
-            return false;
         }
     }
 
@@ -209,14 +142,49 @@ public class MainApp extends Application {
             controller.setDialogStage(dialogStage, verifyLen);
             controller.setColleghi(colleghi);
 
-            dialogStage.getIcons().add(new Image("file:resources/images/edit.png"));
+            dialogStage.showAndWait();
+            return controller.isOkClicked();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public boolean showSettingsEditDialog(DAOMySQLSettings daoSettings) {
+        try {
+            FXMLLoader loader = new FXMLLoader();
+            loader.setLocation(MainApp.class.getResource("view/SettingsEditDialog.fxml"));
+
+            Stage dialogStage = new Stage();
+            dialogStage.setTitle("DAO settings");
+            dialogStage.initModality(Modality.WINDOW_MODAL);
+            dialogStage.initOwner(primaryStage);
+            Scene scene = new Scene(loader.load());
+            dialogStage.setScene(scene);
+
+            SettingsEditDialogController controller = loader.getController();
+            controller.setDialogStage(dialogStage);
+            controller.setSettings(daoSettings);
 
             dialogStage.showAndWait();
-
             return controller.isOkClicked();
         } catch (IOException e) {
             e.printStackTrace();
             return false;
+        }
+    }
+
+    private void showAdminLanding() {
+        try {
+            FXMLLoader loader = new FXMLLoader();
+            loader.setLocation(MainApp.class.getResource("view/AdminLandingView.fxml"));
+            BorderPane adminPane = loader.load();
+
+            Scene scene = new Scene(adminPane);
+            primaryStage.setScene(scene);
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
@@ -243,14 +211,27 @@ public class MainApp extends Application {
         }
     }
 
+    public void handleExit() {
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle("Exit");
+        alert.setHeaderText("Are you sure?");
+        alert.setContentText("Exit from application.");
+
+        ButtonType yesButton = new ButtonType("Yes");
+        ButtonType cancelButton = new ButtonType("Cancel", ButtonBar.ButtonData.CANCEL_CLOSE);
+
+        alert.getButtonTypes().setAll(yesButton, cancelButton);
+
+        Optional<ButtonType> result = alert.showAndWait();
+        if (result.isPresent() && result.get() == yesButton) {
+            System.exit(0);
+        }
+    }
+
     public File getColleghiFilePath() {
         Preferences prefs = Preferences.userNodeForPackage(MainApp.class);
         String filePath = prefs.get("filePath", null);
-        if (filePath != null) {
-            return new File(filePath);
-        } else {
-            return null;
-        }
+        return filePath != null ? new File(filePath) : null;
     }
 
     public void setColleghiFilePath(File file) {
@@ -270,15 +251,5 @@ public class MainApp extends Application {
 
     public static void main(String[] args) {
         launch(args);
-    }
-}
-
-/**
- * Clase auxiliar de evento (puedes mantenerla tal como estaba)
- */
-class MyEventHandler implements javafx.event.EventHandler<WindowEvent> {
-    @Override
-    public void handle(WindowEvent windowEvent) {
-        windowEvent.consume();
     }
 }

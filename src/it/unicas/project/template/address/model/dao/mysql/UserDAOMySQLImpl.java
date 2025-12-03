@@ -1,31 +1,56 @@
 package it.unicas.project.template.address.model.dao.mysql;
 
 import it.unicas.project.template.address.model.User;
-import it.unicas.project.template.address.model.dao.DAO;
 import it.unicas.project.template.address.model.dao.DAOException;
 
 import java.sql.*;
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 
-public class UserDAOMySQLImpl implements DAO<User> {
+public class UserDAOMySQLImpl {
 
-    private static DAO<User> dao = null;
-    private static Logger logger = null;
+    private static UserDAOMySQLImpl instance = null;
+    private static Logger logger = Logger.getLogger(UserDAOMySQLImpl.class.getName());
 
     private UserDAOMySQLImpl() {}
 
-    public static DAO<User> getInstance() {
-        if (dao == null) {
-            dao = new UserDAOMySQLImpl();
-            logger = Logger.getLogger(UserDAOMySQLImpl.class.getName());
+    public static UserDAOMySQLImpl getInstance() {
+        if (instance == null) {
+            instance = new UserDAOMySQLImpl();
         }
-        return dao;
+        return instance;
     }
 
-    @Override
+    // ------------------ METODO NUEVO ------------------
+    public User getByUsername(String username) throws DAOException {
+        String sql = "SELECT * FROM users WHERE username = ?";
+        try (PreparedStatement ps = DAOMySQLSettings.getConnection().prepareStatement(sql)) {
+            ps.setString(1, username);
+            logger.info("SQL: " + ps);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return new User(
+                        rs.getInt("idUser"),
+                        rs.getString("name"),
+                        rs.getString("surname"),
+                        rs.getString("username"),
+                        rs.getString("nationalID"),
+                        rs.getDate("birthdate") != null ? rs.getDate("birthdate").toLocalDate() : null,
+                        rs.getString("password"),
+                        rs.getString("email"),
+                        rs.getInt("idRole")
+                );
+            } else {
+                return null;
+            }
+        } catch (SQLException e) {
+            throw new DAOException("Error retrieving user by username: " + e.getMessage());
+        }
+    }
+
+
+    // ------------------ METODOS EXISTENTES ------------------
     public List<User> select(User u) throws DAOException {
         List<User> list = new ArrayList<>();
         if (u == null) u = new User(null, "", "", "", "", null, "", "", -1);
@@ -66,35 +91,24 @@ public class UserDAOMySQLImpl implements DAO<User> {
         } catch (SQLException e) {
             throw new DAOException("In select(): " + e.getMessage());
         }
-
         return list;
     }
 
-    @Override
     public void insert(User u) throws DAOException {
-        verifyObject(u);
+        if (u == null) throw new DAOException("User cannot be null");
         String sql = "INSERT INTO users (name, surname, username, nationalID, birthdate, password, email, idRole) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
-
-        try (PreparedStatement ps = DAOMySQLSettings.getConnection()
-                .prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-
+        try (PreparedStatement ps = DAOMySQLSettings.getConnection().prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setString(1, u.getName());
             ps.setString(2, u.getSurname());
             ps.setString(3, u.getUsername());
             ps.setString(4, u.getNationalID());
-            if (u.getBirthdate() != null) {
-                ps.setDate(5, Date.valueOf(u.getBirthdate()));
-            } else {
-                ps.setNull(5, Types.DATE);
-            }
+            if (u.getBirthdate() != null) ps.setDate(5, Date.valueOf(u.getBirthdate()));
+            else ps.setNull(5, Types.DATE);
             ps.setString(6, u.getPassword());
             ps.setString(7, u.getEmail());
             ps.setInt(8, u.getIdRole());
-
-            logger.info("SQL: " + ps);
             ps.executeUpdate();
 
-            // Obtener idUser generado automáticamente
             ResultSet rs = ps.getGeneratedKeys();
             if (rs.next()) u.setIdUser(rs.getInt(1));
 
@@ -103,54 +117,34 @@ public class UserDAOMySQLImpl implements DAO<User> {
         }
     }
 
-    @Override
     public void update(User u) throws DAOException {
-        verifyObject(u);
+        if (u == null) throw new DAOException("User cannot be null");
         String sql = "UPDATE users SET name=?, surname=?, username=?, nationalID=?, birthdate=?, password=?, email=?, idRole=? WHERE idUser=?";
-
         try (PreparedStatement ps = DAOMySQLSettings.getConnection().prepareStatement(sql)) {
             ps.setString(1, u.getName());
             ps.setString(2, u.getSurname());
             ps.setString(3, u.getUsername());
             ps.setString(4, u.getNationalID());
-            if (u.getBirthdate() != null) {
-                ps.setDate(5, Date.valueOf(u.getBirthdate()));
-            } else {
-                ps.setNull(5, Types.DATE);
-            }
+            if (u.getBirthdate() != null) ps.setDate(5, Date.valueOf(u.getBirthdate()));
+            else ps.setNull(5, Types.DATE);
             ps.setString(6, u.getPassword());
             ps.setString(7, u.getEmail());
             ps.setInt(8, u.getIdRole());
             ps.setInt(9, u.getIdUser());
-
-            logger.info("SQL: " + ps);
             ps.executeUpdate();
-
         } catch (SQLException e) {
             throw new DAOException("In update(): " + e.getMessage());
         }
     }
 
-    @Override
     public void delete(User u) throws DAOException {
-        if (u == null || u.getIdUser() == -1) {
-            throw new DAOException("In delete: idUser cannot be null");
-        }
-
+        if (u == null || u.getIdUser() == -1) throw new DAOException("idUser cannot be null");
         String sql = "DELETE FROM users WHERE idUser=?";
         try (PreparedStatement ps = DAOMySQLSettings.getConnection().prepareStatement(sql)) {
             ps.setInt(1, u.getIdUser());
-            logger.info("SQL: " + ps);
             ps.executeUpdate();
         } catch (SQLException e) {
             throw new DAOException("In delete(): " + e.getMessage());
-        }
-    }
-
-    private void verifyObject(User u) throws DAOException {
-        if (u == null || u.getName() == null || u.getSurname() == null || u.getUsername() == null ||
-                u.getNationalID() == null || u.getPassword() == null || u.getEmail() == null) {
-            throw new DAOException("In verifyObject: required fields must be non-null");
         }
     }
 }
