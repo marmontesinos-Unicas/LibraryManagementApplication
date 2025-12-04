@@ -6,16 +6,19 @@ import it.unicas.project.template.address.model.dao.GenreDAO;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Logger;
 
 public class GenreDAOMySQLImpl implements GenreDAO {
 
     private static GenreDAOMySQLImpl instance;
+    private static Logger logger = null;
 
     private GenreDAOMySQLImpl() {}
 
     public static GenreDAOMySQLImpl getInstance() {
         if (instance == null) {
             instance = new GenreDAOMySQLImpl();
+            logger = Logger.getLogger(GenreDAOMySQLImpl.class.getName());
         }
         return instance;
     }
@@ -37,6 +40,7 @@ public class GenreDAOMySQLImpl implements GenreDAO {
 
         } catch (SQLException e) {
             System.err.println("Error in selectAll(): " + e.getMessage());
+            logger.severe("Error in selectAll(): " + e.getMessage());
         }
 
         return genres;
@@ -56,6 +60,7 @@ public class GenreDAOMySQLImpl implements GenreDAO {
 
         } catch (SQLException e) {
             System.err.println("Error in findIdByName(): " + e.getMessage());
+            logger.severe("Error in findIdByName(): " + e.getMessage());
         }
         return null;
     }
