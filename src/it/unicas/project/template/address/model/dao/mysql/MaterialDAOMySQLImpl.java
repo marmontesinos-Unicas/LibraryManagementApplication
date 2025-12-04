@@ -29,16 +29,41 @@ public class MaterialDAOMySQLImpl implements DAO<Material> {
         List<Material> list = new ArrayList<>();
         if (m == null) m = new Material("", "", null, "", null, "");
 
-        String sql = "SELECT * FROM materials WHERE 1=1";
-        if (m.getIdMaterial() != -1) sql += " AND idMaterial=?";
-        if (m.getTitle() != null && !m.getTitle().isEmpty()) sql += " AND title LIKE ?";
-        if (m.getAuthor() != null && !m.getAuthor().isEmpty()) sql += " AND author LIKE ?";
+        String sql = "SELECT m.*, mt.material_type " +
+                "FROM materials m " +
+                "LEFT JOIN material_type mt ON m.idMaterialType = mt.idMaterialType " +
+                "WHERE 1=1"; // to join with material type for displaying the name
+
+        if (m.getIdMaterial() != -1)
+            sql += " AND m.idMaterial=?";
+        if (m.getTitle() != null && !m.getTitle().isEmpty())
+            sql += " AND m.title LIKE ?";
+        if (m.getAuthor() != null && !m.getAuthor().isEmpty())
+            sql += " AND m.author LIKE ?";
+        if (m.getISBN() != null && !m.getISBN().isEmpty())
+            sql += " AND m.ISBN LIKE ?";
+        if (m.getIdMaterialType() != null && m.getIdMaterialType() != 0)
+            sql += " AND m.idMaterialType=?";
+        if (m.getMaterial_status() != null && !m.getMaterial_status().isEmpty())
+            sql += " AND m.material_status=?";
+
+        sql += " ORDER BY m.title";
 
         try (PreparedStatement ps = DAOMySQLSettings.getConnection().prepareStatement(sql)) {
             int index = 1;
-            if (m.getIdMaterial() != -1) ps.setInt(index++, m.getIdMaterial());
-            if (m.getTitle() != null && !m.getTitle().isEmpty()) ps.setString(index++, m.getTitle() + "%");
-            if (m.getAuthor() != null && !m.getAuthor().isEmpty()) ps.setString(index++, m.getAuthor() + "%");
+            if (m.getIdMaterial() != -1)
+                ps.setInt(index++, m.getIdMaterial());
+            if (m.getTitle() != null && !m.getTitle().isEmpty())
+                ps.setString(index++, "%" + m.getTitle() + "%");
+            if (m.getAuthor() != null && !m.getAuthor().isEmpty())
+                ps.setString(index++, "%" + m.getAuthor() + "%");
+            if (m.getISBN() != null && !m.getISBN().isEmpty())
+                ps.setString(index++, "%" + m.getISBN() + "%");
+            if (m.getIdMaterialType() != null && m.getIdMaterialType() != 0)
+                ps.setInt(index++, m.getIdMaterialType());
+            if (m.getMaterial_status() != null && !m.getMaterial_status().isEmpty())
+                ps.setString(index++, m.getMaterial_status());
+
 
             logger.info("SQL: " + ps);
             ResultSet rs = ps.executeQuery();
@@ -58,6 +83,78 @@ public class MaterialDAOMySQLImpl implements DAO<Material> {
             throw new DAOException("In select(): " + e.getMessage());
         }
         return list;
+    }
+
+    /**
+     * Convenience method to find all materials
+     * Returns all materials ordered by title
+     */
+    public List<Material> selectAll() throws DAOException {
+        return select(null);
+    }
+
+
+    /**
+     * Find materials by a search term that matches title, author, or ISBN
+     * Useful for a single search box in the UI
+     */
+    public List<Material> selectBySearchTerm(String searchTerm) throws DAOException {
+        List<Material> list = new ArrayList<>();
+
+        if (searchTerm == null || searchTerm.trim().isEmpty()) {
+            return selectAll();
+        }
+
+        String sql = "SELECT m.*, mt.material_type " +
+                "FROM materials m " +
+                "LEFT JOIN material_type mt ON m.idMaterialType = mt.idMaterialType " +
+                "WHERE m.title LIKE ? OR m.author LIKE ? OR m.ISBN LIKE ? " +
+                "ORDER BY m.title ASC";
+
+        try (PreparedStatement ps = DAOMySQLSettings.getConnection().prepareStatement(sql)) {
+            String searchPattern = "%" + searchTerm + "%";
+            ps.setString(1, searchPattern);
+            ps.setString(2, searchPattern);
+            ps.setString(3, searchPattern);
+
+            logger.info("SQL: " + ps);
+
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                Material mat = new Material(
+                        rs.getInt("idMaterial"),
+                        rs.getString("title"),
+                        rs.getString("author"),
+                        rs.getInt("year"),
+                        rs.getString("ISBN"),
+                        rs.getInt("idMaterialType"),
+                        rs.getString("material_status")
+                );
+                list.add(mat);
+            }
+        } catch (SQLException e) {
+            throw new DAOException("In selectBySearchTerm(): " + e.getMessage());
+        }
+
+        return list;
+    }
+
+    /**
+     * Find materials by availability status
+     */
+    public List<Material> selectByStatus(String status) throws DAOException {
+        Material criteria = new Material();
+        criteria.setMaterial_status(status);
+        return select(criteria);
+    }
+
+    /**
+     * Find materials by type
+     */
+    public List<Material> selectByType(Integer idMaterialType) throws DAOException {
+        Material criteria = new Material();
+        criteria.setIdMaterialType(idMaterialType);
+        return select(criteria);
     }
 
     @Override
@@ -80,7 +177,8 @@ public class MaterialDAOMySQLImpl implements DAO<Material> {
 
             // Obtener idMaterial generado automáticamente
             ResultSet rs = ps.getGeneratedKeys();
-            if (rs.next()) m.setIdMaterial(rs.getInt(1));
+            if (rs.next())
+                m.setIdMaterial(rs.getInt(1));
 
         } catch (SQLException e) {
             throw new DAOException("In insert(): " + e.getMessage());
@@ -126,8 +224,9 @@ public class MaterialDAOMySQLImpl implements DAO<Material> {
     }
 
     private void verifyObject(Material m) throws DAOException {
-        if (m == null || m.getTitle() == null || m.getIdMaterialType() == null
-                || m.getMaterial_status() == null) {
+        if (m == null || m.getTitle() == null || m.getTitle().isEmpty()
+                || m.getIdMaterialType() == null
+                || m.getMaterial_status() == null || m.getMaterial_status().isEmpty())  {
             throw new DAOException("In verifyObject: all fields must be non-null");
         }
     }
