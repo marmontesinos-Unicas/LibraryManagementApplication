@@ -17,10 +17,8 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.layout.FlowPane;
-import javafx.scene.layout.HBox;
 import javafx.stage.Stage;
 
 import java.util.*;
@@ -57,6 +55,10 @@ public class AddMaterialController {
 
     private List<Genre> allGenres = new ArrayList<>();
     private Set<Genre> selectedGenres = new HashSet<>();
+
+    public void setMainApp(MainApp mainApp) {
+        this.mainApp = mainApp;
+    }
 
     @FXML
     public void initialize() {
@@ -347,16 +349,14 @@ public class AddMaterialController {
                 navigateBack();
             }
         } else {
-            // No unsaved data, go back directly
             navigateBack();
         }
     }
 
     private void navigateBack() {
         if (mainApp != null) {
-            mainApp.showAdminLanding(); // Replace with your actual method name
+            mainApp.showAdminLanding();
         } else {
-            // Fallback: close the current stage if mainApp is not set
             Stage stage = (Stage) titleField.getScene().getWindow();
             stage.close();
         }
@@ -381,7 +381,4 @@ public class AddMaterialController {
         a.showAndWait();
     }
 
-    public void setMainApp(MainApp mainApp) {
-        this.mainApp = mainApp;
-    }
 }
