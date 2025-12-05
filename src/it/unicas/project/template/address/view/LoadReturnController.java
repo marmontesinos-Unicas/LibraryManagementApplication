@@ -11,6 +11,11 @@ import javafx.collections.FXCollections;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
+
+
 import javafx.scene.control.*;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
@@ -156,8 +161,28 @@ public class LoadReturnController {
 
     @FXML
     public void handleAddLoan() {
-        System.out.println("Agregar nuevo préstamo");
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("AddLoanDialog.fxml"));
+            Parent page = loader.load();
+
+            Stage dialog = new Stage();
+            dialog.setTitle("Add New Loan");
+            dialog.initOwner(dialogStage);
+
+            AddLoanController controller = loader.getController();
+            controller.setDialogStage(dialog);
+
+            Scene scene = new Scene(page);
+            dialog.setScene(scene);
+            dialog.showAndWait();
+
+            loadAllLoans(); // refrescar tabla
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
+
 
     @FXML
     private void handleReturnLoan() {
