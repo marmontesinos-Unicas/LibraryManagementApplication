@@ -16,17 +16,18 @@
         <!-- TABLE -->
         <TableView fx:id="loansTable" prefHeight="380" prefWidth="720">
             <columns>
-                <TableColumn fx:id="materialTypeColumn" prefWidth="124.00002098083496" text="Material Type" />
-                <TableColumn fx:id="titleColumn" prefWidth="332.4000244140625" text="Title" />
-                <TableColumn fx:id="userColumn" prefWidth="109.99996948242188" text="User" />
+                <TableColumn fx:id="materialTypeColumn" prefWidth="124.0" text="Material Type" />
+                <TableColumn fx:id="titleColumn" prefWidth="332.4" text="Title" />
+                <TableColumn fx:id="userColumn" prefWidth="110.0" text="User" />
                 <TableColumn fx:id="dueDateColumn" prefWidth="103.0" text="Due Date" />
-                <TableColumn fx:id="delayedColumn" prefWidth="91.20001220703125" text="Delayed" />
+                <TableColumn fx:id="delayedColumn" prefWidth="91.2" text="Delayed" />
             </columns>
         </TableView>
 
-        <!-- ADD BUTTON -->
+        <!-- ADD AND RETURN BUTTONS -->
         <HBox alignment="CENTER" spacing="20">
             <Button fx:id="addLoanButton" onAction="#handleAddLoan" prefWidth="150" text="Add Loan" />
+            <Button fx:id="returnLoanButton" onAction="#handleReturnLoan" prefWidth="150" text="Return" />
         </HBox>
 
     </VBox>
