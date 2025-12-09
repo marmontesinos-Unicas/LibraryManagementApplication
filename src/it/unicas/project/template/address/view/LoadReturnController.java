@@ -122,31 +122,86 @@ public class LoadReturnController {
 
     @FXML
     private void handleSearch() {
-        String text = searchField.getText().trim();
+        String text = searchField.getText().trim().toLowerCase();
+
+        // -------------------------------------------
+        // NEW: search for delayed loans by keywords
+        // -------------------------------------------
+        if (text.equals("delayed") || text.equals("delay") || text.equals("delays")
+                || text.equals("late") || text.equals("overdue")) {
+
+            loanRows.clear();
+
+            try {
+                List<Loan> loans = LoanDAOMySQLImpl.getInstance().select(null);
+
+                for (Loan loan : loans) {
+                    if (loan.getReturn_date() == null &&
+                            loan.getDue_date() != null &&
+                            loan.getDue_date().isBefore(java.time.LocalDateTime.now())) {
+
+                        LoanRow row = buildLoanRow(loan);
+                        if (row != null) loanRows.add(row);
+                    }
+                }
+
+                loanRows.sort(Comparator.comparing(LoanRow::getDueDateAsLocalDate));
+
+            } catch (DAOException e) {
+                e.printStackTrace();
+            }
+
+            return;
+        }
+
+        // ----------------------------------------------------
+        // If no text → show ALL active (not returned) loans
+        // ----------------------------------------------------
         if (text.isEmpty()) {
             loadAllLoans();
             return;
         }
 
+        // ----------------------------------------------------
+        // Normal search (title, name, surname, material)
+        // ----------------------------------------------------
         try {
             Set<Integer> userIDs = new HashSet<>();
             Set<Integer> materialIDs = new HashSet<>();
 
-            User searchByName = new User(); searchByName.setName(text);
-            userIDs.addAll(UserDAOMySQLImpl.getInstance().select(searchByName).stream().map(User::getIdUser).toList());
+            // Search by user name
+            User searchByName = new User();
+            searchByName.setName(text);
+            userIDs.addAll(
+                    UserDAOMySQLImpl.getInstance().select(searchByName)
+                            .stream().map(User::getIdUser).toList()
+            );
 
-            User searchBySurname = new User(); searchBySurname.setSurname(text);
-            userIDs.addAll(UserDAOMySQLImpl.getInstance().select(searchBySurname).stream().map(User::getIdUser).toList());
+            // Search by user surname
+            User searchBySurname = new User();
+            searchBySurname.setSurname(text);
+            userIDs.addAll(
+                    UserDAOMySQLImpl.getInstance().select(searchBySurname)
+                            .stream().map(User::getIdUser).toList()
+            );
 
-            Material searchByTitle = new Material(); searchByTitle.setTitle(text);
-            materialIDs.addAll(MaterialDAOMySQLImpl.getInstance().select(searchByTitle).stream().map(Material::getIdMaterial).toList());
+            // Search by material title
+            Material searchByTitle = new Material();
+            searchByTitle.setTitle(text);
+            materialIDs.addAll(
+                    MaterialDAOMySQLImpl.getInstance().select(searchByTitle)
+                            .stream().map(Material::getIdMaterial).toList()
+            );
 
+            // Apply filtering
             List<Loan> allLoans = LoanDAOMySQLImpl.getInstance().select(null);
             loanRows.clear();
 
             for (Loan loan : allLoans) {
                 if (loan.getReturn_date() == null &&
-                        (userIDs.contains(loan.getIdUser()) || materialIDs.contains(loan.getIdMaterial()))) {
+                        (userIDs.contains(loan.getIdUser()) ||
+                                materialIDs.contains(loan.getIdMaterial()))) {
+
                     LoanRow row = buildLoanRow(loan);
                     if (row != null) loanRows.add(row);
                 }
@@ -158,6 +213,7 @@ public class LoadReturnController {
             e.printStackTrace();
         }
     }
+
 
     @FXML
     public void handleAddLoan() {
@@ -253,6 +309,16 @@ public class LoadReturnController {
                 // -----------------------------------------
                 loanReal.setReturn_date(LocalDateTime.now());
                 LoanDAOMySQLImpl.getInstance().update(loanReal);
+
+                // -----------------------------------------
+                // NUEVO: MARCAR MATERIAL COMO AVAILABLE
+                // -----------------------------------------
+                Material material = new Material();
+                material.setIdMaterial(loanReal.getIdMaterial());
+                material = MaterialDAOMySQLImpl.getInstance().select(material).get(0);
+
+                material.setMaterial_status("available");
+                MaterialDAOMySQLImpl.getInstance().update(material);
 
 
                 loadAllLoans();
