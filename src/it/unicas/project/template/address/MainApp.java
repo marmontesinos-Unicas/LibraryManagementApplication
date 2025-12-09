@@ -139,6 +139,8 @@ public class MainApp extends Application {
             Scene scene = new Scene(adminPane);
             primaryStage.setScene(scene);
             primaryStage.setTitle("Admin Dashboard"); // Set title back
+            primaryStage.setMinWidth(800); // Optional: Set a minimum width for the table view
+            primaryStage.setMinHeight(520); // Optional: Set a minimum height
 
             // Pass the MainApp reference to the AdminLandingController
             it.unicas.project.template.address.view.AdminLandingController controller = loader.getController();
