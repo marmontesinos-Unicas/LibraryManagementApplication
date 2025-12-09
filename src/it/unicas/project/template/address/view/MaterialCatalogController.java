@@ -17,6 +17,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.geometry.Bounds;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Parent;
@@ -27,6 +28,7 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
+import javafx.stage.Popup;
 import javafx.stage.Stage;
 
 import java.io.IOException;
@@ -36,9 +38,9 @@ import java.util.stream.Collectors;
 public class MaterialCatalogController {
 
     @FXML private TextField searchField;
-    @FXML private Button materialTypeFilterButton;
-    @FXML private Button statusFilterButton;
-    @FXML private Button genreFilterButton;
+    @FXML private ComboBox<String> materialTypeFilterButton;
+    @FXML private ComboBox<String> statusFilterButton;
+    @FXML private ComboBox<String> genreFilterButton;
     @FXML private TextField yearFromField;
     @FXML private TextField yearToField;
 
@@ -48,6 +50,7 @@ public class MaterialCatalogController {
     @FXML private TableColumn<Material, Integer> yearColumn;
     @FXML private TableColumn<Material, String> isbnColumn;
     @FXML private TableColumn<Material, Integer> typeColumn;
+    @FXML private TableColumn<Material, Integer> genreColumn;
     @FXML private TableColumn<Material, String> statusColumn;
 
     @FXML private Button addButton;
@@ -66,14 +69,19 @@ public class MaterialCatalogController {
     private ObservableList<Material> materialList;
     private ObservableList<Material> filteredList;
     private Map<Integer, String> materialTypeMap;
-    private Map<Integer, String> genreMap; // Cache for genre ID -> name mapping
-    private Map<Integer, Set<Integer>> materialGenreMap; // Maps material ID -> set of genre IDs
+    private Map<Integer, String> genreMap;
+    private Map<Integer, Set<Integer>> materialGenreMap;
     private boolean isAdminMode = true;
 
     // Filter selections
     private Set<String> selectedMaterialTypes = new HashSet<>();
     private Set<String> selectedStatuses = new HashSet<>();
     private Set<String> selectedGenres = new HashSet<>();
+
+    // Popups for filters
+    private Popup materialTypePopup;
+    private Popup statusPopup;
+    private Popup genrePopup;
 
     /**
      * Initialize the controller
@@ -108,121 +116,132 @@ public class MaterialCatalogController {
     }
 
     /**
-     * Setup filter buttons with icons/indicators
+     * Setup filter buttons
      */
     private void setupFilterButtons() {
         if (materialTypeFilterButton != null) {
-            materialTypeFilterButton.setText("Material Type ▼");
-            materialTypeFilterButton.setOnAction(e -> showMaterialTypeFilter());
+            materialTypeFilterButton.setValue("All Types");
+            materialTypeFilterButton.setOnMouseClicked(e -> toggleMaterialTypeFilter());
         }
 
         if (statusFilterButton != null) {
-            statusFilterButton.setText("Status ▼");
-            statusFilterButton.setOnAction(e -> showStatusFilter());
+            statusFilterButton.setValue("All Statuses");
+            statusFilterButton.setOnMouseClicked(e -> toggleStatusFilter());
         }
 
         if (genreFilterButton != null) {
-            genreFilterButton.setText("Genre ▼");
-            genreFilterButton.setOnAction(e -> showGenreFilter());
+            genreFilterButton.setValue("All Genres");
+            genreFilterButton.setOnMouseClicked(e -> toggleGenreFilter());
         }
     }
 
     /**
-     * Show Material Type filter popup with checkboxes
+     * Toggle Material Type filter popup
      */
-    private void showMaterialTypeFilter() {
-        Set<String> allTypes = materialList.stream()
-                .map(m -> getMaterialTypeName(m.getIdMaterialType()))
-                .collect(Collectors.toSet());
-
-        if (selectedMaterialTypes.isEmpty()) {
-            selectedMaterialTypes.addAll(allTypes);
+    private void toggleMaterialTypeFilter() {
+        if (materialTypePopup != null && materialTypePopup.isShowing()) {
+            materialTypePopup.hide();
+            return;
         }
 
-        showCheckboxFilter(materialTypeFilterButton, "Material Type Filter",
+        Set<String> allTypes = materialList.stream()
+                .map(m -> getMaterialTypeName(m.getIdMaterialType()))
+                .collect(Collectors.toCollection(TreeSet::new));
+
+        materialTypePopup = createFilterPopup(materialTypeFilterButton, "Material Types",
                 allTypes, selectedMaterialTypes);
     }
 
     /**
-     * Show Status filter popup with checkboxes
+     * Toggle Status filter popup
      */
-    private void showStatusFilter() {
+    private void toggleStatusFilter() {
+        if (statusPopup != null && statusPopup.isShowing()) {
+            statusPopup.hide();
+            return;
+        }
+
         Set<String> allStatuses = materialList.stream()
                 .map(Material::getMaterial_status)
                 .filter(Objects::nonNull)
-                .collect(Collectors.toSet());
+                .collect(Collectors.toCollection(TreeSet::new));
 
-        if (selectedStatuses.isEmpty()) {
-            selectedStatuses.addAll(allStatuses);
-        }
-
-        showCheckboxFilter(statusFilterButton, "Status Filter",
+        statusPopup = createFilterPopup(statusFilterButton, "Statuses",
                 allStatuses, selectedStatuses);
     }
 
     /**
-     * Show Genre filter popup with checkboxes
+     * Toggle Genre filter popup
      */
-    private void showGenreFilter() {
-        // Get all unique genres from materials
+    private void toggleGenreFilter() {
+        if (genrePopup != null && genrePopup.isShowing()) {
+            genrePopup.hide();
+            return;
+        }
+
         Set<String> allGenres = materialGenreMap.values().stream()
                 .flatMap(Set::stream)
                 .map(this::getGenreName)
-                .collect(Collectors.toSet());
+                .collect(Collectors.toCollection(TreeSet::new));
 
-        if (selectedGenres.isEmpty()) {
-            selectedGenres.addAll(allGenres);
-        }
-
-        showCheckboxFilter(genreFilterButton, "Genre Filter",
+        genrePopup = createFilterPopup(genreFilterButton, "Genres",
                 allGenres, selectedGenres);
     }
 
     /**
-     * Generic method to show checkbox filter popup
+     * Create filter popup with checkboxes
      */
-    private void showCheckboxFilter(Button sourceButton, String title,
+    private Popup createFilterPopup(ComboBox<String> sourceButton, String label,
                                     Set<String> allOptions, Set<String> selectedOptions) {
-        Stage filterStage = new Stage();
-        filterStage.initModality(Modality.APPLICATION_MODAL);
-        filterStage.initOwner(sourceButton.getScene().getWindow());
-        filterStage.setTitle(title);
+        Popup popup = new Popup();
+        popup.setAutoHide(true);
 
-        VBox container = new VBox(10);
-        container.setPadding(new Insets(15));
-        container.setStyle("-fx-background-color: white;");
+        VBox container = new VBox(5);
+        container.setPadding(new Insets(5));
+        container.setStyle(
+                "-fx-background-color: white; " +
+                        "-fx-border-color: #cccccc; " +
+                        "-fx-border-width: 1; " +
+                        "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 5, 0, 0, 2);"
+        );
+        container.setPrefWidth(sourceButton.getWidth());
 
         // Select All checkbox
         CheckBox selectAllCheckBox = new CheckBox("Select All");
         selectAllCheckBox.setSelected(selectedOptions.size() == allOptions.size());
-        selectAllCheckBox.setStyle("-fx-font-weight: bold;");
+        selectAllCheckBox.setStyle(
+                "-fx-font-weight: bold; " +
+                        "-fx-padding: 5; " +
+                        "-fx-mark-color: black; " +
+                        "-fx-mark-size: 8px;"
+        );
 
         Separator separator = new Separator();
 
-        // Individual checkboxes
-        VBox checkboxContainer = new VBox(5);
+        // Checkboxes container with scrolling
+        VBox checkboxContainer = new VBox(3);
+        checkboxContainer.setPadding(new Insets(5));
+
         Map<String, CheckBox> checkBoxMap = new HashMap<>();
 
-        List<String> sortedOptions = new ArrayList<>(allOptions);
-        Collections.sort(sortedOptions);
-
-        for (String option : sortedOptions) {
+        for (String option : allOptions) {
             CheckBox cb = new CheckBox(option);
             cb.setSelected(selectedOptions.contains(option));
+            cb.setStyle(
+                    "-fx-padding: 3; " +
+                            "-fx-mark-color: black; " +
+                            "-fx-mark-size: 8px;"
+            );
 
-            // When individual checkbox is clicked
             cb.setOnAction(e -> {
                 if (cb.isSelected()) {
                     selectedOptions.add(option);
                 } else {
                     selectedOptions.remove(option);
                 }
-
-                // Update Select All checkbox
                 selectAllCheckBox.setSelected(selectedOptions.size() == allOptions.size());
-
-                // Update button text to show filter is active
-                updateFilterButtonText(sourceButton, selectedOptions, allOptions);
+                updateFilterButtonText(sourceButton, selectedOptions.size(), allOptions.size(), label);
+                handleFilter();
             });
 
             checkBoxMap.put(option, cb);
@@ -232,62 +251,52 @@ public class MaterialCatalogController {
         // Select All logic
         selectAllCheckBox.setOnAction(e -> {
             boolean isSelected = selectAllCheckBox.isSelected();
-
             if (isSelected) {
-                // Select all
                 selectedOptions.clear();
                 selectedOptions.addAll(allOptions);
                 checkBoxMap.values().forEach(cb -> cb.setSelected(true));
             } else {
-                // Deselect all
                 selectedOptions.clear();
                 checkBoxMap.values().forEach(cb -> cb.setSelected(false));
             }
-
-            updateFilterButtonText(sourceButton, selectedOptions, allOptions);
+            updateFilterButtonText(sourceButton, selectedOptions.size(), allOptions.size(), label);
+            handleFilter();
         });
 
+        // ScrollPane for checkboxes
         ScrollPane scrollPane = new ScrollPane(checkboxContainer);
         scrollPane.setFitToWidth(true);
-        scrollPane.setPrefHeight(300);
-        scrollPane.setStyle("-fx-background-color: white;");
+        scrollPane.setMaxHeight(250);
+        scrollPane.setStyle(
+                "-fx-background-color: white; " +
+                        "-fx-border-color: transparent;"
+        );
+        scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+        scrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
 
-        // Action buttons
-        HBox buttonBox = new HBox(10);
-        buttonBox.setAlignment(Pos.CENTER_RIGHT);
+        container.getChildren().addAll(selectAllCheckBox, separator, scrollPane);
 
-        Button applyButton = new Button("Apply");
-        applyButton.setOnAction(e -> {
-            handleFilter();
-            filterStage.close();
-        });
+        popup.getContent().add(container);
 
-        Button cancelButton = new Button("Cancel");
-        cancelButton.setOnAction(e -> filterStage.close());
+        // Position popup below button
+        Bounds bounds = sourceButton.localToScreen(sourceButton.getBoundsInLocal());
+        popup.show(sourceButton, bounds.getMinX(), bounds.getMaxY());
 
-        buttonBox.getChildren().addAll(cancelButton, applyButton);
-
-        container.getChildren().addAll(selectAllCheckBox, separator, scrollPane, buttonBox);
-
-        Scene scene = new Scene(container, 250, 400);
-        filterStage.setScene(scene);
-        filterStage.showAndWait();
+        return popup;
     }
 
     /**
      * Update filter button text to indicate active filters
      */
-    private void updateFilterButtonText(Button button, Set<String> selected, Set<String> all) {
-        String baseText = button.getText().split(" \\(")[0].replace(" ▼", "");
-
-        if (selected.isEmpty()) {
-            button.setText(baseText + " (None) ▼");
+    private void updateFilterButtonText(ComboBox<String> button, int selected, int total, String label) {
+        if (selected == 0) {
+            button.setValue("No " + label);
             button.setStyle("-fx-text-fill: red;");
-        } else if (selected.size() == all.size()) {
-            button.setText(baseText + " ▼");
+        } else if (selected == total) {
+            button.setValue("All " + label);
             button.setStyle("");
         } else {
-            button.setText(baseText + " (" + selected.size() + "/" + all.size() + ") ▼");
+            button.setValue(selected + "/" + total + " " + label);
             button.setStyle("-fx-text-fill: blue;");
         }
     }
@@ -356,6 +365,29 @@ public class MaterialCatalogController {
             }
         });
 
+        // Genre column
+        genreColumn.setCellValueFactory(new PropertyValueFactory<>("idMaterial"));
+        genreColumn.setCellFactory(column -> new TableCell<Material, Integer>() {
+            @Override
+            protected void updateItem(Integer materialId, boolean empty) {
+                super.updateItem(materialId, empty);
+                if (empty || materialId == null) {
+                    setText(null);
+                } else {
+                    Set<Integer> genreIds = materialGenreMap.get(materialId);
+                    if (genreIds != null && !genreIds.isEmpty()) {
+                        String genres = genreIds.stream()
+                                .map(id -> getGenreName(id))
+                                .sorted()
+                                .collect(Collectors.joining(", "));
+                        setText(genres);
+                    } else {
+                        setText("—");
+                    }
+                }
+            }
+        });
+
         statusColumn.setCellValueFactory(new PropertyValueFactory<>("material_status"));
         statusColumn.setCellFactory(column -> new TableCell<Material, String>() {
             @Override
@@ -401,7 +433,6 @@ public class MaterialCatalogController {
                     .filter(Objects::nonNull)
                     .collect(Collectors.toSet()));
 
-            // Initialize genre filter
             selectedGenres.clear();
             selectedGenres.addAll(materialGenreMap.values().stream()
                     .flatMap(Set::stream)
@@ -453,15 +484,15 @@ public class MaterialCatalogController {
 
         // Reset button texts
         if (materialTypeFilterButton != null) {
-            materialTypeFilterButton.setText("Material Type ▼");
+            materialTypeFilterButton.setValue("All Types");
             materialTypeFilterButton.setStyle("");
         }
         if (statusFilterButton != null) {
-            statusFilterButton.setText("Status ▼");
+            statusFilterButton.setValue("All Statuses");
             statusFilterButton.setStyle("");
         }
         if (genreFilterButton != null) {
-            genreFilterButton.setText("Genre ▼");
+            genreFilterButton.setValue("All Genres");
             genreFilterButton.setStyle("");
         }
 
@@ -494,10 +525,8 @@ public class MaterialCatalogController {
                     if (!selectedGenres.isEmpty()) {
                         Set<Integer> materialGenres = materialGenreMap.get(material.getIdMaterial());
                         if (materialGenres == null || materialGenres.isEmpty()) {
-                            // Material has no genres - only include if "No Genre" or similar is selected
                             matchesGenre = false;
                         } else {
-                            // Check if material has at least one selected genre
                             matchesGenre = materialGenres.stream()
                                     .map(this::getGenreName)
                                     .anyMatch(selectedGenres::contains);
@@ -538,7 +567,6 @@ public class MaterialCatalogController {
 
     /**
      * Enhanced search that prioritizes title matches, then author, then others
-     * Only matches words that START with the search term
      */
     private List<Material> searchAndSort(List<Material> materials, String searchTerm) {
         List<Material> titleMatches = new ArrayList<>();
@@ -548,9 +576,7 @@ public class MaterialCatalogController {
         for (Material material : materials) {
             boolean titleMatch = false;
             boolean authorMatch = false;
-            boolean otherMatch = false;
 
-            // Check title
             if (material.getTitle() != null) {
                 if (containsWordStartingWith(material.getTitle(), searchTerm)) {
                     titleMatches.add(material);
@@ -558,7 +584,6 @@ public class MaterialCatalogController {
                 }
             }
 
-            // Check author (only if not already matched by title)
             if (!titleMatch && material.getAuthor() != null) {
                 if (containsWordStartingWith(material.getAuthor(), searchTerm)) {
                     authorMatches.add(material);
@@ -566,7 +591,6 @@ public class MaterialCatalogController {
                 }
             }
 
-            // Check ISBN and other fields (only if not already matched)
             if (!titleMatch && !authorMatch) {
                 if ((material.getISBN() != null && containsWordStartingWith(material.getISBN(), searchTerm)) ||
                         containsWordStartingWith(getMaterialTypeName(material.getIdMaterialType()), searchTerm) ||
@@ -576,7 +600,6 @@ public class MaterialCatalogController {
             }
         }
 
-        // Combine results: title matches first, then author, then others
         List<Material> result = new ArrayList<>();
         result.addAll(titleMatches);
         result.addAll(authorMatches);
@@ -595,8 +618,6 @@ public class MaterialCatalogController {
 
         String lowerText = text.toLowerCase();
         String lowerSearch = searchTerm.toLowerCase();
-
-        // Split by common delimiters: space, comma, period, hyphen, etc.
         String[] words = lowerText.split("[\\s,.-]+");
 
         for (String word : words) {
@@ -608,9 +629,6 @@ public class MaterialCatalogController {
         return false;
     }
 
-    /**
-     * Handle table row click
-     */
     @FXML
     private void handleTableClick(MouseEvent event) {
         Material selected = materialTable.getSelectionModel().getSelectedItem();
@@ -721,7 +739,6 @@ public class MaterialCatalogController {
         content.append("Type: ").append(getMaterialTypeName(selected.getIdMaterialType())).append("\n");
         content.append("Status: ").append(selected.getMaterial_status()).append("\n");
 
-        // Add genres
         Set<Integer> genres = materialGenreMap.get(selected.getIdMaterial());
         if (genres != null && !genres.isEmpty()) {
             String genreList = genres.stream()
@@ -781,7 +798,7 @@ public class MaterialCatalogController {
     }
 
     public void refresh() {
-        loadMaterialGenreRelationships(); // Refresh genre relationships
+        loadMaterialGenreRelationships();
         loadAllMaterials();
         handleFilter();
     }
