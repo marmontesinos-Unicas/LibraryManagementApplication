@@ -3,7 +3,9 @@ package it.unicas.project.template.address;
 import it.unicas.project.template.address.model.User;
 import it.unicas.project.template.address.model.dao.DAOException;
 import it.unicas.project.template.address.model.dao.mysql.UserDAOMySQLImpl;
+import it.unicas.project.template.address.view.AdminLandingController;
 import it.unicas.project.template.address.view.LoginDialogController;
+import it.unicas.project.template.address.view.MaterialCatalogController;
 import it.unicas.project.template.address.view.UserLandingController;
 import javafx.application.Application;
 import javafx.collections.FXCollections;
@@ -132,11 +134,29 @@ public class MainApp extends Application {
             Scene scene = new Scene(adminPane);
             primaryStage.setScene(scene);
 
+            AdminLandingController controller = loader.getController();
+            controller.setMainApp(this);
+
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
+    public void showCatalogView() {
+        try {
+            FXMLLoader loader = new FXMLLoader();
+            loader.setLocation(MainApp.class.getResource("view/MaterialCatalog.fxml"));
+            AnchorPane page = loader.load();
 
+            Scene scene = new Scene(page);
+            primaryStage.setScene(scene);
+
+            MaterialCatalogController controller = loader.getController();
+            controller.setMainApp(this);
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
 
     public User getLoggedUser() {
