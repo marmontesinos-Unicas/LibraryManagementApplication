@@ -177,9 +177,6 @@ public class MainApp extends Application {
             UserManagementController controller = loader.getController();
             controller.setMainApp(this);
 
-            AdminLandingController controller = loader.getController();
-            controller.setMainApp(this);
-
         } catch (IOException e) {
             e.printStackTrace();
             // Show an alert if the FXML file can't be loaded
