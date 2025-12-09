@@ -20,10 +20,16 @@ public class AdminLandingController {
 
     private MainApp mainApp;
 
+    /**
+     * Is called by the main application to give a reference back to itself.
+     *
+     * @param mainApp
+     */
     public void setMainApp(MainApp mainApp) {
         this.mainApp = mainApp;
     }
 
+    // References to the buttons
     @FXML
     private Button addMaterialButton;
     @FXML
@@ -33,11 +39,7 @@ public class AdminLandingController {
     @FXML
     private Button searchButton;
 
-    /**
-     * Handles the action for the "Add Material" button.
-     * Future logic: Open the view to add new books or resources.
-     * @param event The action event.
-     */
+    // ... (handleAddMaterial remains the same) ...
     @FXML
     protected void handleAddMaterial(ActionEvent event) {
         // Open the Add Material dialog (modal). mainApp provides the method.
@@ -50,13 +52,17 @@ public class AdminLandingController {
 
     /**
      * Handles the action for the "Manage Users" button.
-     * Future logic: Open the view to add, remove, or modify user profiles.
+     * Implemented logic: Calls MainApp to switch the scene to the User Management view.
      * @param event The action event.
      */
     @FXML
     protected void handleManageUsers(ActionEvent event) {
-        System.out.println("Acción: Gestionar usuarios (Pendiente de implementación).");
-        // The code to switch to the user management screen will go here.
+        if (mainApp != null) {
+            System.out.println("Acción: Gestionar usuarios. Cambiando a la vista User Management.");
+            mainApp.showUserManagement(); // CALL TO THE NEW METHOD
+        } else {
+            System.err.println("Error: MainApp reference is null. Cannot show User Management.");
+        }
     }
 
     /**

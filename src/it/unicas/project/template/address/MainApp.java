@@ -7,15 +7,20 @@ import it.unicas.project.template.address.view.AddMaterialController;
 import it.unicas.project.template.address.view.AdminLandingController;
 import it.unicas.project.template.address.view.LoginDialogController;
 import it.unicas.project.template.address.view.UserLandingController;
+import it.unicas.project.template.address.view.UserManagementController;
+import it.unicas.project.template.address.view.UserEditController;
+
 import javafx.application.Application;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXMLLoader;
+import javafx.geometry.Rectangle2D;
 import javafx.scene.Scene;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.image.Image;
 import javafx.stage.Modality;
+import javafx.stage.Screen;
 import javafx.stage.Stage;
 
 import java.io.IOException;
@@ -69,7 +74,7 @@ public class MainApp extends Application {
             dialogStage.initOwner(primaryStage);
             Scene scene = new Scene(page);
             dialogStage.setScene(scene);
-            dialogStage.setResizable(false);
+            dialogStage.setResizable(false); // Login is kept small and fixed size
 
             LoginDialogController controller = loader.getController();
             controller.setDialogStage(dialogStage);
@@ -133,12 +138,56 @@ public class MainApp extends Application {
 
             Scene scene = new Scene(adminPane);
             primaryStage.setScene(scene);
+            primaryStage.setTitle("Admin Dashboard"); // Set title back
+
+            // Pass the MainApp reference to the AdminLandingController
+            it.unicas.project.template.address.view.AdminLandingController controller = loader.getController();
+            controller.setMainApp(this);
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Displays the User Management interface.
+     */
+    public void showUserManagement() {
+        try {
+            FXMLLoader loader = new FXMLLoader();
+            loader.setLocation(MainApp.class.getResource("view/UserManagement.fxml"));
+            BorderPane userManagementPane = loader.load();
+
+            // --- FULL SCREEN SOLUTION FOR MAIN VIEWS ---
+            Rectangle2D screenBounds = Screen.getPrimary().getVisualBounds();
+            primaryStage.setX(screenBounds.getMinX());
+            primaryStage.setY(screenBounds.getMinY());
+            primaryStage.setWidth(screenBounds.getWidth());
+            primaryStage.setHeight(screenBounds.getHeight());
+            // ------------------------------------------
+
+            // Set the new scene on the primary stage
+            Scene scene = new Scene(userManagementPane);
+            primaryStage.setScene(scene);
+            primaryStage.setTitle("User Management");
+            primaryStage.setMinWidth(650); // Optional: Set a minimum width for the table view
+            primaryStage.setMinHeight(400); // Optional: Set a minimum height
+
+            // Get the controller and initialize if needed (already done in initialize method)
+            UserManagementController controller = loader.getController();
+            controller.setMainApp(this);
 
             AdminLandingController controller = loader.getController();
             controller.setMainApp(this);
 
         } catch (IOException e) {
             e.printStackTrace();
+            // Show an alert if the FXML file can't be loaded
+            javafx.scene.control.Alert alert = new javafx.scene.control.Alert(javafx.scene.control.Alert.AlertType.ERROR);
+            alert.setTitle("Error");
+            alert.setHeaderText("View Loading Failed");
+            alert.setContentText("Could not load UserInterface.fxml.");
+            alert.showAndWait();
         }
     }
 
@@ -159,6 +208,49 @@ public class MainApp extends Application {
         }
     }
 
+    /**
+     * Shows the user edit dialog (e.g., for creating or editing a user).
+     * The dialog size is based on the FXML/content, as requested.
+     * @param user the user object to be edited or created.
+     * @param userManagementController the controller to refresh the table after save/delete.
+     */
+    public void showUserEditDialog(User user, UserManagementController userManagementController) {
+        try {
+            FXMLLoader loader = new FXMLLoader();
+            loader.setLocation(MainApp.class.getResource("view/UserEditDialog.fxml"));
+            AnchorPane page = loader.load();
+
+            Stage dialogStage = new Stage();
+            dialogStage.setTitle("Edit User Details");
+            dialogStage.initModality(Modality.WINDOW_MODAL);
+            dialogStage.initOwner(primaryStage);
+
+
+            Scene scene = new Scene(page);
+            dialogStage.setScene(scene);
+
+            UserEditController controller = loader.getController();
+            controller.setDialogStage(dialogStage);
+
+            controller.setSelectedUser(user);
+
+            controller.setUserManagementController(userManagementController);
+
+            dialogStage.showAndWait();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            // Show an alert if the FXML file can't be loaded
+            javafx.scene.control.Alert alert = new javafx.scene.control.Alert(javafx.scene.control.Alert.AlertType.ERROR);
+            alert.setTitle("Error");
+            alert.setHeaderText("Dialog Loading Failed");
+            alert.setContentText("Could not load UserEditDialog.fxml.");
+            alert.showAndWait();
+        }
+    }
+
+
+
     public User getLoggedUser() {
         return loggedUser;
     }
@@ -170,5 +262,4 @@ public class MainApp extends Application {
     public static void main(String[] args) {
         launch(args);
     }
-
 }

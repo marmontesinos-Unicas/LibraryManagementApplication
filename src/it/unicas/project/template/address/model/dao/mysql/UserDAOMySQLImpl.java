@@ -70,7 +70,7 @@ public class UserDAOMySQLImpl {
             if (u.getSurname() != null && !u.getSurname().isEmpty()) ps.setString(index++, u.getSurname() + "%");
             if (u.getUsername() != null && !u.getUsername().isEmpty()) ps.setString(index++, u.getUsername() + "%");
             if (u.getNationalID() != null && !u.getNationalID().isEmpty()) ps.setString(index++, u.getNationalID() + "%");
-            if (u.getEmail() != null && !u.getEmail().isEmpty()) ps.setString(index++, u.getEmail() + "%");
+            if (u.getEmail() != null && !u.getEmail().isEmpty()) ps.setString(index++, "%" + u.getEmail() + "%");
 
             logger.info("SQL: " + ps);
             ResultSet rs = ps.executeQuery();
