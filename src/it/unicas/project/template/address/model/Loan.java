@@ -23,13 +23,14 @@ public class Loan {
     // Constructor completo
     public Loan(Integer idLoan, Integer idUser, Integer idMaterial,
                 LocalDateTime start_date, LocalDateTime due_date, LocalDateTime return_date) {
-        this.idLoan = idLoan != null ? new SimpleIntegerProperty(idLoan) : new SimpleIntegerProperty();
-        this.idUser = new SimpleIntegerProperty(idUser);
-        this.idMaterial = new SimpleIntegerProperty(idMaterial);
+        this.idLoan = idLoan != null ? new SimpleIntegerProperty(idLoan) : new SimpleIntegerProperty(-1);
+        this.idUser = idUser != null ? new SimpleIntegerProperty(idUser) : new SimpleIntegerProperty(-1);
+        this.idMaterial = idMaterial != null ? new SimpleIntegerProperty(idMaterial) : new SimpleIntegerProperty(-1);
         this.start_date = new SimpleObjectProperty<>(start_date);
         this.due_date = new SimpleObjectProperty<>(due_date);
         this.return_date = new SimpleObjectProperty<>(return_date);
     }
+
 
     // Constructor sin idLoan (para insertar nuevos loans)
     public Loan(Integer idUser, Integer idMaterial,
