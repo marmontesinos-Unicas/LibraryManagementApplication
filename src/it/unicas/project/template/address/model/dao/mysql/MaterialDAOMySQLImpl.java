@@ -33,12 +33,14 @@ public class MaterialDAOMySQLImpl implements DAO<Material> {
         if (m.getIdMaterial() != -1) sql += " AND idMaterial=?";
         if (m.getTitle() != null && !m.getTitle().isEmpty()) sql += " AND title LIKE ?";
         if (m.getAuthor() != null && !m.getAuthor().isEmpty()) sql += " AND author LIKE ?";
+        if (m.getISBN() != null && !m.getISBN().isEmpty()) sql += " AND ISBN LIKE ?"; // <-- agregado
 
         try (PreparedStatement ps = DAOMySQLSettings.getConnection().prepareStatement(sql)) {
             int index = 1;
             if (m.getIdMaterial() != -1) ps.setInt(index++, m.getIdMaterial());
             if (m.getTitle() != null && !m.getTitle().isEmpty()) ps.setString(index++, m.getTitle() + "%");
             if (m.getAuthor() != null && !m.getAuthor().isEmpty()) ps.setString(index++, m.getAuthor() + "%");
+            if (m.getISBN() != null && !m.getISBN().isEmpty()) ps.setString(index++, "%" + m.getISBN() + "%"); // <-- agregado
 
             logger.info("SQL: " + ps);
             ResultSet rs = ps.executeQuery();
@@ -59,6 +61,7 @@ public class MaterialDAOMySQLImpl implements DAO<Material> {
         }
         return list;
     }
+
 
     @Override
     public void insert(Material m) throws DAOException {

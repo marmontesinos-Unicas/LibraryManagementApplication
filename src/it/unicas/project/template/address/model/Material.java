@@ -39,7 +39,7 @@ public class Material {
         this.title = new SimpleStringProperty(title);
         this.author = new SimpleStringProperty(author);
         this.year = new SimpleIntegerProperty(year != null ? year : 0);
-        this.ISBN = new SimpleStringProperty(ISBN);
+        this.ISBN = new SimpleStringProperty(ISBN != null ? ISBN : ""); //this.ISBN = new SimpleStringProperty(ISBN);
         this.idMaterialType = new SimpleIntegerProperty(idMaterialType != null ? idMaterialType : 0);
         this.material_status = new SimpleStringProperty(material_status);
     }
