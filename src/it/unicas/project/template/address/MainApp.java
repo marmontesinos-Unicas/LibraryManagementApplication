@@ -137,6 +137,8 @@ public class MainApp extends Application {
         }
     }
 
+
+
     public User getLoggedUser() {
         return loggedUser;
     }
