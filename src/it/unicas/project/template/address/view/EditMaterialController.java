@@ -118,7 +118,7 @@ public class EditMaterialController {
     private void loadExistingGenres(Integer materialId) {
         try {
             // Query material_genres table for this material
-            MaterialGenre searchCriteria = new MaterialGenre(materialId, null);
+            MaterialGenre searchCriteria = new MaterialGenre(materialId, -1);
             List<MaterialGenre> materialGenres = materialGenreDAO.select(searchCriteria);
 
             // Find and add corresponding Genre objects
@@ -304,7 +304,7 @@ public class EditMaterialController {
             materialDAO.update(currentMaterial);
 
             // Delete existing genre associations
-            MaterialGenre deleteCriteria = new MaterialGenre(currentMaterial.getIdMaterial(), null);
+            MaterialGenre deleteCriteria = new MaterialGenre(currentMaterial.getIdMaterial(), -1);
             List<MaterialGenre> existingGenres = materialGenreDAO.select(deleteCriteria);
             for (MaterialGenre mg : existingGenres) {
                 materialGenreDAO.delete(mg);
