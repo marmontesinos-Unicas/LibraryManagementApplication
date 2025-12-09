@@ -41,8 +41,12 @@ public class AdminLandingController {
      */
     @FXML
     protected void handleAddMaterial(ActionEvent event) {
-        System.out.println("Acción: Añadir nuevo material (Pendiente de implementación).");
-        // The code to switch to the add material screen will go here.
+        // Open the Add Material dialog (modal). mainApp provides the method.
+        if (mainApp != null) {
+            mainApp.showAddMaterialView();
+        } else {
+            System.err.println("mainApp is null - call setMainApp(...) when loading the admin view.");
+        }
     }
 
     /**

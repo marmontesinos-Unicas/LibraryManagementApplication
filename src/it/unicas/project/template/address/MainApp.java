@@ -3,6 +3,8 @@ package it.unicas.project.template.address;
 import it.unicas.project.template.address.model.User;
 import it.unicas.project.template.address.model.dao.DAOException;
 import it.unicas.project.template.address.model.dao.mysql.UserDAOMySQLImpl;
+import it.unicas.project.template.address.view.AddMaterialController;
+import it.unicas.project.template.address.view.AdminLandingController;
 import it.unicas.project.template.address.view.LoginDialogController;
 import it.unicas.project.template.address.view.UserLandingController;
 import javafx.application.Application;
@@ -123,7 +125,7 @@ public class MainApp extends Application {
         }
     }
 
-    private void showAdminLanding() {
+    public void showAdminLanding() {
         try {
             FXMLLoader loader = new FXMLLoader();
             loader.setLocation(MainApp.class.getResource("view/AdminLandingView.fxml"));
@@ -131,6 +133,26 @@ public class MainApp extends Application {
 
             Scene scene = new Scene(adminPane);
             primaryStage.setScene(scene);
+
+            AdminLandingController controller = loader.getController();
+            controller.setMainApp(this);
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void showAddMaterialView() {
+        try {
+            FXMLLoader loader = new FXMLLoader();
+            loader.setLocation(MainApp.class.getResource("view/AddMaterial.fxml"));
+            AnchorPane page = loader.load(); // same as your working code
+
+            Scene scene = new Scene(page);
+            primaryStage.setScene(scene);
+
+            AddMaterialController controller = loader.getController();
+            controller.setMainApp(this);
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -148,4 +170,5 @@ public class MainApp extends Application {
     public static void main(String[] args) {
         launch(args);
     }
+
 }

@@ -17,11 +17,8 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.geometry.Insets;
-import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.layout.FlowPane;
-import javafx.scene.layout.HBox;
 import javafx.stage.Stage;
 
 import java.util.*;
@@ -35,10 +32,16 @@ public class AddMaterialController {
     @FXML private TextField yearField;
     @FXML private ComboBox<MaterialType> materialTypeComboBox;
 
+    // Error labels
+    @FXML private Label titleErrorLabel;
+    @FXML private Label yearErrorLabel;
+    @FXML private Label materialTypeErrorLabel;
+
     // New Genre UI Components
     @FXML private TextField genreSearchField;
     @FXML private ListView<Genre> genreSearchResultsList;
     @FXML private FlowPane selectedGenresPane;
+    @FXML private Button goBackButton;
 
     private MainApp mainApp;
 
@@ -48,8 +51,14 @@ public class AddMaterialController {
     private final GenreDAO genreDAO = GenreDAOMySQLImpl.getInstance();
     private final DAO<MaterialGenre> materialGenreDAO = MaterialGenreDAOMySQLImpl.getInstance();
 
+
+
     private List<Genre> allGenres = new ArrayList<>();
     private Set<Genre> selectedGenres = new HashSet<>();
+
+    public void setMainApp(MainApp mainApp) {
+        this.mainApp = mainApp;
+    }
 
     @FXML
     public void initialize() {
@@ -58,6 +67,7 @@ public class AddMaterialController {
         loadMaterialTypes();
         loadGenres();
         setupGenreSearch();
+        setupFieldValidation();
     }
 
     private void loadMaterialTypes() {
@@ -68,6 +78,29 @@ public class AddMaterialController {
 
     private void loadGenres() {
         allGenres = genreDAO.selectAll();
+    }
+
+    private void setupFieldValidation() {
+        // Clear error when user types in title field
+        titleField.textProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal != null && !newVal.trim().isEmpty()) {
+                clearFieldError(titleField, titleErrorLabel);
+            }
+        });
+
+        // Clear error when user types in year field
+        yearField.textProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal != null && !newVal.trim().isEmpty()) {
+                clearFieldError(yearField, yearErrorLabel);
+            }
+        });
+
+        // Clear error when user selects material type
+        materialTypeComboBox.valueProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal != null) {
+                clearFieldError(materialTypeComboBox, materialTypeErrorLabel);
+            }
+        });
     }
 
     private void setupGenreSearch() {
@@ -81,7 +114,7 @@ public class AddMaterialController {
             }
         });
 
-        // Handle genre selection from list - use cell factory for better click handling
+        // Handle genre selection from list
         genreSearchResultsList.setCellFactory(lv -> {
             ListCell<Genre> cell = new ListCell<>() {
                 @Override
@@ -106,10 +139,9 @@ public class AddMaterialController {
             return cell;
         });
 
-        // Setup focus listener to hide results when focus is lost
+        // Setup focus listener
         genreSearchField.focusedProperty().addListener((obs, wasFocused, isNowFocused) -> {
             if (!isNowFocused) {
-                // Delay hiding to allow click on list item
                 new Thread(() -> {
                     try {
                         Thread.sleep(200);
@@ -130,7 +162,6 @@ public class AddMaterialController {
     private void filterAndShowGenres(String query) {
         String lowerQuery = query.toLowerCase();
 
-        // Filter genres that match the search and aren't already selected
         List<Genre> filtered = allGenres.stream()
                 .filter(g -> !selectedGenres.contains(g))
                 .filter(g -> g.getGenre().toLowerCase().contains(lowerQuery))
@@ -149,12 +180,11 @@ public class AddMaterialController {
 
     private void addGenreTag(Genre genre) {
         if (selectedGenres.contains(genre)) {
-            return; // Already selected
+            return;
         }
 
         selectedGenres.add(genre);
 
-        // Create tag button
         Button tagButton = new Button("× " + genre.getGenre());
         tagButton.setStyle(
                 "-fx-background-color: #e0e0e0; " +
@@ -163,7 +193,6 @@ public class AddMaterialController {
                         "-fx-cursor: hand;"
         );
 
-        // Hover effect
         tagButton.setOnMouseEntered(e ->
                 tagButton.setStyle(
                         "-fx-background-color: #d0d0d0; " +
@@ -181,7 +210,6 @@ public class AddMaterialController {
                 )
         );
 
-        // Remove genre when clicked
         tagButton.setOnAction(e -> {
             selectedGenres.remove(genre);
             selectedGenresPane.getChildren().remove(tagButton);
@@ -192,37 +220,50 @@ public class AddMaterialController {
 
     @FXML
     private void handleSaveMaterial() {
+        // Clear all previous errors
+        clearAllErrors();
+
+        boolean hasErrors = false;
+
+        // Validate title
         String title = titleField.getText().trim();
         if (title.isEmpty()) {
-            show(Alert.AlertType.WARNING, "Title is required");
-            return;
+            setFieldError(titleField, titleErrorLabel, "Title is required");
+            hasErrors = true;
         }
 
+        // Validate year
+        String ytxt = yearField.getText().trim();
+        if (ytxt.isEmpty()) {
+            setFieldError(yearField, yearErrorLabel, "Year is required");
+            hasErrors = true;
+        } else {
+            try {
+                Integer.parseInt(ytxt);
+            } catch (NumberFormatException nfe) {
+                setFieldError(yearField, yearErrorLabel, "Year must be a valid number");
+                hasErrors = true;
+            }
+        }
+
+        // Validate material type
         MaterialType mt = materialTypeComboBox.getValue();
         if (mt == null) {
-            show(Alert.AlertType.WARNING, "Material type is required");
+            setFieldError(materialTypeComboBox, materialTypeErrorLabel, "Material type is required");
+            hasErrors = true;
+        }
+
+        // If there are validation errors, stop here
+        if (hasErrors) {
             return;
         }
 
+        // Create and save material
         Material m = new Material();
         m.setTitle(title);
         m.setAuthor(authorField.getText().trim());
         m.setISBN(isbnField.getText().trim());
-
-        // Year validation
-        String ytxt = yearField.getText().trim();
-        if (ytxt.isEmpty()) {
-            show(Alert.AlertType.WARNING, "Year is required");
-            return;
-        }
-        try {
-            int year = Integer.parseInt(ytxt);
-            m.setYear(year);
-        } catch (NumberFormatException nfe) {
-            show(Alert.AlertType.WARNING, "Year must be an integer");
-            return;
-        }
-
+        m.setYear(Integer.parseInt(ytxt));
         m.setIdMaterialType(mt.getIdMaterialType());
 
         try {
@@ -238,30 +279,85 @@ public class AddMaterialController {
                 }
             }
 
-            show(Alert.AlertType.INFORMATION, "Material saved");
+            show(Alert.AlertType.INFORMATION, "Material saved successfully");
             clearForm();
 
         } catch (DAOException ex) {
-            show(Alert.AlertType.ERROR, "DB error: " + ex.getMessage());
+            show(Alert.AlertType.ERROR, "Database error: " + ex.getMessage());
         } catch (Exception ex) {
             show(Alert.AlertType.ERROR, "Unexpected error: " + ex.getMessage());
         }
     }
 
+    private void setFieldError(Control field, Label errorLabel, String message) {
+        // Set red border on field
+        field.setStyle("-fx-border-color: red; -fx-border-width: 2px;");
+
+        // Show error message
+        if (errorLabel != null) {
+            errorLabel.setText(message);
+            errorLabel.setVisible(true);
+            errorLabel.setManaged(true);
+        }
+    }
+
+    private void clearFieldError(Control field, Label errorLabel) {
+        // Remove red border
+        field.setStyle("");
+
+        // Hide error message
+        if (errorLabel != null) {
+            errorLabel.setText("");
+            errorLabel.setVisible(false);
+            errorLabel.setManaged(false);
+        }
+    }
+
+    private void clearAllErrors() {
+        clearFieldError(titleField, titleErrorLabel);
+        clearFieldError(yearField, yearErrorLabel);
+        clearFieldError(materialTypeComboBox, materialTypeErrorLabel);
+    }
+
     @FXML
-    private void handleCancel(ActionEvent event) {
-        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-        alert.setTitle("Exit Confirmation");
-        alert.setHeaderText(null);
-        alert.setContentText("You are about to exit, are you sure you don't want to save the changes?");
+    private void handleGoBack(ActionEvent event) {
+        // Check if any field has data
+        boolean hasUnsavedData = false;
 
-        ButtonType yes = new ButtonType("Yes");
-        ButtonType no = new ButtonType("No");
-        alert.getButtonTypes().setAll(yes, no);
+        if (!titleField.getText().trim().isEmpty() ||
+                !authorField.getText().trim().isEmpty() ||
+                !isbnField.getText().trim().isEmpty() ||
+                !yearField.getText().trim().isEmpty() ||
+                materialTypeComboBox.getValue() != null ||
+                !selectedGenres.isEmpty()) {
+            hasUnsavedData = true;
+        }
 
-        Optional<ButtonType> result = alert.showAndWait();
-        if (result.isPresent() && result.get() == yes) {
-            Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+        if (hasUnsavedData) {
+            // Show confirmation dialog
+            Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+            alert.setTitle("Go Back Confirmation");
+            alert.setHeaderText(null);
+            alert.setContentText("You have unsaved changes. Are you sure you want to go back?");
+
+            ButtonType yes = new ButtonType("Yes");
+            ButtonType no = new ButtonType("No");
+            alert.getButtonTypes().setAll(yes, no);
+
+            Optional<ButtonType> result = alert.showAndWait();
+            if (result.isPresent() && result.get() == yes) {
+                navigateBack();
+            }
+        } else {
+            navigateBack();
+        }
+    }
+
+    private void navigateBack() {
+        if (mainApp != null) {
+            mainApp.showAdminLanding();
+        } else {
+            Stage stage = (Stage) titleField.getScene().getWindow();
             stage.close();
         }
     }
@@ -275,6 +371,7 @@ public class AddMaterialController {
         genreSearchField.clear();
         selectedGenres.clear();
         selectedGenresPane.getChildren().clear();
+        clearAllErrors();
     }
 
     private void show(Alert.AlertType type, String message) {
@@ -284,7 +381,4 @@ public class AddMaterialController {
         a.showAndWait();
     }
 
-    public void setMainApp(MainApp mainApp) {
-        this.mainApp = mainApp;
-    }
 }
