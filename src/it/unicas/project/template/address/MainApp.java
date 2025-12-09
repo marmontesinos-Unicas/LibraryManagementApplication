@@ -121,6 +121,9 @@ public class MainApp extends Application {
 
             Scene scene = new Scene(userPane);
             primaryStage.setScene(scene);
+            primaryStage.setTitle("User Dashboard");
+            primaryStage.setMinWidth(800);
+            primaryStage.setMinHeight(520);
 
             UserLandingController controller = loader.getController();
             controller.setMainApp(this);
@@ -139,8 +142,8 @@ public class MainApp extends Application {
             Scene scene = new Scene(adminPane);
             primaryStage.setScene(scene);
             primaryStage.setTitle("Admin Dashboard"); // Set title back
-            primaryStage.setMinWidth(800); // Optional: Set a minimum width for the table view
-            primaryStage.setMinHeight(520); // Optional: Set a minimum height
+            primaryStage.setMinWidth(800);
+            primaryStage.setMinHeight(520);
 
             // Pass the MainApp reference to the AdminLandingController
             it.unicas.project.template.address.view.AdminLandingController controller = loader.getController();
@@ -160,20 +163,12 @@ public class MainApp extends Application {
             loader.setLocation(MainApp.class.getResource("view/UserManagement.fxml"));
             BorderPane userManagementPane = loader.load();
 
-            // --- FULL SCREEN SOLUTION FOR MAIN VIEWS ---
-            Rectangle2D screenBounds = Screen.getPrimary().getVisualBounds();
-            primaryStage.setX(screenBounds.getMinX());
-            primaryStage.setY(screenBounds.getMinY());
-            primaryStage.setWidth(screenBounds.getWidth());
-            primaryStage.setHeight(screenBounds.getHeight());
-            // ------------------------------------------
-
             // Set the new scene on the primary stage
             Scene scene = new Scene(userManagementPane);
             primaryStage.setScene(scene);
             primaryStage.setTitle("User Management");
-            primaryStage.setMinWidth(650); // Optional: Set a minimum width for the table view
-            primaryStage.setMinHeight(400); // Optional: Set a minimum height
+            primaryStage.setMinWidth(800);
+            primaryStage.setMinHeight(520);
 
             // Get the controller and initialize if needed (already done in initialize method)
             UserManagementController controller = loader.getController();
