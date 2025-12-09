@@ -3,7 +3,7 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<AnchorPane prefHeight="550.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="it.unicas.project.template.address.view.AddMaterialController">
+<AnchorPane prefHeight="520" prefWidth="800" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="it.unicas.project.template.address.view.AddMaterialController">
 
     <!-- Go Back Button - Top Left -->
     <Button mnemonicParsing="false" onAction="#handleGoBack" text="Go Back"
