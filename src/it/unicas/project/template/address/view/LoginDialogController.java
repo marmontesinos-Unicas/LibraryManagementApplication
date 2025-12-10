@@ -2,14 +2,12 @@ package it.unicas.project.template.address.view;
 
 import it.unicas.project.template.address.model.User;
 import it.unicas.project.template.address.model.dao.DAOException;
-import it.unicas.project.template.address.model.dao.mysql.UserDAOMySQLImpl;
+import it.unicas.project.template.address.service.LoginService; // <-- Keep this import
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
-
-import java.util.List;
 
 public class LoginDialogController {
 
@@ -24,62 +22,68 @@ public class LoginDialogController {
 
     private Stage dialogStage;
     private boolean loginSuccessful = false;
-    private String username; // guardamos el username logueado
+    private String username; // Stores the logged-in username
+
+    // 1. Service Instantiation: Instantiate the LoginService
+    private final LoginService loginService = new LoginService();
 
     /**
-     * Llamado desde MainApp para pasar la referencia del Stage
+     * Called by the MainApp to pass the reference of the Stage.
      */
     public void setDialogStage(Stage dialogStage) {
         this.dialogStage = dialogStage;
     }
 
     /**
-     * Retorna true si el login fue exitoso
+     * Returns true if the login was successful.
      */
     public boolean isLoginSuccessful() {
         return loginSuccessful;
     }
 
     /**
-     * Retorna el username del usuario logueado
+     * Returns the username of the logged-in user.
      */
     public String getUsername() {
         return username;
     }
 
     /**
-     * Acción del botón Login
+     * Action for the Login button.
      */
     @FXML
     private void handleLogin() {
+        // Clear any previous error message
+        errorLabel.setText("");
+
         String inputUsername = usernameField.getText();
         String inputPassword = passwordField.getText();
 
         try {
-            // Obtenemos todos los usuarios desde la base de datos
-            List<User> users = UserDAOMySQLImpl.getInstance().select(null);
-
-            User matchedUser = users.stream()
-                    .filter(u -> u.getUsername().equals(inputUsername) && u.getPassword().equals(inputPassword))
-                    .findFirst()
-                    .orElse(null);
+            // 2. Delegate the authentication logic to the LoginService
+            // The service now handles fetching the user and comparing the password.
+            User matchedUser = loginService.authenticate(inputUsername, inputPassword);
 
             if (matchedUser != null) {
+                // Login successful
                 loginSuccessful = true;
-                username = matchedUser.getUsername(); // guardamos el username
-                dialogStage.close(); // cerramos el login
+                username = matchedUser.getUsername(); // Store the username
+                dialogStage.close(); // Close the login dialog
             } else {
-                errorLabel.setText("Usuario o contraseña incorrectos");
+                // 3. Authentication failed (User not found OR incorrect password)
+                errorLabel.setText("Incorrect username or password");
             }
 
         } catch (DAOException e) {
-            errorLabel.setText("Error al acceder a la base de datos");
+            // 4. Handle DAOException: This signals a system/database error, not a user error.
+            errorLabel.setText("System Error: Could not connect to the authentication service.");
             e.printStackTrace();
+            // Optionally show an error dialog box here for better user experience
         }
     }
 
     /**
-     * Acción del botón Cancel
+     * Action for the Cancel button.
      */
     @FXML
     private void handleCancel() {
