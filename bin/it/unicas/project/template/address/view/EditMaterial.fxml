@@ -3,11 +3,7 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<AnchorPane prefHeight="520" prefWidth="800" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="it.unicas.project.template.address.view.AddMaterialController">
-
-    <!-- Go Back Button - Top Left -->
-    <Button mnemonicParsing="false" onAction="#handleGoBack" text="&lt; Back to Home"
-            AnchorPane.leftAnchor="20.0" AnchorPane.topAnchor="20.0" />
+<AnchorPane prefHeight="550.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="it.unicas.project.template.address.view.EditMaterialController">
 
     <GridPane layoutX="20.0" layoutY="70.0" AnchorPane.leftAnchor="20.0" AnchorPane.rightAnchor="20.0" AnchorPane.topAnchor="70.0">
         <columnConstraints>
@@ -18,6 +14,7 @@
             <RowConstraints minHeight="10.0" prefHeight="45.0" vgrow="SOMETIMES" />
             <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
             <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+            <RowConstraints minHeight="10.0" prefHeight="45.0" vgrow="SOMETIMES" />
             <RowConstraints minHeight="10.0" prefHeight="45.0" vgrow="SOMETIMES" />
             <RowConstraints minHeight="10.0" prefHeight="45.0" vgrow="SOMETIMES" />
             <RowConstraints minHeight="10.0" prefHeight="150.0" vgrow="SOMETIMES" />
@@ -67,13 +64,25 @@
             <Label fx:id="materialTypeErrorLabel" textFill="red" style="-fx-font-size: 11px;" visible="false" managed="false" />
         </VBox>
 
-        <!-- Row 5: Genres -->
-        <Label text="Genres:" GridPane.columnIndex="0" GridPane.rowIndex="5" GridPane.valignment="TOP">
+
+        <!-- Row 5: Status -->
+        <Label text="Status:" GridPane.columnIndex="0" GridPane.rowIndex="5" GridPane.valignment="TOP">
+            <GridPane.margin>
+                <Insets top="5.0" />
+            </GridPane.margin>
+        </Label>
+        <VBox spacing="2.0" GridPane.columnIndex="1" GridPane.rowIndex="5">
+            <ComboBox fx:id="statusComboBox" promptText="Select" maxWidth="Infinity" />
+        </VBox>
+
+
+        <!-- Row 6: Genres -->
+        <Label text="Genres:" GridPane.columnIndex="0" GridPane.rowIndex="6" GridPane.valignment="TOP">
             <GridPane.margin>
                 <Insets top="10.0" />
             </GridPane.margin>
         </Label>
-        <VBox spacing="8.0" GridPane.columnIndex="1" GridPane.rowIndex="5">
+        <VBox spacing="8.0" GridPane.columnIndex="1" GridPane.rowIndex="6">
             <!-- Search TextField with Dropdown -->
             <VBox fx:id="genreSearchContainer" spacing="0">
                 <TextField fx:id="genreSearchField" promptText="Search genres..." />
@@ -85,9 +94,10 @@
                 <FlowPane fx:id="selectedGenresPane" hgap="5.0" vgap="5.0" />
             </ScrollPane>
         </VBox>
+
     </GridPane>
 
     <!-- Save Material Button - Bottom Right -->
-    <Button mnemonicParsing="false" onAction="#handleSaveMaterial" prefHeight="26.0" prefWidth="120.0" text="Save Material"
+    <Button mnemonicParsing="false" onAction="#handleUpdateMaterial" prefHeight="26.0" prefWidth="120.0" text="Save Material"
             AnchorPane.bottomAnchor="20.0" AnchorPane.rightAnchor="20.0" />
 </AnchorPane>

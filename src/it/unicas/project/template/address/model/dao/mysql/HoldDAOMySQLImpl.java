@@ -118,6 +118,11 @@ public class HoldDAOMySQLImpl implements DAO<Hold> {
         }
     }
 
+    @Override
+    public List<Hold> selectAll() throws DAOException {
+        return List.of();
+    }
+
     private void verifyObject(Hold h) throws DAOException {
         if (h == null || h.getIdUser() == -1 ||
                 h.getIdMaterial() == -1 || h.getHold_date() == null) {

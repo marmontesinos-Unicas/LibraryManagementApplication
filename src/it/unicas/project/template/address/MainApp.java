@@ -5,7 +5,9 @@ import it.unicas.project.template.address.model.dao.DAOException;
 import it.unicas.project.template.address.model.dao.mysql.UserDAOMySQLImpl;
 import it.unicas.project.template.address.view.AddMaterialController;
 import it.unicas.project.template.address.view.AdminLandingController;
+import it.unicas.project.template.address.view.AdminLandingController;
 import it.unicas.project.template.address.view.LoginDialogController;
+import it.unicas.project.template.address.view.MaterialCatalogController;
 import it.unicas.project.template.address.view.UserLandingController;
 import it.unicas.project.template.address.view.UserManagementController;
 import it.unicas.project.template.address.view.UserEditController;
@@ -202,6 +204,22 @@ public class MainApp extends Application {
             e.printStackTrace();
         }
     }
+    public void showCatalogView() {
+        try {
+            FXMLLoader loader = new FXMLLoader();
+            loader.setLocation(MainApp.class.getResource("view/MaterialCatalog.fxml"));
+            AnchorPane page = loader.load();
+
+            Scene scene = new Scene(page);
+            primaryStage.setScene(scene);
+
+            MaterialCatalogController controller = loader.getController();
+            controller.setMainApp(this);
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
     /**
      * Shows the user edit dialog (e.g., for creating or editing a user).
@@ -274,6 +292,7 @@ public class MainApp extends Application {
             alert.showAndWait();
         }
     }
+
 
 
 

@@ -137,6 +137,11 @@ public class LoanDAOMySQLImpl implements DAO<Loan> {
         }
     }
 
+    @Override
+    public List<Loan> selectAll() throws DAOException {
+        return List.of();
+    }
+
     private void verifyObject(Loan l) throws DAOException {
         if (l == null || l.getIdUser() == -1 || l.getIdMaterial() == -1 ||
                 l.getStart_date() == null || l.getDue_date() == null) {
