@@ -3,14 +3,8 @@ package it.unicas.project.template.address;
 import it.unicas.project.template.address.model.User;
 import it.unicas.project.template.address.model.dao.DAOException;
 import it.unicas.project.template.address.model.dao.mysql.UserDAOMySQLImpl;
-import it.unicas.project.template.address.view.AddMaterialController;
+import it.unicas.project.template.address.view.*;
 import it.unicas.project.template.address.view.AdminLandingController;
-import it.unicas.project.template.address.view.AdminLandingController;
-import it.unicas.project.template.address.view.LoginDialogController;
-import it.unicas.project.template.address.view.MaterialCatalogController;
-import it.unicas.project.template.address.view.UserLandingController;
-import it.unicas.project.template.address.view.UserManagementController;
-import it.unicas.project.template.address.view.UserEditController;
 
 import javafx.application.Application;
 import javafx.collections.FXCollections;
@@ -27,6 +21,7 @@ import javafx.stage.Stage;
 import javafx.scene.control.*;
 
 import java.io.IOException;
+import java.util.List;
 
 public class MainApp extends Application {
 
@@ -279,7 +274,7 @@ public class MainApp extends Application {
 
             // Get the controller and pass the MainApp reference
             it.unicas.project.template.address.view.LoadReturnController controller = loader.getController();
-            controller.setMainApp(this); // THIS LINE IS CRUCIAL for the Back button functionality
+            controller.setMainApp(this); // This line ensures that we can go back to the landing page.
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -293,6 +288,43 @@ public class MainApp extends Application {
         }
     }
 
+    /**
+     * Displays the user's overdue notifications in a dialog.
+     * @param notifications A list of formatted String messages to display.
+     */
+    public void showNotificationsView(List<String> notifications) {
+        try {
+            FXMLLoader loader = new FXMLLoader();
+            // Assuming the FXML is located at: address/view/NotificationsView.fxml
+            loader.setLocation(MainApp.class.getResource("view/NotificationsView.fxml"));
+            AnchorPane page = loader.load();
+
+            // Create the dialog Stage
+            Stage dialogStage = new Stage();
+            dialogStage.setTitle("Overdue Notifications");
+            // Set modality to BLOCKING, typical for alerts/modals
+            dialogStage.initModality(Modality.WINDOW_MODAL);
+            dialogStage.initOwner(primaryStage);
+
+            Scene scene = new Scene(page);
+            dialogStage.setScene(scene);
+
+            // Get the controller and pass the data and stage
+            NotificationsController controller = loader.getController();
+            controller.setDialogStage(dialogStage);
+            controller.setNotifications(notifications); // Pass the list of messages
+
+            dialogStage.showAndWait();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Error");
+            alert.setHeaderText("View Loading Failed");
+            alert.setContentText("Could not load NotificationsView.fxml.");
+            alert.showAndWait();
+        }
+    }
 
 
 
