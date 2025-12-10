@@ -106,9 +106,16 @@ public class AdminLandingController {
      */
     @FXML
     protected void handleSearch(ActionEvent event) {
-        System.out.println("Acción: Búsqueda avanzada de catálogo (Pendiente de implementación).");
+        System.out.println("Action: Advanced search of the catalog.");
         // The code to switch to the search screen will go here.
+        if (mainApp != null) {
+            mainApp.showCatalogView();
+        } else {
+            System.err.println("mainApp is null - call setMainApp(...) when loading the admin view.");
+        }
     }
+
+}
 
     //@FXML
     //protected void handleCloseButton(ActionEvent event) {
@@ -117,4 +124,3 @@ public class AdminLandingController {
         //stage.close();
         //mainApp.handleExit();
     //}
-}

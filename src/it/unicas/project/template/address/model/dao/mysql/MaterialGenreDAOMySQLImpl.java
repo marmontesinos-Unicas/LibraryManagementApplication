@@ -96,6 +96,11 @@ public class MaterialGenreDAOMySQLImpl implements DAO<MaterialGenre> {
         }
     }
 
+    @Override
+    public List<MaterialGenre> selectAll() throws DAOException {
+        return List.of();
+    }
+
     private void verifyObject(MaterialGenre mg) throws DAOException {
         if (mg == null || mg.getIdMaterial() == -1 || mg.getIdGenre() == -1) {
             throw new DAOException("In verifyObject: idMaterial y idGenre deben ser válidos");
