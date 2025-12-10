@@ -1,5 +1,6 @@
 package it.unicas.project.template.address.view;
 
+import it.unicas.project.template.address.MainApp;
 import it.unicas.project.template.address.model.Loan;
 import it.unicas.project.template.address.model.Material;
 import it.unicas.project.template.address.model.User;
@@ -38,9 +39,18 @@ public class LoadReturnController {
 
     private Stage dialogStage;
     private ObservableList<LoanRow> loanRows = FXCollections.observableArrayList();
+    private MainApp mainApp; // NEW FIELD
 
     public void setDialogStage(Stage dialogStage) {
         this.dialogStage = dialogStage;
+    }
+
+    /**
+     * Is called by the MainApp to give a reference back to itself.
+     * @param mainApp
+     */
+    public void setMainApp(MainApp mainApp) {
+        this.mainApp = mainApp;
     }
 
     @FXML
@@ -77,6 +87,13 @@ public class LoadReturnController {
                 handleSearch();
             }
         });
+    }
+
+    @FXML
+    private void handleBackToHome() {
+        if (mainApp != null) {
+            mainApp.showAdminLanding();
+        }
     }
 
     private void loadAllLoans() {
