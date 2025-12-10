@@ -13,6 +13,7 @@ import it.unicas.project.template.address.model.dao.mysql.MaterialDAOMySQLImpl;
 import it.unicas.project.template.address.model.dao.mysql.MaterialGenreDAOMySQLImpl;
 import it.unicas.project.template.address.model.dao.mysql.MaterialTypeDAOMySQLImpl;
 
+import it.unicas.project.template.address.service.MaterialCatalogService;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -82,6 +83,9 @@ public class MaterialCatalogController {
     private Popup materialTypePopup;
     private Popup statusPopup;
     private Popup genrePopup;
+
+    private final MaterialCatalogService catalogService = new MaterialCatalogService();
+
 
     /**
      * Initialize the controller
@@ -506,64 +510,23 @@ public class MaterialCatalogController {
      */
     @FXML
     private void handleFilter() {
-        String searchTerm = searchField.getText().trim().toLowerCase();
-        String yearFrom = yearFromField.getText().trim();
-        String yearTo = yearToField.getText().trim();
+        List<Material> result = catalogService.filterMaterials(
+                materialList,
+                materialGenreMap,
+                materialTypeMap,
+                genreMap,
+                selectedMaterialTypes,
+                selectedStatuses,
+                selectedGenres,
+                yearFromField.getText().trim(),
+                yearToField.getText().trim(),
+                searchField.getText().trim()
+        );
 
-        List<Material> filtered = materialList.stream()
-                .filter(material -> {
-                    // Material type filter
-                    boolean matchesType = selectedMaterialTypes.isEmpty() ||
-                            selectedMaterialTypes.contains(getMaterialTypeName(material.getIdMaterialType()));
-
-                    // Status filter
-                    boolean matchesStatus = selectedStatuses.isEmpty() ||
-                            selectedStatuses.contains(material.getMaterial_status());
-
-                    // Genre filter
-                    boolean matchesGenre = true;
-                    if (!selectedGenres.isEmpty()) {
-                        Set<Integer> materialGenres = materialGenreMap.get(material.getIdMaterial());
-                        if (materialGenres == null || materialGenres.isEmpty()) {
-                            matchesGenre = false;
-                        } else {
-                            matchesGenre = materialGenres.stream()
-                                    .map(this::getGenreName)
-                                    .anyMatch(selectedGenres::contains);
-                        }
-                    }
-
-                    // Year range filter
-                    boolean matchesYear = true;
-                    if (!yearFrom.isEmpty() || !yearTo.isEmpty()) {
-                        try {
-                            int materialYear = material.getYear();
-                            if (!yearFrom.isEmpty()) {
-                                int fromYear = Integer.parseInt(yearFrom);
-                                matchesYear = materialYear >= fromYear;
-                            }
-                            if (!yearTo.isEmpty() && matchesYear) {
-                                int toYear = Integer.parseInt(yearTo);
-                                matchesYear = materialYear <= toYear;
-                            }
-                        } catch (NumberFormatException e) {
-                            matchesYear = true;
-                        }
-                    }
-
-                    return matchesType && matchesStatus && matchesGenre && matchesYear;
-                })
-                .collect(Collectors.toList());
-
-        // Apply search and sort
-        if (!searchTerm.isEmpty()) {
-            filtered = searchAndSort(filtered, searchTerm);
-        }
-
-        filteredList.clear();
-        filteredList.addAll(filtered);
+        filteredList.setAll(result);
         updateResultCount();
     }
+
 
     /**
      * Enhanced search that prioritizes title matches, then author, then others

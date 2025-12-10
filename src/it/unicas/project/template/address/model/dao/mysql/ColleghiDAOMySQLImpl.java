@@ -131,6 +131,11 @@ public class ColleghiDAOMySQLImpl implements DAO<Amici> {
 
     }
 
+    @Override
+    public List<Amici> selectAll() throws DAOException {
+        return List.of();
+    }
+
 
     @Override
     public void insert(Amici a) throws DAOException {
