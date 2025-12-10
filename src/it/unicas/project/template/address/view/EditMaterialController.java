@@ -44,15 +44,10 @@ public class EditMaterialController {
     private final GenreDAO genreDAO = GenreDAOMySQLImpl.getInstance();
     private final DAO<MaterialGenre> materialGenreDAO = MaterialGenreDAOMySQLImpl.getInstance();
 
-    private MainApp mainApp;
 
     private List<Genre> allGenres = new ArrayList<>();
     private Set<Genre> selectedGenres = new HashSet<>();
     private Material currentMaterial; // The material being edited
-
-    public void setMainApp(MainApp mainApp) {
-        this.mainApp = mainApp;
-    }
 
     @FXML
     public void initialize() {
@@ -61,7 +56,7 @@ public class EditMaterialController {
         loadMaterialTypes();
         loadGenres();
         setupGenreSearch();
-        setupStatusComboBox();
+        setupStatus();
     }
 
     /**
@@ -99,7 +94,7 @@ public class EditMaterialController {
         materialTypeComboBox.setItems(obs);
     }
 
-    private void setupStatusComboBox() {
+    private void setupStatus() {
         statusComboBox.getItems().addAll(
                 "available",
                 "loaned",
@@ -271,11 +266,8 @@ public class EditMaterialController {
             return;
         }
 
+        //status will never be empty because of setupStatus()
         String status = statusComboBox.getValue();
-        if (status == null || status.isEmpty()) {
-            showAlert(Alert.AlertType.WARNING, "Status is required");
-            return;
-        }
 
         // Update material fields
         currentMaterial.setTitle(title);
@@ -333,7 +325,12 @@ public class EditMaterialController {
 
     @FXML
     private void handleGoBack(ActionEvent event) {
-        // Check if any field has data
+        if (confirmClose()) {
+            navigateBack();
+        }
+    }
+
+    private boolean confirmClose() {
         boolean hasUnsavedData = false;
 
         if (!titleField.getText().trim().isEmpty() ||
@@ -345,34 +342,30 @@ public class EditMaterialController {
             hasUnsavedData = true;
         }
 
-        if (hasUnsavedData) {
-            // Show confirmation dialog
-            Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-            alert.setTitle("Go Back Confirmation");
-            alert.setHeaderText(null);
-            alert.setContentText("You have unsaved changes. Are you sure you want to go back?");
-
-            ButtonType yes = new ButtonType("Yes");
-            ButtonType no = new ButtonType("No");
-            alert.getButtonTypes().setAll(yes, no);
-
-            Optional<ButtonType> result = alert.showAndWait();
-            if (result.isPresent() && result.get() == yes) {
-                navigateBack();
-            }
-        } else {
-            navigateBack();
+        if (!hasUnsavedData) {
+            return true;
         }
-    }
 
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle("Go Back Confirmation");
+        alert.setHeaderText(null);
+        alert.setContentText("You have unsaved changes. Are you sure you want to go back?");
+
+        ButtonType yes = new ButtonType("Yes");
+        ButtonType no = new ButtonType("No");
+        alert.getButtonTypes().setAll(yes, no);
+
+        Optional<ButtonType> result = alert.showAndWait();
+        return result.isPresent() && result.get() == yes;
+    }
     private void navigateBack() {
-        if (mainApp != null) {
-            mainApp.showAdminLanding();
-        } else {
-            Stage stage = (Stage) titleField.getScene().getWindow();
+        Stage stage = (Stage) titleField.getScene().getWindow();
+        if (stage != null) {
             stage.close();
         }
     }
+
+
 
     private void showAlert(Alert.AlertType type, String message) {
         Alert a = new Alert(type);
