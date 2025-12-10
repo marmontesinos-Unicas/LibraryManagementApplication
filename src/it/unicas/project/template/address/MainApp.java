@@ -22,6 +22,7 @@ import javafx.scene.image.Image;
 import javafx.stage.Modality;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
+import javafx.scene.control.*;
 
 import java.io.IOException;
 
@@ -239,6 +240,37 @@ public class MainApp extends Application {
             alert.setTitle("Error");
             alert.setHeaderText("Dialog Loading Failed");
             alert.setContentText("Could not load UserEditDialog.fxml.");
+            alert.showAndWait();
+        }
+    }
+
+    /**
+     * Displays the Loan and Return management interface, replacing the current scene.
+     */
+    public void showLoadReturn() {
+        try {
+            FXMLLoader loader = new FXMLLoader();
+            loader.setLocation(MainApp.class.getResource("/it/unicas/project/template/address/view/LoadReturn.fxml"));
+            AnchorPane loadReturnPane = loader.load();
+
+            Scene scene = new Scene(loadReturnPane);
+            primaryStage.setScene(scene);
+            primaryStage.setTitle("Loan and Return Management");
+            primaryStage.setMinWidth(800);
+            primaryStage.setMinHeight(520);
+
+            // Get the controller and pass the MainApp reference
+            it.unicas.project.template.address.view.LoadReturnController controller = loader.getController();
+            controller.setMainApp(this); // THIS LINE IS CRUCIAL for the Back button functionality
+
+        } catch (IOException e) {
+            e.printStackTrace();
+
+            // Error handling using the correctly imported Alert class
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Error");
+            alert.setHeaderText("View Loading Failed");
+            alert.setContentText("Could not load LoadReturn.fxml.");
             alert.showAndWait();
         }
     }
