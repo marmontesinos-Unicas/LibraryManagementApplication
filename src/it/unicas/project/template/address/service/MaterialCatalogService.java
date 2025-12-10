@@ -65,7 +65,6 @@ public class MaterialCatalogService {
 
         return filtered;
     }
-
     List<Material> searchAndSort(List<Material> materials, String searchTerm) {
         String term = searchTerm.toLowerCase();
 

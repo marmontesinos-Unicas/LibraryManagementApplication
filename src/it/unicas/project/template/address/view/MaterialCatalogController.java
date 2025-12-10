@@ -56,11 +56,8 @@ public class MaterialCatalogController {
     @FXML private Button addButton;
     @FXML private Button editButton;
     @FXML private Button deleteButton;
-    @FXML private Button searchButton;
-    @FXML private Button clearButton;
     @FXML private Label resultCountLabel;
     @FXML private HBox adminActionsBox;
-    @FXML private Button backButton;
 
     private MainApp mainApp;
 
@@ -451,14 +448,6 @@ public class MaterialCatalogController {
         } catch (DAOException e) {
             showError("Error loading materials", e.getMessage());
         }
-    }
-
-    /**
-     * Handle search button click
-     */
-    @FXML
-    private void handleSearch() {
-        handleFilter();
     }
 
     /**
