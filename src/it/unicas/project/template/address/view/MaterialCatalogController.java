@@ -35,6 +35,10 @@ import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * Controller for Material Catalog - ADMIN VIEW ONLY
+ * Allows full CRUD operations on materials
+ */
 public class MaterialCatalogController {
 
     @FXML private TextField searchField;
@@ -74,7 +78,6 @@ public class MaterialCatalogController {
     private Map<Integer, String> materialTypeMap;
     private Map<Integer, String> genreMap;
     private Map<Integer, Set<Integer>> materialGenreMap;
-    private boolean isAdminMode = true;
 
     // Filter selections
     private Set<String> selectedMaterialTypes = new HashSet<>();
@@ -110,7 +113,6 @@ public class MaterialCatalogController {
         loadMaterialGenreRelationships();
         setupTableColumns();
         loadAllMaterials();
-        setAdminMode(isAdminMode);
 
         // Initialize filter buttons
         setupFilterButtons();
@@ -524,17 +526,11 @@ public class MaterialCatalogController {
     @FXML
     private void handleTableClick(MouseEvent event) {
         Material selected = materialTable.getSelectionModel().getSelectedItem();
-        if (isAdminMode) {
-            editButton.setDisable(selected == null);
-            deleteButton.setDisable(selected == null);
-        }
+        editButton.setDisable(selected == null);
+        deleteButton.setDisable(selected == null);
 
         if (event.getClickCount() == 2 && selected != null) {
-            if (isAdminMode) {
-                handleEdit();
-            } else {
-                handleView();
-            }
+            handleEdit();
         }
     }
 
@@ -623,41 +619,6 @@ public class MaterialCatalogController {
         } else {
             showError("Navigation Error", "Cannot navigate back - MainApp not set");
         }
-    }
-
-    private void handleView() {
-        Material selected = materialTable.getSelectionModel().getSelectedItem();
-        if (selected == null) return;
-
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle("Material Details");
-        alert.setHeaderText(selected.getTitle());
-
-        StringBuilder content = new StringBuilder();
-        content.append("Author: ").append(selected.getAuthor() != null ? selected.getAuthor() : "N/A").append("\n");
-        content.append("Year: ").append(selected.getYear()).append("\n");
-        content.append("ISBN: ").append(selected.getISBN() != null ? selected.getISBN() : "N/A").append("\n");
-        content.append("Type: ").append(getMaterialTypeName(selected.getIdMaterialType())).append("\n");
-        content.append("Status: ").append(selected.getMaterial_status()).append("\n");
-
-        Set<Integer> genres = materialGenreMap.get(selected.getIdMaterial());
-        if (genres != null && !genres.isEmpty()) {
-            String genreList = genres.stream()
-                    .map(this::getGenreName)
-                    .collect(Collectors.joining(", "));
-            content.append("Genres: ").append(genreList);
-        } else {
-            content.append("Genres: None");
-        }
-
-        alert.setContentText(content.toString());
-        alert.showAndWait();
-    }
-
-    public void setAdminMode(boolean isAdmin) {
-        this.isAdminMode = isAdmin;
-        adminActionsBox.setVisible(isAdmin);
-        adminActionsBox.setManaged(isAdmin);
     }
 
     private void updateResultCount() {
