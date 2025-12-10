@@ -8,7 +8,7 @@
 
     <!-- Search and Filter Section -->
     <VBox spacing="10" styleClass="filter-section"
-          AnchorPane.topAnchor="15.0"
+          AnchorPane.topAnchor="55.0"
           AnchorPane.leftAnchor="15.0"
           AnchorPane.rightAnchor="15.0">
 
@@ -38,7 +38,7 @@
             <VBox spacing="5">
                 <Label text="Status:" style="-fx-font-weight: bold;"/>
                 <ComboBox fx:id="statusFilterButton"
-                          promptText="All Statuses"
+                          promptText="All Status"
                           prefWidth="150"
                           editable="false"
                           styleClass="filter-combo"/>
@@ -73,7 +73,7 @@
     <!-- Table View -->
     <TableView fx:id="materialTable"
                onMouseClicked="#handleTableClick"
-               AnchorPane.topAnchor="125.0"
+               AnchorPane.topAnchor="165.0"
                AnchorPane.bottomAnchor="60.0"
                AnchorPane.leftAnchor="15.0"
                AnchorPane.rightAnchor="15.0">
@@ -87,6 +87,14 @@
             <TableColumn fx:id="statusColumn" text="Status" prefWidth="100" minWidth="80"/>
         </columns>
     </TableView>
+
+    <!-- Back Button -->
+    <Button fx:id="backButton"
+            text="&lt; Back to Home"
+            onAction="#handleBack"
+            styleClass="back-button"
+            AnchorPane.topAnchor="15.0"
+            AnchorPane.leftAnchor="15.0"/>
 
     <!-- Action Buttons (Admin Only) -->
     <HBox spacing="10" alignment="CENTER_RIGHT" fx:id="adminActionsBox"

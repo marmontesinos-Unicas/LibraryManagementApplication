@@ -20,7 +20,6 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Bounds;
 import javafx.geometry.Insets;
-import javafx.geometry.Pos;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
@@ -61,6 +60,7 @@ public class MaterialCatalogController {
     @FXML private Button clearButton;
     @FXML private Label resultCountLabel;
     @FXML private HBox adminActionsBox;
+    @FXML private Button backButton;
 
     private DAO<Material> materialDAO;
     private MaterialTypeDAOMySQLImpl materialTypeDAO;
@@ -684,6 +684,20 @@ public class MaterialCatalogController {
             } catch (DAOException e) {
                 showError("Delete Error", "Failed to delete material: " + e.getMessage());
             }
+        }
+    }
+    @FXML
+    private void handleBack() {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/it/unicas/project/template/address/view/AdminLandingView.fxml"));
+            Parent root = loader.load();
+
+            Stage stage = (Stage) backButton.getScene().getWindow();
+            stage.setScene(new Scene(root));
+            stage.setTitle("Library Management System - Home");
+        } catch (IOException e) {
+            showError("Navigation Error", "Could not load home page: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 
