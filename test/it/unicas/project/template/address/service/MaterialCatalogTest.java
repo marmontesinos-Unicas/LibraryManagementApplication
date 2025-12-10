@@ -129,4 +129,3 @@ class MaterialCatalogServiceTest {
         assertEquals(2, result.size());
     }
 }
-
