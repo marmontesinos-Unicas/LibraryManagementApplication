@@ -30,7 +30,7 @@ public class HoldDAOMySQLImpl implements DAO<Hold> {
     @Override
     public List<Hold> select(Hold h) throws DAOException {
         List<Hold> list = new ArrayList<>();
-        if (h == null) h = new Hold(null, null, null, null, null);
+        if (h == null) h = new Hold(null, null, null);
 
         String sql = "SELECT * FROM holds WHERE 1=1";
         if (h.getIdHold() != -1) sql += " AND idHold=?";
@@ -52,8 +52,7 @@ public class HoldDAOMySQLImpl implements DAO<Hold> {
                         rs.getInt("idHold"),
                         rs.getInt("idUser"),
                         rs.getInt("idMaterial"),
-                        rs.getTimestamp("hold_date").toLocalDateTime(),
-                        rs.getString("hold_status")
+                        rs.getTimestamp("hold_date").toLocalDateTime()
                 );
                 list.add(hold);
             }
@@ -67,20 +66,19 @@ public class HoldDAOMySQLImpl implements DAO<Hold> {
     @Override
     public void insert(Hold h) throws DAOException {
         verifyObject(h);
-        String sql = "INSERT INTO holds (idUser, idMaterial, hold_date, hold_status) VALUES (?, ?, ?, ?)";
+        String sql = "INSERT INTO holds (idUser, idMaterial, hold_date) VALUES (?, ?, ?)";
 
         try (PreparedStatement ps = DAOMySQLSettings.getConnection().prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setInt(1, h.getIdUser());
             ps.setInt(2, h.getIdMaterial());
             ps.setString(3, h.getHold_date().format(FORMATTER));
-            ps.setString(4, h.getHold_status());
 
             logger.info("SQL: " + ps);
             ps.executeUpdate();
 
-            // Obtener idHold generado automáticamente
             ResultSet rs = ps.getGeneratedKeys();
             if (rs.next()) h.setIdHold(rs.getInt(1));
+
         } catch (SQLException e) {
             throw new DAOException("In insert(): " + e.getMessage());
         }
@@ -89,14 +87,13 @@ public class HoldDAOMySQLImpl implements DAO<Hold> {
     @Override
     public void update(Hold h) throws DAOException {
         verifyObject(h);
-        String sql = "UPDATE holds SET idUser=?, idMaterial=?, hold_date=?, hold_status=? WHERE idHold=?";
+        String sql = "UPDATE holds SET idUser=?, idMaterial=?, hold_date=? WHERE idHold=?";
 
         try (PreparedStatement ps = DAOMySQLSettings.getConnection().prepareStatement(sql)) {
             ps.setInt(1, h.getIdUser());
             ps.setInt(2, h.getIdMaterial());
             ps.setString(3, h.getHold_date().format(FORMATTER));
-            ps.setString(4, h.getHold_status());
-            ps.setInt(5, h.getIdHold());
+            ps.setInt(4, h.getIdHold());
 
             logger.info("SQL: " + ps);
             ps.executeUpdate();
@@ -122,8 +119,8 @@ public class HoldDAOMySQLImpl implements DAO<Hold> {
     }
 
     private void verifyObject(Hold h) throws DAOException {
-        if (h == null || h.getIdUser() == -1 || h.getIdMaterial() == -1 ||
-                h.getHold_date() == null || h.getHold_status() == null) {
+        if (h == null || h.getIdUser() == -1 ||
+                h.getIdMaterial() == -1 || h.getHold_date() == null) {
             throw new DAOException("In verifyObject: all fields must be non-null or valid");
         }
     }
