@@ -8,6 +8,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 
+
+/**
+ * MySQL implementation of the GenreDAO interface.
+ */
+
 public class GenreDAOMySQLImpl implements GenreDAO {
 
     private static GenreDAOMySQLImpl instance;

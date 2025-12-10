@@ -354,13 +354,9 @@ public class AddMaterialController {
     }
 
     private void navigateBack() {
-        if (mainApp != null) {
-            mainApp.showAdminLanding();
-        } else {
-            Stage stage = (Stage) titleField.getScene().getWindow();
-            stage.close();
-        }
+        mainApp.showAdminLanding();
     }
+
 
     private void clearForm() {
         titleField.clear();
