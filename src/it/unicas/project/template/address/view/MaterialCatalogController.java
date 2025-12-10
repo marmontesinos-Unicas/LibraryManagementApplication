@@ -62,6 +62,8 @@ public class MaterialCatalogController {
     @FXML private HBox adminActionsBox;
     @FXML private Button backButton;
 
+    private MainApp mainApp;
+
     private DAO<Material> materialDAO;
     private MaterialTypeDAOMySQLImpl materialTypeDAO;
     private GenreDAO genreDAO;
@@ -686,18 +688,13 @@ public class MaterialCatalogController {
             }
         }
     }
+
     @FXML
     private void handleBack() {
-        try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/it/unicas/project/template/address/view/AdminLandingView.fxml"));
-            Parent root = loader.load();
-
-            Stage stage = (Stage) backButton.getScene().getWindow();
-            stage.setScene(new Scene(root));
-            stage.setTitle("Library Management System - Home");
-        } catch (IOException e) {
-            showError("Navigation Error", "Could not load home page: " + e.getMessage());
-            e.printStackTrace();
+        if (mainApp != null) {
+            mainApp.showAdminLanding();
+        } else {
+            showError("Navigation Error", "Cannot navigate back - MainApp not set");
         }
     }
 
@@ -781,5 +778,6 @@ public class MaterialCatalogController {
     }
 
     public void setMainApp(MainApp mainApp) {
+        this.mainApp = mainApp;
     }
 }
