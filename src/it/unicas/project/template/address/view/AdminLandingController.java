@@ -53,6 +53,7 @@
         /**
          * Handles the action for the "Manage Users" button.
          * Implemented logic: Calls MainApp to switch the scene to the User Management view.
+         *
          * @param event The action event.
          */
         @FXML
@@ -68,6 +69,7 @@
         /**
          * Handles the action for the "Loan / Return" button.
          * Logic: Calls MainApp to switch the scene to the Loan/Return view.
+         *
          * @param event The action event.
          */
         @FXML
@@ -79,20 +81,21 @@
                 System.err.println("Error: MainApp reference is null. Cannot show Loan/Return view.");
             }
         }
-    }
 
-    /**
-     * Handles the action for the "Advanced Search" button.
-     * Future logic: Open the view to perform detailed searches in the catalog.
-     * @param event The action event.
-     */
-    @FXML
-    protected void handleSearch(ActionEvent event) {
-        System.out.println("Action: Advanced search of the catalog.");
-        // The code to switch to the search screen will go here.
-        if (mainApp != null) {
-            mainApp.showCatalogView();
-        } else {
-            System.err.println("mainApp is null - call setMainApp(...) when loading the admin view.");
+        /**
+         * Handles the action for the "Advanced Search" button.
+         * Future logic: Open the view to perform detailed searches in the catalog.
+         *
+         * @param event The action event.
+         */
+        @FXML
+        protected void handleSearch(ActionEvent event) {
+            System.out.println("Action: Advanced search of the catalog.");
+            // The code to switch to the search screen will go here.
+            if (mainApp != null) {
+                mainApp.showCatalogView();
+            } else {
+                System.err.println("mainApp is null - call setMainApp(...) when loading the admin view.");
+            }
         }
     }
