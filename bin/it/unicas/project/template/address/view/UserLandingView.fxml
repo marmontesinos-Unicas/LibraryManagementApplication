@@ -22,8 +22,8 @@
         <TableView fx:id="myLoansTable" VBox.vgrow="ALWAYS" prefHeight="470">
             <columns>
                 <TableColumn fx:id="loanTitleColumn" text="Title" prefWidth="170"/>
-                <TableColumn fx:id="loanReturnDateColumn" text="Return Date" prefWidth="110"/>
-                <TableColumn fx:id="loanStatusColumn" text="Status" prefWidth="80"/>
+                <TableColumn fx:id="loanReturnDateColumn" text="Return Date" prefWidth="100"/>
+                <TableColumn fx:id="loanStatusColumn" text="Status" prefWidth="90"/>
             </columns>
         </TableView>
     </VBox>

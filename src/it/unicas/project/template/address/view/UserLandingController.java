@@ -1,3 +1,4 @@
+
 package it.unicas.project.template.address.view;
 
 import it.unicas.project.template.address.MainApp;
@@ -15,6 +16,13 @@ import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.TableCell;
+import javafx.scene.control.TableColumn;
+import javafx.util.Callback;
+
 
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -65,11 +73,38 @@ public class UserLandingController {
         loanStatusColumn.setCellValueFactory(cell -> cell.getValue().delayedProperty());
         myLoansTable.setItems(loanList);
 
+        // Colorear status: Active = verde, Delayed = rojo
+        loanStatusColumn.setCellFactory(column -> new TableCell<LoanRow, String>() {
+            @Override
+            protected void updateItem(String item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText(null);
+                    setStyle("");
+                } else {
+                    setText(item);
+                    switch (item) {
+                        case "Delayed" -> setStyle("-fx-text-fill: red; -fx-font-weight: bold;");
+                        case "Active" -> setStyle("-fx-text-fill: green;-fx-font-weight: bold;");
+                        default -> setStyle(""); // Returned u otros
+                    }
+                }
+            }
+        });
+
         // ---------- Hold Table ----------
         holdTitleColumn.setCellValueFactory(cell -> cell.getValue().titleProperty());
         holdMaxDateColumn.setCellValueFactory(cell -> cell.getValue().maxDateProperty());
         myHoldsTable.setItems(holdList);
+
+        // -----------------------------------------
+        // Disable Delete button if nothing selected
+        // -----------------------------------------
+        deleteHoldButton.disableProperty().bind(
+                myHoldsTable.getSelectionModel().selectedItemProperty().isNull()
+        );
     }
+
 
     private void loadUserData() {
         if (currentUser == null) return;
@@ -82,13 +117,29 @@ public class UserLandingController {
 
             loanList.clear();
             for (Loan loan : userLoans) {
+
                 Material mat = new Material();
                 mat.setIdMaterial(loan.getIdMaterial());
                 mat = MaterialDAOMySQLImpl.getInstance().select(mat).stream().findFirst().orElse(null);
 
                 String title = (mat != null && mat.getTitle() != null) ? mat.getTitle() : "Unknown";
-                String returnDate = (loan.getReturn_date() != null) ? loan.getReturn_date().format(dateFormatter) : "Not Returned";
-                String status = (loan.getReturn_date() == null) ? "Active" : "Returned";
+                String returnDate = (loan.getReturn_date() != null)
+                        ? loan.getReturn_date().format(dateFormatter)
+                        : "Not Returned";
+
+                // ---------------------------
+                // STATUS LOGIC
+                // ---------------------------
+                String status;
+
+                if (loan.getReturn_date() != null) {
+                    status = "Returned";
+                } else if (loan.getDue_date() != null &&
+                        loan.getDue_date().isBefore(java.time.LocalDateTime.now())) {
+                    status = "Delayed";
+                } else {
+                    status = "Active";
+                }
 
                 loanList.add(new LoanRow(loan.getIdLoan(), "", title, "", returnDate, status));
             }
@@ -108,16 +159,18 @@ public class UserLandingController {
                 }
 
                 String title = (mat != null && mat.getTitle() != null) ? mat.getTitle() : "Unknown";
-                String maxDate = (hold.getHold_date() != null) ? hold.getHold_date().format(dateFormatter) : "-";
+                String maxDate = (hold.getHold_date() != null)
+                        ? hold.getHold_date().format(dateFormatter)
+                        : "-";
 
                 holdList.add(new HoldRow(hold.getIdHold(), title, maxDate));
             }
-
 
         } catch (DAOException e) {
             e.printStackTrace();
         }
     }
+
 
     @FXML
     private void handleSearch() {
@@ -132,16 +185,81 @@ public class UserLandingController {
     @FXML
     private void handleDeleteHold() {
         HoldRow selected = myHoldsTable.getSelectionModel().getSelectedItem();
-        if (selected != null) {
-            try {
-                Hold hold = new Hold();
-                hold.setIdHold(selected.getIdHold());
-                HoldDAOMySQLImpl.getInstance().delete(hold);
-                holdList.remove(selected);
-                System.out.println("Deleted hold: " + selected.getIdHold());
-            } catch (DAOException e) {
-                e.printStackTrace();
+
+        if (selected == null) {
+            Alert alert = new Alert(Alert.AlertType.WARNING);
+            alert.setTitle("No Hold Selected");
+            alert.setHeaderText(null);
+            alert.setContentText("Please select a hold before trying to delete it.");
+            alert.showAndWait();
+            return;
+        }
+
+        // Confirm with user (show title for friendliness)
+        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
+        confirm.setTitle("Confirm Hold Removal");
+        confirm.setHeaderText(null);
+        confirm.setContentText("Are you sure you want to remove the hold for \"" + selected.getTitle() + "\"?");
+        ButtonType yes = new ButtonType("Yes");
+        ButtonType no = new ButtonType("No", ButtonType.CANCEL.getButtonData());
+        confirm.getButtonTypes().setAll(yes, no);
+
+        if (confirm.showAndWait().orElse(no) != yes) {
+            return; // user cancelled
+        }
+
+        try {
+            // 1) Retrieve the real Hold from DB (so we have idMaterial)
+            Hold filter = new Hold();
+            filter.setIdHold(selected.getIdHold());
+            var holds = HoldDAOMySQLImpl.getInstance().select(filter);
+
+            if (holds == null || holds.isEmpty()) {
+                Alert err = new Alert(Alert.AlertType.ERROR);
+                err.setTitle("Error");
+                err.setHeaderText(null);
+                err.setContentText("Could not find the hold in the database.");
+                err.showAndWait();
+                return;
             }
+
+            Hold realHold = holds.get(0);
+
+            // 2) If the hold references a material, mark that material as available
+            Integer matId = realHold.getIdMaterial();
+            boolean materialUpdated = false;
+            if (matId != null && matId != -1) {
+                Material mFilter = new Material();
+                mFilter.setIdMaterial(matId);
+                var mats = MaterialDAOMySQLImpl.getInstance().select(mFilter);
+                if (mats != null && !mats.isEmpty()) {
+                    Material mat = mats.get(0);
+                    mat.setMaterial_status("available");
+                    MaterialDAOMySQLImpl.getInstance().update(mat);
+                    materialUpdated = true;
+                }
+            }
+
+            // 3) Delete the hold from DB
+            HoldDAOMySQLImpl.getInstance().delete(realHold);
+
+            // 4) Remove from UI list
+            holdList.removeIf(h -> h.getIdHold() == selected.getIdHold());
+
+            // 5) Inform the user
+            Alert info = new Alert(Alert.AlertType.INFORMATION);
+            info.setTitle("Hold Removed");
+            info.setHeaderText(null);
+            info.setContentText("Hold for \"" + selected.getTitle() + "\" has been removed.");
+            info.showAndWait();
+
+        } catch (DAOException e) {
+            e.printStackTrace();
+            Alert error = new Alert(Alert.AlertType.ERROR);
+            error.setTitle("Error");
+            error.setHeaderText("Operation failed");
+            error.setContentText("An error occurred while removing the hold. Please try again.");
+            error.showAndWait();
         }
     }
 }
