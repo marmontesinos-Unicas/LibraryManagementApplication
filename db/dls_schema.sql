@@ -26,7 +26,7 @@ CREATE TABLE `genre` (
   `idGenre` int NOT NULL AUTO_INCREMENT,
   `genre` varchar(45) DEFAULT NULL,
   PRIMARY KEY (`idGenre`)
-) ENGINE=InnoDB AUTO_INCREMENT=25 DEFAULT CHARSET=utf8mb3;
+) ENGINE=InnoDB AUTO_INCREMENT=45 DEFAULT CHARSET=utf8mb3;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -35,7 +35,7 @@ CREATE TABLE `genre` (
 
 LOCK TABLES `genre` WRITE;
 /*!40000 ALTER TABLE `genre` DISABLE KEYS */;
-INSERT INTO `genre` VALUES (1,'romance'),(2,'fiction'),(3,'fantasy'),(4,'horror'),(5,'adventure'),(6,'drama'),(7,'history'),(8,'science'),(9,'children'),(10,'blues'),(11,'jazz'),(12,'rock'),(13,'pop'),(14,'reggae'),(15,'opera'),(16,'kpop'),(17,'news'),(18,'fashion'),(19,'sports'),(20,'cooking'),(21,'fitness'),(22,'home and garden'),(23,'crime'),(24,'animation');
+INSERT INTO `genre` VALUES (1,'romance'),(2,'fiction'),(3,'fantasy'),(4,'horror'),(5,'adventure'),(6,'drama'),(7,'history'),(8,'science'),(9,'children'),(10,'blues'),(11,'jazz'),(12,'rock'),(13,'pop'),(14,'reggae'),(15,'opera'),(16,'kpop'),(17,'news'),(18,'fashion'),(19,'sports'),(20,'cooking'),(21,'fitness'),(22,'home and garden'),(23,'romance'),(24,'fiction'),(25,'fantasy'),(26,'horror'),(27,'adventure'),(28,'drama'),(29,'history'),(30,'science'),(31,'children'),(32,'blues'),(33,'jazz'),(34,'rock'),(35,'pop'),(36,'reggae'),(37,'opera'),(38,'kpop'),(39,'news'),(40,'fashion'),(41,'sports'),(42,'cooking'),(43,'fitness'),(44,'home and garden');
 /*!40000 ALTER TABLE `genre` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -51,13 +51,12 @@ CREATE TABLE `holds` (
   `idUser` int NOT NULL,
   `idMaterial` int NOT NULL,
   `hold_date` datetime(2) NOT NULL,
-  `hold_status` varchar(45) NOT NULL,
   PRIMARY KEY (`idHold`),
   KEY `idUser_idx` (`idUser`),
   KEY `idMaterial_idx` (`idMaterial`),
   CONSTRAINT `idMaterial_FK` FOREIGN KEY (`idMaterial`) REFERENCES `materials` (`idMaterial`),
   CONSTRAINT `idUser_FK` FOREIGN KEY (`idUser`) REFERENCES `users` (`idUser`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb3;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -66,6 +65,7 @@ CREATE TABLE `holds` (
 
 LOCK TABLES `holds` WRITE;
 /*!40000 ALTER TABLE `holds` DISABLE KEYS */;
+INSERT INTO `holds` VALUES (1,1,3,'2025-12-10 00:00:00.00'),(4,4,7,'2025-12-10 00:00:00.00');
 /*!40000 ALTER TABLE `holds` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -88,7 +88,7 @@ CREATE TABLE `loans` (
   KEY `idMaterial_idx` (`idMaterial`),
   CONSTRAINT `idMaterial_FK2` FOREIGN KEY (`idMaterial`) REFERENCES `materials` (`idMaterial`),
   CONSTRAINT `idUser_FK2` FOREIGN KEY (`idUser`) REFERENCES `users` (`idUser`)
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb3;
+) ENGINE=InnoDB AUTO_INCREMENT=16 DEFAULT CHARSET=utf8mb3;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -97,7 +97,7 @@ CREATE TABLE `loans` (
 
 LOCK TABLES `loans` WRITE;
 /*!40000 ALTER TABLE `loans` DISABLE KEYS */;
-INSERT INTO `loans` VALUES (1,3,1,'2025-12-09 14:30:36.00','2026-01-09 14:30:36.00','2025-12-09 13:31:23.00'),(2,2,1,'2025-12-10 12:39:17.00','2026-01-10 12:39:17.00',NULL),(3,2,6,'2025-11-25 22:02:11.00','2025-12-05 22:02:11.00',NULL);
+INSERT INTO `loans` VALUES (1,1,3,'2025-01-10 00:00:00.00','2025-02-10 00:00:00.00','2025-01-28 00:00:00.00'),(2,2,7,'2025-02-05 00:00:00.00','2025-03-05 00:00:00.00','2025-02-28 00:00:00.00'),(3,3,12,'2025-03-01 00:00:00.00','2025-04-01 00:00:00.00','2025-03-29 00:00:00.00'),(4,4,18,'2025-04-15 00:00:00.00','2025-05-15 00:00:00.00','2025-05-10 00:00:00.00'),(5,5,25,'2025-05-20 00:00:00.00','2025-06-20 00:00:00.00','2025-06-12 00:00:00.00'),(6,1,10,'2025-10-10 02:00:00.00','2025-11-10 01:00:00.00','2025-12-09 12:08:58.00'),(7,2,14,'2025-10-25 00:00:00.00','2025-11-25 00:00:00.00',NULL),(8,3,22,'2025-11-10 00:00:00.00','2025-12-10 00:00:00.00',NULL),(9,4,30,'2025-06-01 02:00:00.00','2025-07-01 02:00:00.00','2025-12-05 18:49:52.00'),(10,5,5,'2025-07-15 02:00:00.00','2025-08-15 02:00:00.00','2025-12-05 18:50:23.00'),(11,2,1,'2025-08-10 02:00:00.00','2025-09-10 02:00:00.00','2025-12-05 19:11:13.00'),(12,2,1,'2025-12-05 21:37:22.00','2026-01-05 21:37:22.00','2025-12-10 15:25:16.00'),(13,3,3,'2025-12-05 21:49:25.00','2026-01-05 21:49:25.00','2025-12-05 20:50:13.00'),(14,3,2,'2025-12-09 12:10:24.00','2026-01-09 12:10:24.00',NULL),(15,4,34,'2025-12-11 18:09:13.00','2026-01-11 18:09:13.00',NULL);
 /*!40000 ALTER TABLE `loans` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -138,12 +138,12 @@ CREATE TABLE `materials` (
   `author` varchar(45) DEFAULT NULL,
   `year` int DEFAULT NULL,
   `ISBN` varchar(45) DEFAULT NULL,
-  `idMaterialType` int NOT NULL,
+  `idMaterialType` int DEFAULT NULL,
   `material_status` varchar(45) NOT NULL,
   PRIMARY KEY (`idMaterial`),
   KEY `idMaterialType_idx` (`idMaterialType`),
   CONSTRAINT `idMaterialType_FK` FOREIGN KEY (`idMaterialType`) REFERENCES `material_type` (`idMaterialType`)
-) ENGINE=InnoDB AUTO_INCREMENT=38 DEFAULT CHARSET=utf8mb3;
+) ENGINE=InnoDB AUTO_INCREMENT=37 DEFAULT CHARSET=utf8mb3;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -152,7 +152,7 @@ CREATE TABLE `materials` (
 
 LOCK TABLES `materials` WRITE;
 /*!40000 ALTER TABLE `materials` DISABLE KEYS */;
-INSERT INTO `materials` VALUES (1,'Pride and Prejudice','Jane Austen',1813,'67967966766',1,'loaned'),(2,'The Way of Kings','Brandon Sanderson',2010,'9781429992800',1,'available'),(3,'The Name of the Wind','Patrick Rothfuss ',2007,'575081384',1,'available'),(4,'The Name of the Wind','Patrick Rothfuss ',2007,'575081384',1,'available'),(5,'The Great Gatsby','F. Scott Fitzgerald',1925,'4375687624324',1,'available'),(6,'Harry Potter and the Sorcerer Stone','J.K. Rowling',1997,'34578736345',1,'available'),(7,'Harry Potter and the Sorcerer Stone','J.K. Rowling',1997,'34578736345',1,'available'),(8,'Harry Potter and the Sorcerer Stone','J.K. Rowling',1997,'34578736345',1,'available'),(9,'It','Stephen King',1986,'345463346',1,'available'),(10,'Treasure Island','Robert Louis Stevenson',1883,'4537768',1,'available'),(11,'Hamlet','William Shakespeare',1603,'3567568879',1,'available'),(12,'Sapiens: A Brief History of Humankind','Yuval Noah Harari',2011,'46765885665',1,'available'),(13,'A Brief History of Time','Stephen Hawking',1988,'6588795879',1,'available'),(14,'Charlotte\'s Web','E.B. White',1952,'6798757768',1,'available'),(15,'Kind of Blue','Miles Davis',1959,NULL,2,'available'),(16,'Blue Train','John Coltrane',1957,NULL,2,'available'),(17,'Abbey Road','The Beatles',1969,NULL,2,'available'),(18,'Thriller','Michael Jackson',1982,NULL,2,'available'),(19,'Legend','Bob Marley',1984,NULL,2,'available'),(20,'La Traviata','Giuseppe Verdi',1853,NULL,2,'available'),(21,'Map of the Soul: 7','BTS',2020,NULL,2,'available'),(22,'The Notebook','Nick Cassavetes',2004,NULL,3,'available'),(23,'Inception','Christopher Nolan',2010,NULL,3,'available'),(24,'The Lord of the Rings: The Fellowship of the Ring','Peter Jackson',2001,NULL,3,'available'),(25,'It','Andy Muschietti',2017,NULL,3,'available'),(26,'Pirates of the Caribbean: The Curse of the Black Pearl','Gore Verbinski',2003,NULL,3,'available'),(27,'The Godfather','Francis Ford Coppola',1972,NULL,3,'available'),(28,'Gladiator','Ridley Scott',2000,NULL,3,'available'),(29,'Interstellar','Christopher Nolan',2014,NULL,3,'available'),(30,'Frozen','Chris Buck & Jennifer Lee',2013,NULL,3,'available'),(31,'The Daily News','Global Press',2024,NULL,4,'available'),(32,'Vogue','Condé Nast',2024,NULL,4,'available'),(33,'Sports Illustrated','SI Media',2024,NULL,4,'available'),(34,'Bon Appétit','Condé Nast',2024,NULL,4,'available'),(35,'Men\'s Health','Hearst',2024,NULL,4,'available'),(36,'Better Homes & Gardens','Meredith',2024,NULL,4,'available'),(37,'Ramen Cooking Guide','Mar Gonzalez',2025,'',4,'available');
+INSERT INTO `materials` VALUES (1,'Pride and Prejudice','Jane Austen',1813,'67967966766',1,'available'),(2,'The Way of Kings','Brandon Sanderson',2010,'9781429992800',1,'loaned'),(3,'The Name of the Wind','Patrick Rothfuss ',2007,'575081384',1,'hold'),(4,'The Name of the Wind','Patrick Rothfuss ',2007,'575081384',1,'hold'),(5,'The Great Gatsby','F. Scott Fitzgerald',1925,'4375687624324',1,'available'),(6,'Harry Potter and the Sorcerer Stone','J.K. Rowling',1997,'34578736345',1,'hold'),(7,'Harry Potter and the Sorcerer Stone','J.K. Rowling',1997,'34578736345',1,'hold'),(8,'Harry Potter and the Sorcerer Stone','J.K. Rowling',1997,'34578736345',1,'hold'),(9,'It','Stephen King',1986,'345463346',1,'available'),(10,'Treasure Island','Robert Louis Stevenson',1883,'4537768',1,'available'),(11,'Hamlet','William Shakespeare',1603,'3567568879',1,'available'),(12,'Sapiens: A Brief History of Humankind','Yuval Noah Harari',2011,'46765885665',1,'available'),(13,'A Brief History of Time','Stephen Hawking',1988,'6588795879',1,'available'),(14,'Charlotte\'s Web','E.B. White',1952,'6798757768',1,'loaned'),(15,'Kind of Blue','Miles Davis',1959,NULL,2,'available'),(16,'Blue Train','John Coltrane',1957,NULL,2,'available'),(17,'Abbey Road','The Beatles',1969,NULL,2,'available'),(18,'Thriller','Michael Jackson',1982,NULL,2,'available'),(19,'Legend','Bob Marley',1984,NULL,2,'available'),(20,'La Traviata','Giuseppe Verdi',1853,NULL,2,'available'),(21,'Map of the Soul: 7','BTS',2020,NULL,2,'available'),(22,'The Notebook','Nick Cassavetes',2004,NULL,3,'loaned'),(23,'Inception','Christopher Nolan',2010,NULL,3,'available'),(24,'The Lord of the Rings: The Fellowship of the Ring','Peter Jackson',2001,NULL,3,'available'),(25,'It','Andy Muschietti',2017,NULL,3,'available'),(26,'Pirates of the Caribbean: The Curse of the Black Pearl','Gore Verbinski',2003,NULL,3,'available'),(27,'The Godfather','Francis Ford Coppola',1972,NULL,3,'available'),(28,'Gladiator','Ridley Scott',2000,NULL,3,'available'),(29,'Interstellar','Christopher Nolan',2014,NULL,3,'available'),(30,'Frozen','Chris Buck & Jennifer Lee',2013,NULL,3,'available'),(31,'The Daily News','Global Press',2024,NULL,3,'available'),(32,'Vogue','Condé Nast',2024,NULL,3,'available'),(33,'Sports Illustrated','SI Media',2024,NULL,3,'available'),(34,'Bon Appétit','Condé Nast',2024,'',3,'loaned'),(35,'Men\'s Health','Hearst',2024,NULL,3,'available'),(36,'Better Homes & Gardens','Meredith',2024,NULL,3,'available');
 /*!40000 ALTER TABLE `materials` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -179,7 +179,7 @@ CREATE TABLE `materials_genres` (
 
 LOCK TABLES `materials_genres` WRITE;
 /*!40000 ALTER TABLE `materials_genres` DISABLE KEYS */;
-INSERT INTO `materials_genres` VALUES (1,1),(22,1),(5,2),(23,2),(29,2),(2,3),(3,3),(4,3),(6,3),(7,3),(8,3),(24,3),(9,4),(25,4),(10,5),(26,5),(11,6),(27,6),(28,6),(12,7),(28,7),(13,8),(14,9),(30,9),(15,11),(16,11),(17,12),(18,13),(19,14),(20,15),(21,16),(31,17),(32,18),(33,19),(34,20),(35,21),(36,22),(27,23),(30,24);
+INSERT INTO `materials_genres` VALUES (22,1),(23,2),(29,2),(24,3),(25,4),(26,5),(27,6),(28,6),(30,9),(15,11),(16,11),(17,12),(18,13),(19,14),(20,15),(21,16),(31,17),(32,18),(33,19),(34,20),(35,21),(36,22);
 /*!40000 ALTER TABLE `materials_genres` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -227,7 +227,7 @@ CREATE TABLE `users` (
   PRIMARY KEY (`idUser`),
   KEY `isAdmin_idx` (`idRole`),
   CONSTRAINT `idRole_FK` FOREIGN KEY (`idRole`) REFERENCES `roles` (`idRole`)
-) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb3;
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb3;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -236,7 +236,7 @@ CREATE TABLE `users` (
 
 LOCK TABLES `users` WRITE;
 /*!40000 ALTER TABLE `users` DISABLE KEYS */;
-INSERT INTO `users` VALUES (1,'Carla','Ramirez','crami','24433365K','1967-01-12','45464','cramirez@gmail.com',1),(2,'Maria','Castro','mcastro','23456793I','2002-12-03','mcastro111','mcastro@gmail.com',2),(3,'Pablo','Garcia','pgarcia','45653567G','1998-05-20','pgarcia111','pgarcia@gmail.com',2),(4,'Marc','Roig','mroig','98936489Y','1997-06-26','mroig111','mroig@gmail.com',2),(5,'Carles','Pujalte','cpujalte','45653567G','1978-09-10','cpujalte111','cpujalte@gmail.com',2),(6,'Ferran','Montero','fmontero','49899173M','2002-10-20','Alicia20','ferran.montero@studentmail.unicas.it',1);
+INSERT INTO `users` VALUES (1,'Carla','Ramirez','crami','24433365K','1967-01-12','45464','cramirez@gmail.com',1),(2,'Maria','Castro','mcastro','23456793I','2002-12-03','mcastro111','mcastro@gmail.com',2),(3,'Pablo','Garcia','pgarcia','45653567G','1998-05-20','pgarcia111','pgarcia@gmail.com',2),(4,'Marc','Roig','mroig','98936489Y','1997-06-26','mroig111','mroig@gmail.com',2),(5,'Carles','Pujalte','cpujalte','45653567G','1978-09-10','cpujalte111','cpujalte@gmail.com',2);
 /*!40000 ALTER TABLE `users` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
@@ -249,4 +249,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2025-12-11 17:26:55
+-- Dump completed on 2025-12-11 18:43:53
