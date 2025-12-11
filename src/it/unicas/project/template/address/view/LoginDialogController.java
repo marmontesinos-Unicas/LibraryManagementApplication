@@ -3,7 +3,7 @@ package it.unicas.project.template.address.view;
 import it.unicas.project.template.address.MainApp;
 import it.unicas.project.template.address.model.User;
 import it.unicas.project.template.address.model.dao.DAOException;
-import it.unicas.project.template.address.service.LoginService; // <-- Keep this import
+import it.unicas.project.template.address.service.LoginService;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
@@ -30,17 +30,17 @@ public class LoginDialogController {
     private final LoginService loginService = new LoginService();
 
     /**
+     * Called by the MainApp to pass the reference of the MainApp object.
+     */
+    public void setMainApp(MainApp mainApp) {
+        this.mainApp = mainApp;
+    }
+
+    /**
      * Called by the MainApp to pass the reference of the Stage.
      */
     public void setDialogStage(Stage dialogStage) {
         this.dialogStage = dialogStage;
-    }
-
-    /**
-     * Called by the MainApp to pass the MainApp reference (Used for re-login/logout scenario).
-     */
-    public void setMainApp(MainApp mainApp) {
-        this.mainApp = mainApp;
     }
 
     /**
@@ -83,11 +83,12 @@ public class LoginDialogController {
                 }
 
             } else {
-                // Authentication failed
+                // 3. Authentication failed (User not found OR incorrect password)
                 errorLabel.setText("Incorrect username or password");
             }
 
         } catch (DAOException e) {
+            // 4. Handle DAOException: This signals a system/database error, not a user error.
             errorLabel.setText("System Error: Could not connect to the authentication service.");
             e.printStackTrace();
         }
@@ -99,6 +100,11 @@ public class LoginDialogController {
     @FXML
     private void handleCancel() {
         loginSuccessful = false;
-        dialogStage.close();
+        if (dialogStage != null) {
+            dialogStage.close();
+        } else if (mainApp != null) {
+            // If we are in the scene (logout), and the user cancels, we simply let the app sit on the login screen.
+            System.out.println("Login canceled on main scene.");
+        }
     }
 }

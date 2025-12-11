@@ -3,8 +3,14 @@ package it.unicas.project.template.address;
 import it.unicas.project.template.address.model.User;
 import it.unicas.project.template.address.model.dao.DAOException;
 import it.unicas.project.template.address.model.dao.mysql.UserDAOMySQLImpl;
-import it.unicas.project.template.address.view.*;
+import it.unicas.project.template.address.view.AddMaterialController;
 import it.unicas.project.template.address.view.AdminLandingController;
+import it.unicas.project.template.address.view.LoginDialogController;
+import it.unicas.project.template.address.view.MaterialCatalogController;
+import it.unicas.project.template.address.view.UserLandingController;
+import it.unicas.project.template.address.view.UserManagementController;
+import it.unicas.project.template.address.view.UserEditController;
+import it.unicas.project.template.address.view.*;
 
 import javafx.application.Application;
 import javafx.collections.FXCollections;
@@ -76,7 +82,7 @@ public class MainApp extends Application {
             Stage dialogStage = new Stage();
             dialogStage.setTitle("Login");
             dialogStage.initModality(Modality.WINDOW_MODAL);
-            dialogStage.initOwner(primaryStage); // Still owned by the primaryStage (which is currently hidden)
+            dialogStage.initOwner(primaryStage);
             Scene scene = new Scene(page);
             dialogStage.setScene(scene);
             dialogStage.setResizable(false); // Login is kept small and fixed size
@@ -87,11 +93,14 @@ public class MainApp extends Application {
 
             dialogStage.showAndWait();
 
+            // The controller handles setting loggedUser/loans/reservations only if login was successful
             if (controller.isLoginSuccessful()) {
                 String username = controller.getUsername();
+
+                // 1. Fetch user data and initialize lists
                 loggedUser = UserDAOMySQLImpl.getInstance().getByUsername(username);
 
-                // Inicializamos listas de préstamos y reservas del usuario
+                // Initialize lists of loans and reservations for the user
                 loadUserLoans();
                 loadUserReservations();
 
@@ -137,8 +146,6 @@ public class MainApp extends Application {
         try {
             FXMLLoader loader = new FXMLLoader();
             loader.setLocation(MainApp.class.getResource("view/UserLandingView.fxml"));
-
-            // Cambiado de BorderPane a AnchorPane
             AnchorPane userPane = loader.load();
 
             Scene scene = new Scene(userPane);
@@ -148,14 +155,13 @@ public class MainApp extends Application {
             primaryStage.setMinHeight(520);
 
             UserLandingController controller = loader.getController();
-            controller.setMainApp(this);        // Pasar referencia a MainApp
-            controller.setCurrentUser(loggedUser); // Pasar el usuario loggeado
+            controller.setMainApp(this);        // Pass reference to MainApp
+            controller.setCurrentUser(loggedUser); // Pass the logged User
 
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
-
 
     public void showAdminLanding() {
         try {
@@ -351,8 +357,6 @@ public class MainApp extends Application {
             alert.showAndWait();
         }
     }
-
-
 
     public User getLoggedUser() {
         return loggedUser;
