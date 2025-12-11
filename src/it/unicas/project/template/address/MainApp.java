@@ -119,7 +119,9 @@ public class MainApp extends Application {
         try {
             FXMLLoader loader = new FXMLLoader();
             loader.setLocation(MainApp.class.getResource("view/UserLandingView.fxml"));
-            BorderPane userPane = loader.load();
+
+            // Cambiado de BorderPane a AnchorPane
+            AnchorPane userPane = loader.load();
 
             Scene scene = new Scene(userPane);
             primaryStage.setScene(scene);
@@ -128,12 +130,14 @@ public class MainApp extends Application {
             primaryStage.setMinHeight(520);
 
             UserLandingController controller = loader.getController();
-            controller.setMainApp(this);
+            controller.setMainApp(this);        // Pasar referencia a MainApp
+            controller.setCurrentUser(loggedUser); // Pasar el usuario loggeado
 
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
+
 
     public void showAdminLanding() {
         try {

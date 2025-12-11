@@ -6,7 +6,7 @@
 <AnchorPane prefHeight="520" prefWidth="800" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="it.unicas.project.template.address.view.AddMaterialController">
 
     <!-- Go Back Button - Top Left -->
-    <Button mnemonicParsing="false" onAction="#handleGoBack" text="Go Back"
+    <Button mnemonicParsing="false" onAction="#handleGoBack" text="&lt; Back to Home"
             AnchorPane.leftAnchor="20.0" AnchorPane.topAnchor="20.0" />
 
     <GridPane layoutX="20.0" layoutY="70.0" AnchorPane.leftAnchor="20.0" AnchorPane.rightAnchor="20.0" AnchorPane.topAnchor="70.0">

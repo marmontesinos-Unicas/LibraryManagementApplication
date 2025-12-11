@@ -1,79 +1,62 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import java.lang.*?>
 <?import javafx.geometry.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.*?>
 
-<BorderPane prefHeight="520.0" prefWidth="800.0" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="it.unicas.project.template.address.view.UserLandingController">
-    <center>
-        <HBox spacing="10.0" BorderPane.alignment="CENTER">
-            <padding>
-                <Insets bottom="10.0" left="20.0" right="10.0" top="10.0" />
-            </padding>
-            <HBox alignment="TOP_CENTER" spacing="10.0" HBox.hgrow="ALWAYS">
-                <VBox style="-fx-border-color: gray; -fx-border-width: 1;" HBox.hgrow="ALWAYS">
-                    <Label text="My loans">
-                        <font>
-                            <Font size="20.0" />
-                        </font>
-                        <padding>
-                            <Insets bottom="5.0" left="10.0" right="10.0" top="10.0" />
-                        </padding>
-                    </Label>
-                    <ListView fx:id="myLoansList" VBox.vgrow="ALWAYS" />
-                    <HBox alignment="CENTER_LEFT">
-                        <padding>
-                            <Insets bottom="10.0" left="10.0" right="10.0" top="5.0" />
-                        </padding>
-                        <Button fx:id="deleteLoanButton" mnemonicParsing="false" onAction="#handleDeleteLoan" text="Delete">
-                            <styleClass>
-                                <String fx:value="button" />
-                                <String fx:value="button-danger" />
-                            </styleClass>
-                        </Button>
-                    </HBox>
-                </VBox>
-                <VBox style="-fx-border-color: gray; -fx-border-width: 1;" HBox.hgrow="ALWAYS">
-                    <Label text="My reservations">
-                        <font>
-                            <Font size="20.0" />
-                        </font>
-                        <padding>
-                            <Insets bottom="5.0" left="10.0" right="10.0" top="10.0" />
-                        </padding>
-                    </Label>
-                    <ListView fx:id="myReservationsList" VBox.vgrow="ALWAYS" />
-                    <HBox alignment="CENTER_LEFT">
-                        <padding>
-                            <Insets bottom="10.0" left="10.0" right="10.0" top="5.0" />
-                        </padding>
-                        <Button fx:id="deleteReservationButton" mnemonicParsing="false" onAction="#handleDeleteReservation" text="Delete">
-                            <styleClass>
-                                <String fx:value="button" />
-                                <String fx:value="button-danger" />
-                            </styleClass>
-                        </Button>
-                    </HBox>
-                </VBox>
-            </HBox>
+<AnchorPane prefWidth="800" prefHeight="520"
+            xmlns="http://javafx.com/javafx/17.0.12"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="it.unicas.project.template.address.view.UserLandingController">
 
-            <VBox alignment="TOP_CENTER" spacing="20.0">
-                <padding>
-                    <Insets top="10.0" />
-                </padding>
-                <Button fx:id="searchButton" alignment="CENTER" mnemonicParsing="false" onAction="#handleSearch" prefHeight="70.0" prefWidth="150.0" text="Search">
-                    <font>
-                        <Font size="18.0" />
-                    </font>
-                </Button>
-                <Button fx:id="notificationsButton" alignment="CENTER" mnemonicParsing="false" onAction="#handleNotifications" prefHeight="70.0" prefWidth="150.0" text="Notifications">
-                    <font>
-                        <Font size="18.0" />
-                    </font>
-                </Button>
-            </VBox>
-        </HBox>
-    </center>
-</BorderPane>
+    <!-- My Loans -->
+    <VBox spacing="10" AnchorPane.topAnchor="10" AnchorPane.leftAnchor="10"
+          prefWidth="360" prefHeight="500"
+          style="-fx-border-color: gray; -fx-border-width: 1;">
+
+        <Label text="My Loans" alignment="CENTER" maxWidth="Infinity">
+            <font><Font size="20"/></font>
+        </Label>
+
+        <TableView fx:id="myLoansTable" VBox.vgrow="ALWAYS" prefHeight="470">
+            <columns>
+                <TableColumn fx:id="loanTitleColumn" text="Title" prefWidth="170"/>
+                <TableColumn fx:id="loanReturnDateColumn" text="Return Date" prefWidth="110"/>
+                <TableColumn fx:id="loanStatusColumn" text="Status" prefWidth="80"/>
+            </columns>
+        </TableView>
+    </VBox>
+
+
+    <!-- My Holds -->
+    <VBox spacing="10" AnchorPane.topAnchor="10" AnchorPane.leftAnchor="380"
+          prefWidth="260" prefHeight="500"
+          style="-fx-border-color: gray; -fx-border-width: 1;">
+
+        <Label text="My Holds" alignment="CENTER" maxWidth="Infinity">
+            <font><Font size="20"/></font>
+        </Label>
+
+        <TableView fx:id="myHoldsTable" VBox.vgrow="ALWAYS" prefHeight="470">
+            <columns>
+                <TableColumn fx:id="holdTitleColumn" text="Title" prefWidth="150"/>
+                <TableColumn fx:id="holdMaxDateColumn" text="Max Pickup Date" prefWidth="110"/>
+            </columns>
+        </TableView>
+    </VBox>
+
+
+    <!-- Botones -->
+    <VBox spacing="10"
+          AnchorPane.bottomAnchor="10"
+          AnchorPane.rightAnchor="10"
+          prefWidth="120"
+          alignment="BOTTOM_CENTER">
+
+        <Button fx:id="searchButton" text="Search" onAction="#handleSearch" prefWidth="120"/>
+        <Button fx:id="notificationsButton" text="Notifications" onAction="#handleNotifications" prefWidth="120"/>
+        <Button fx:id="deleteHoldButton" text="Delete Hold" onAction="#handleDeleteHold" prefWidth="120"/>
+    </VBox>
+
+</AnchorPane>
