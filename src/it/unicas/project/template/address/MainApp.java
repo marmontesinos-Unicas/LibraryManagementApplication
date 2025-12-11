@@ -71,6 +71,12 @@ public class MainApp extends Application {
             loader.setLocation(MainApp.class.getResource("view/LoginDialog.fxml"));
             AnchorPane page = loader.load();
 
+            // Hide/Clear the primaryStage before opening the dialog
+            if (primaryStage.isShowing()) {
+                primaryStage.hide();
+                primaryStage.setScene(null); // Explicitly remove the Admin Scene content
+            }
+
             Stage dialogStage = new Stage();
             dialogStage.setTitle("Login");
             dialogStage.initModality(Modality.WINDOW_MODAL);
@@ -88,9 +94,17 @@ public class MainApp extends Application {
             // The controller handles setting loggedUser/loans/reservations only if login was successful
             if (controller.isLoginSuccessful()) {
                 String username = controller.getUsername();
-                // This logic is handled by the handleSuccessfulLogin method
-                return handleSuccessfulLogin(username);
+                boolean success = handleSuccessfulLogin(username); // Sets the Admin/User Scene
+
+                // Show the primaryStage with the new Admin/User scene
+                if (success) {
+                    primaryStage.show();
+                }
+                return success;
             } else {
+                // Login failed or was cancelled.
+                // If the primaryStage was hidden (i.e., this was a logout event),
+                // the app should remain closed (as per your initial start() logic).
                 return false;
             }
         } catch (IOException e) {

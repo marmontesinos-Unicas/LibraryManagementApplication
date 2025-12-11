@@ -114,10 +114,17 @@
                 // 1. Show the Login Dialog
                 mainApp.showLoginDialog();
 
-                // 2. Explicitly close/hide the current Admin Landing window/stage.
+                // 2. Explicitly close the current Admin Landing window/stage.
                 try {
-                    // Get the source of the event (the Button), find its Scene, and then find its Window (Stage)
-                    ((Node) (event.getSource())).getScene().getWindow().hide();
+                    Stage currentStage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+
+                    // Hide the window
+                    currentStage.hide();
+
+                    // Call System.gc() to try and force cleanup of the Admin Scene
+                    // data before the stage can reappear if login fails. (Use sparingly, but necessary here)
+                    System.gc();
+
                 } catch (Exception e) {
                     System.err.println("Error closing Admin Landing stage: " + e.getMessage());
                 }
