@@ -399,17 +399,38 @@ public class UserCatalogController {
             }
 
             private void updateButtonState(GroupedMaterial material) {
-                if (material.hasAvailable()) {
-                    holdButton.setText("Hold");
-                    holdButton.setStyle("-fx-background-color: #4CAF50; -fx-text-fill: white; " +
-                            "-fx-font-weight: bold; -fx-cursor: hand;");
-                    holdButton.setDisable(false);
-                } else if (material.hasHolded()) {
+                // Check if current user has a hold on any copy
+                boolean currentUserHasHold = false;
+                try {
+                    for (Material m : material.getMaterials()) {
+                        if ("holded".equalsIgnoreCase(m.getMaterial_status())) {
+                            Hold searchHold = new Hold();
+                            searchHold.setIdUser(currentUser.getIdUser());
+                            searchHold.setIdMaterial(m.getIdMaterial());
+                            List<Hold> holds = holdDAO.select(searchHold);
+                            if (!holds.isEmpty()) {
+                                currentUserHasHold = true;
+                                break;
+                            }
+                        }
+                    }
+                } catch (DAOException e) {
+                    e.printStackTrace();
+                }
+
+                if (currentUserHasHold) {
                     holdButton.setText("Holded");
                     holdButton.setStyle("-fx-background-color: #81C784; -fx-text-fill: white; " +
                             "-fx-font-weight: bold; -fx-cursor: hand;");
                     holdButton.setDisable(false);
+                } else if (material.hasAvailable()) {
+                    // Available copies exist
+                    holdButton.setText("Hold");
+                    holdButton.setStyle("-fx-background-color: #4CAF50; -fx-text-fill: white; " +
+                            "-fx-font-weight: bold; -fx-cursor: hand;");
+                    holdButton.setDisable(false);
                 } else {
+                    // No copies available
                     holdButton.setText("Unavailable");
                     holdButton.setStyle("-fx-background-color: #BDBDBD; -fx-text-fill: #757575; " +
                             "-fx-font-weight: bold; -fx-cursor: not-allowed;");
@@ -429,54 +450,55 @@ public class UserCatalogController {
         }
 
         try {
-            if (groupedMaterial.hasAvailable()) {
-                // Find first available material and hold it
+            boolean userHasHold = false;
+            Hold userHold = null;
+            Material heldMaterial = null;
+
+            for (Material material : groupedMaterial.getMaterials()) {
+                if ("holded".equalsIgnoreCase(material.getMaterial_status())) {
+                    Hold searchHold = new Hold();
+                    searchHold.setIdUser(currentUser.getIdUser());
+                    searchHold.setIdMaterial(material.getIdMaterial());
+                    List<Hold> holds = holdDAO.select(searchHold);
+                    if (!holds.isEmpty()) {
+                        userHasHold = true;
+                        userHold = holds.get(0);
+                        heldMaterial = material;
+                        break;
+                    }
+                }
+            }
+
+            if (userHasHold) {
+                // User already has a hold - release it
+                try {
+                    holdService.releaseHold(userHold, heldMaterial);
+                    refresh();
+                } catch (DAOException e) {
+                    showError("Error", "Could not release hold: " + e.getMessage());
+                    e.printStackTrace();
+                }
+            } else if (groupedMaterial.hasAvailable()) {
+                // No hold by current user - try to place one
                 Material availableMaterial = groupedMaterial.getMaterials().stream()
                         .filter(m -> "available".equalsIgnoreCase(m.getMaterial_status()))
                         .findFirst()
                         .orElse(null);
+
                 if (availableMaterial != null) {
                     try {
-                        // Use the transactional service
                         holdService.holdMaterial(currentUser.getIdUser(), availableMaterial);
-                        showInfo("Success", "Material placed on hold successfully!");
                         refresh();
                     } catch (DAOException e) {
                         showError("Error", "Could not place hold: " + e.getMessage());
                         e.printStackTrace();
                     }
                 }
-            } else if (groupedMaterial.hasHolded()) {
-                // Attempt to find a hold record belonging to the current user and release it
-                boolean released = false;
-                for (Material material : groupedMaterial.getMaterials()) {
-                    if ("holded".equalsIgnoreCase(material.getMaterial_status())) {
-                        // Build search Hold with wildcards using setters so idHold stays -1
-                        Hold searchHold = new Hold();
-                        searchHold.setIdUser(currentUser.getIdUser());
-                        searchHold.setIdMaterial(material.getIdMaterial());
-                        List<Hold> holds = holdDAO.select(searchHold);
-                        if (!holds.isEmpty()) {
-                            Hold found = holds.get(0);
-                            try {
-                                holdService.releaseHold(found, material);
-                                showInfo("Success", "Hold released successfully!");
-                                refresh();
-                                released = true;
-                            } catch (DAOException e) {
-                                showError("Error", "Could not release hold: " + e.getMessage());
-                                e.printStackTrace();
-                            }
-                            break;
-                        }
-                    }
-                }
-                if (!released) {
-                    showInfo("Notice", "No hold found for current user on this material.");
-                }
+            } else {
+                showInfo("Notice", "No copies available to hold.");
             }
         } catch (DAOException e) {
-            showError("Error", "Failed to fetch holds: " + e.getMessage());
+            showError("Error", "Failed to process hold: " + e.getMessage());
             e.printStackTrace();
         }
     }
