@@ -5,7 +5,6 @@ import it.unicas.project.template.address.model.dao.DAOException;
 import it.unicas.project.template.address.model.dao.mysql.UserDAOMySQLImpl;
 import it.unicas.project.template.address.view.AddMaterialController;
 import it.unicas.project.template.address.view.AdminLandingController;
-import it.unicas.project.template.address.view.AdminLandingController;
 import it.unicas.project.template.address.view.LoginDialogController;
 import it.unicas.project.template.address.view.MaterialCatalogController;
 import it.unicas.project.template.address.view.UserLandingController;
@@ -53,11 +52,12 @@ public class MainApp extends Application {
 
         boolean loggedIn = showLoginDialog();
         if (loggedIn) {
-            // Dependiendo del rol, abrir la vista correspondiente
+            // This logic is now handled in showLoginDialog, but is repeated here for startup clarity.
+            // showLoginDialog() calls the appropriate landing view before primaryStage.show().
             if (loggedUser.getIdRole() == 1) {
-                showAdminLanding();
+                // showAdminLanding(); // Already called in showLoginDialog
             } else {
-                showUserLandingView();
+                // showUserLandingView(); // Already called in showLoginDialog
             }
             primaryStage.show();
         } else {
@@ -94,68 +94,28 @@ public class MainApp extends Application {
             // The controller handles setting loggedUser/loans/reservations only if login was successful
             if (controller.isLoginSuccessful()) {
                 String username = controller.getUsername();
-                boolean success = handleSuccessfulLogin(username); // Sets the Admin/User Scene
 
-                // Show the primaryStage with the new Admin/User scene
-                if (success) {
-                    primaryStage.show();
+                // 1. Fetch user data and initialize lists
+                loggedUser = UserDAOMySQLImpl.getInstance().getByUsername(username);
+                loadUserLoans();
+                loadUserReservations();
+
+                // 2. Set the appropriate scene on the primary stage
+                if (loggedUser.getIdRole() == 1) {
+                    showAdminLanding();
+                } else {
+                    showUserLandingView();
                 }
-                return success;
+
+                // 3. Show the primaryStage with the new Admin/User scene
+                primaryStage.show();
+
+                return true;
             } else {
-                // Login failed or was cancelled.
-                // If the primaryStage was hidden (i.e., this was a logout event),
-                // the app should remain closed (as per your initial start() logic).
                 return false;
             }
-        } catch (IOException e) {
+        } catch (IOException | DAOException e) {
             e.printStackTrace();
-            return false;
-        }
-    }
-
-    // Method used ONLY when LOGGING OUT (switches the primary stage scene)
-    public void showLoginScene() {
-        try {
-            FXMLLoader loader = new FXMLLoader();
-            loader.setLocation(MainApp.class.getResource("view/LoginDialog.fxml"));
-            AnchorPane loginPane = loader.load();
-
-            // Set the new scene on the primary stage
-            Scene scene = new Scene(loginPane);
-            primaryStage.setScene(scene);
-
-            primaryStage.setTitle("Login");
-            primaryStage.setResizable(false); // Keep fixed size for the login view
-
-            // Pass MainApp reference to the controller
-            LoginDialogController controller = loader.getController();
-            controller.setMainApp(this);
-
-            loggedUser = null; // Reset logged user state
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    // Centralized logic for what happens AFTER a successful login
-    public boolean handleSuccessfulLogin(String username) {
-        try {
-            loggedUser = UserDAOMySQLImpl.getInstance().getByUsername(username);
-
-            // Initialize user data
-            loadUserLoans();
-            loadUserReservations();
-
-            // Determine role and switch scene on primary stage depending on the identified role
-            if (loggedUser.getIdRole() == 1) {
-                showAdminLanding();
-            } else {
-                showUserLandingView();
-            }
-            return true;
-        } catch (DAOException e) {
-            System.err.println("Error fetching user data after login: " + e.getMessage());
             return false;
         }
     }
@@ -350,9 +310,6 @@ public class MainApp extends Application {
             alert.showAndWait();
         }
     }
-
-
-
 
     public User getLoggedUser() {
         return loggedUser;
