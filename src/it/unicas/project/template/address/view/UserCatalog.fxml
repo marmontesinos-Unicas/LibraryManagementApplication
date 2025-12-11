@@ -35,17 +35,6 @@
                           styleClass="filter-combo"/>
             </VBox>
 
-            <!-- Status Filter -->
-            <VBox spacing="5">
-                <Label text="Status:" style="-fx-font-weight: bold; -fx-text-fill: black;"/>
-                <ComboBox fx:id="statusFilterButton"
-                          promptText="All Status"
-                          prefWidth="150"
-                          editable="false"
-                          style="-fx-text-fill: black;"
-                          styleClass="filter-combo"/>
-            </VBox>
-
             <!-- Genre Filter -->
             <VBox spacing="5">
                 <Label text="Genre:" style="-fx-font-weight: bold; -fx-text-fill: black;"/>

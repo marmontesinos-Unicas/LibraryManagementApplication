@@ -32,7 +32,6 @@ public class UserCatalogController {
 
     @FXML private TextField searchField;
     @FXML private ComboBox<String> materialTypeFilterButton;
-    @FXML private ComboBox<String> statusFilterButton;
     @FXML private ComboBox<String> genreFilterButton;
     @FXML private TextField yearFromField;
     @FXML private TextField yearToField;
@@ -68,12 +67,10 @@ public class UserCatalogController {
 
     // Filter selections
     private Set<String> selectedMaterialTypes = new HashSet<>();
-    private Set<String> selectedStatuses = new HashSet<>();
     private Set<String> selectedGenres = new HashSet<>();
 
     // Popups for filters
     private Popup materialTypePopup;
-    private Popup statusPopup;
     private Popup genrePopup;
 
     private final MaterialCatalogService catalogService = new MaterialCatalogService();
@@ -165,11 +162,6 @@ public class UserCatalogController {
             materialTypeFilterButton.setOnMouseClicked(e -> toggleMaterialTypeFilter());
         }
 
-        if (statusFilterButton != null) {
-            statusFilterButton.setValue("All Statuses");
-            statusFilterButton.setOnMouseClicked(e -> toggleStatusFilter());
-        }
-
         if (genreFilterButton != null) {
             genreFilterButton.setValue("All Genres");
             genreFilterButton.setOnMouseClicked(e -> toggleGenreFilter());
@@ -191,20 +183,6 @@ public class UserCatalogController {
 
         materialTypePopup = createFilterPopup(materialTypeFilterButton, "Material Types",
                 allTypes, selectedMaterialTypes);
-    }
-
-    /**
-     * Toggle Status filter popup
-     */
-    private void toggleStatusFilter() {
-        if (statusPopup != null && statusPopup.isShowing()) {
-            statusPopup.hide();
-            return;
-        }
-
-        Set<String> allStatuses = new TreeSet<>(Arrays.asList("available", "holded", "on loan"));
-        statusPopup = createFilterPopup(statusFilterButton, "Statuses",
-                allStatuses, selectedStatuses);
     }
 
     /**
@@ -544,9 +522,6 @@ public class UserCatalogController {
                     .map(GroupedMaterial::getType)
                     .collect(Collectors.toSet()));
 
-            selectedStatuses.clear();
-            selectedStatuses.addAll(Arrays.asList("available", "holded", "on loan"));
-
             selectedGenres.clear();
             selectedGenres.addAll(groupedMaterialList.stream()
                     .map(GroupedMaterial::getGenres)
@@ -604,9 +579,6 @@ public class UserCatalogController {
                 .map(GroupedMaterial::getType)
                 .collect(Collectors.toSet()));
 
-        selectedStatuses.clear();
-        selectedStatuses.addAll(Arrays.asList("available", "holded", "on loan"));
-
         selectedGenres.clear();
         selectedGenres.addAll(groupedMaterialList.stream()
                 .map(GroupedMaterial::getGenres)
@@ -617,10 +589,6 @@ public class UserCatalogController {
         if (materialTypeFilterButton != null) {
             materialTypeFilterButton.setValue("All Types");
             materialTypeFilterButton.setStyle("");
-        }
-        if (statusFilterButton != null) {
-            statusFilterButton.setValue("All Statuses");
-            statusFilterButton.setStyle("");
         }
         if (genreFilterButton != null) {
             genreFilterButton.setValue("All Genres");
@@ -645,16 +613,6 @@ public class UserCatalogController {
                 .filter(gm -> {
                     // Type filter
                     if (!selectedMaterialTypes.contains(gm.getType())) return false;
-
-                    // Status filter
-                    boolean matchesStatus = false;
-                    for (Material m : gm.getMaterials()) {
-                        if (selectedStatuses.stream().anyMatch(s -> s.equalsIgnoreCase(m.getMaterial_status()))) {
-                            matchesStatus = true;
-                            break;
-                        }
-                    }
-                    if (!matchesStatus) return false;
 
                     // Genre filter
                     if (gm.getGenres() != null && !gm.getGenres().equals("—")) {
