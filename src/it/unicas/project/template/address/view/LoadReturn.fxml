@@ -19,7 +19,7 @@
 
             <TextField fx:id="searchField" prefWidth="482.0" promptText="Search loans..." HBox.hgrow="ALWAYS" />
 
-            <Button fx:id="searchButton" onAction="#handleSearch" text="Search" />
+            <Button fx:id="searchButton" onAction="#handleSearch" text="Clear" />
 
         </HBox>
 

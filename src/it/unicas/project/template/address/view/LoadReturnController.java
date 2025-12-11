@@ -82,12 +82,118 @@ public class LoadReturnController {
 
         returnLoanButton.setOnAction(e -> handleReturnLoan());
 
-        searchField.setOnKeyReleased(event -> {
-            if (event.getCode().toString().equals("ENTER")) {
-                handleSearch();
-            }
-        });
+        // -----------------------------
+        // SEARCH en tiempo real
+        // -----------------------------
+        searchField.textProperty().addListener((obs, oldText, newText) -> handleSearch());
+
+        // -----------------------------
+        // Botón Search -> Clear
+        // -----------------------------
+        searchButton.setText("Clear");
+        searchButton.setOnAction(e -> handleClear());
     }
+
+    // Nuevo metodo Clear
+    private void handleClear() {
+        searchField.clear();
+        loadAllLoans();
+    }
+
+    // Modificación handleSearch()
+    @FXML
+    private void handleSearch() {
+        String searchText = searchField.getText().trim().toLowerCase();
+
+        // Buscar préstamos "delayed" si se escribe "delayed", "late", etc.
+        if (searchText.equals("delayed") || searchText.equals("delay") || searchText.equals("late") || searchText.equals("overdue")) {
+            loanRows.clear();
+            try {
+                List<Loan> loans = LoanDAOMySQLImpl.getInstance().select(null);
+                for (Loan loan : loans) {
+                    if (loan.getReturn_date() == null &&
+                            loan.getDue_date() != null &&
+                            loan.getDue_date().isBefore(java.time.LocalDateTime.now())) {
+
+                        LoanRow row = buildLoanRow(loan);
+                        if (row != null) loanRows.add(row);
+                    }
+                }
+                loanRows.sort(Comparator.comparing(LoanRow::getDueDateAsLocalDate));
+            } catch (DAOException e) {
+                e.printStackTrace();
+            }
+            return;
+        }
+
+        // Si el texto está vacío -> mostrar todos los préstamos activos
+        if (searchText.isEmpty()) {
+            loadAllLoans();
+            return;
+        }
+
+        // Búsqueda normal: título, nombre o apellido del usuario
+        try {
+            Set<Integer> userIDs = new HashSet<>();
+            Set<Integer> materialIDs = new HashSet<>();
+
+            // Buscar por nombre y apellido del usuario
+            List<User> allUsers = UserDAOMySQLImpl.getInstance().select(null);
+            for (User u : allUsers) {
+                if ((u.getName() != null && matchesWords(u.getName(), searchText)) ||
+                        (u.getSurname() != null && matchesWords(u.getSurname(), searchText))) {
+                    userIDs.add(u.getIdUser());
+                }
+            }
+
+// Buscar por título del material
+            List<Material> allMaterials = MaterialDAOMySQLImpl.getInstance().select(null);
+            for (Material m : allMaterials) {
+                if (m.getTitle() != null && matchesWords(m.getTitle(), searchText)) {
+                    materialIDs.add(m.getIdMaterial());
+                }
+            }
+
+
+            // Filtrar préstamos activos
+            List<Loan> allLoans = LoanDAOMySQLImpl.getInstance().select(null);
+            loanRows.clear();
+            for (Loan loan : allLoans) {
+                if (loan.getReturn_date() == null &&
+                        (userIDs.contains(loan.getIdUser()) || materialIDs.contains(loan.getIdMaterial()))) {
+                    LoanRow row = buildLoanRow(loan);
+                    if (row != null) loanRows.add(row);
+                }
+            }
+
+            loanRows.sort(Comparator.comparing(LoanRow::getDueDateAsLocalDate));
+
+        } catch (DAOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    // ------------------------
+// Helper method for multi-word search (title o nombre de usuario)
+// ------------------------
+    private boolean matchesWords(String textToCheck, String searchText) {
+        if (textToCheck == null || searchText == null) return false;
+        String[] searchWords = searchText.toLowerCase().split("\\s+"); // dividir búsqueda por palabras
+        String[] targetWords = textToCheck.toLowerCase().split("\\s+"); // dividir texto en palabras
+
+        for (String sWord : searchWords) {
+            boolean wordMatch = false;
+            for (String tWord : targetWords) {
+                if (tWord.startsWith(sWord)) {
+                    wordMatch = true;
+                    break;
+                }
+            }
+            if (!wordMatch) return false; // si alguna palabra no coincide, fallo
+        }
+        return true; // todas las palabras coinciden al inicio de alguna palabra
+    }
+
 
     @FXML
     private void handleBackToHome() {
@@ -135,100 +241,6 @@ public class LoadReturnController {
         boolean delayed = loan.getDue_date() != null && loan.getDue_date().isBefore(LocalDateTime.now());
 
         return new LoanRow(loan.getIdLoan(), materialType, title, userName, due, delayed ? "Yes" : "No");
-    }
-
-    @FXML
-    private void handleSearch() {
-        String text = searchField.getText().trim().toLowerCase();
-
-        // -------------------------------------------
-        // NEW: search for delayed loans by keywords
-        // -------------------------------------------
-        if (text.equals("delayed") || text.equals("delay") || text.equals("delays")
-                || text.equals("late") || text.equals("overdue")) {
-
-            loanRows.clear();
-
-            try {
-                List<Loan> loans = LoanDAOMySQLImpl.getInstance().select(null);
-
-                for (Loan loan : loans) {
-                    if (loan.getReturn_date() == null &&
-                            loan.getDue_date() != null &&
-                            loan.getDue_date().isBefore(java.time.LocalDateTime.now())) {
-
-                        LoanRow row = buildLoanRow(loan);
-                        if (row != null) loanRows.add(row);
-                    }
-                }
-
-                loanRows.sort(Comparator.comparing(LoanRow::getDueDateAsLocalDate));
-
-            } catch (DAOException e) {
-                e.printStackTrace();
-            }
-
-            return;
-        }
-
-        // ----------------------------------------------------
-        // If no text → show ALL active (not returned) loans
-        // ----------------------------------------------------
-        if (text.isEmpty()) {
-            loadAllLoans();
-            return;
-        }
-
-        // ----------------------------------------------------
-        // Normal search (title, name, surname, material)
-        // ----------------------------------------------------
-        try {
-            Set<Integer> userIDs = new HashSet<>();
-            Set<Integer> materialIDs = new HashSet<>();
-
-            // Search by user name
-            User searchByName = new User();
-            searchByName.setName(text);
-            userIDs.addAll(
-                    UserDAOMySQLImpl.getInstance().select(searchByName)
-                            .stream().map(User::getIdUser).toList()
-            );
-
-            // Search by user surname
-            User searchBySurname = new User();
-            searchBySurname.setSurname(text);
-            userIDs.addAll(
-                    UserDAOMySQLImpl.getInstance().select(searchBySurname)
-                            .stream().map(User::getIdUser).toList()
-            );
-
-            // Search by material title
-            Material searchByTitle = new Material();
-            searchByTitle.setTitle(text);
-            materialIDs.addAll(
-                    MaterialDAOMySQLImpl.getInstance().select(searchByTitle)
-                            .stream().map(Material::getIdMaterial).toList()
-            );
-
-            // Apply filtering
-            List<Loan> allLoans = LoanDAOMySQLImpl.getInstance().select(null);
-            loanRows.clear();
-
-            for (Loan loan : allLoans) {
-                if (loan.getReturn_date() == null &&
-                        (userIDs.contains(loan.getIdUser()) ||
-                                materialIDs.contains(loan.getIdMaterial()))) {
-
-                    LoanRow row = buildLoanRow(loan);
-                    if (row != null) loanRows.add(row);
-                }
-            }
-
-            loanRows.sort(Comparator.comparing(LoanRow::getDueDateAsLocalDate));
-
-        } catch (DAOException e) {
-            e.printStackTrace();
-        }
     }
 
 
