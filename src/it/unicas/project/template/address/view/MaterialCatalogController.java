@@ -454,14 +454,6 @@ public class MaterialCatalogController {
     }
 
     /**
-     * Handle search button click
-     */
-    @FXML
-    private void handleSearch() {
-        handleFilter();
-    }
-
-    /**
      * Handle clear button click
      */
     @FXML
@@ -527,71 +519,6 @@ public class MaterialCatalogController {
 
         filteredList.setAll(result);
         updateResultCount();
-    }
-
-
-    /**
-     * Enhanced search that prioritizes title matches, then author, then others
-     */
-    private List<Material> searchAndSort(List<Material> materials, String searchTerm) {
-        List<Material> titleMatches = new ArrayList<>();
-        List<Material> authorMatches = new ArrayList<>();
-        List<Material> otherMatches = new ArrayList<>();
-
-        for (Material material : materials) {
-            boolean titleMatch = false;
-            boolean authorMatch = false;
-
-            if (material.getTitle() != null) {
-                if (containsWordStartingWith(material.getTitle(), searchTerm)) {
-                    titleMatches.add(material);
-                    titleMatch = true;
-                }
-            }
-
-            if (!titleMatch && material.getAuthor() != null) {
-                if (containsWordStartingWith(material.getAuthor(), searchTerm)) {
-                    authorMatches.add(material);
-                    authorMatch = true;
-                }
-            }
-
-            if (!titleMatch && !authorMatch) {
-                if ((material.getISBN() != null && containsWordStartingWith(material.getISBN(), searchTerm)) ||
-                        containsWordStartingWith(getMaterialTypeName(material.getIdMaterialType()), searchTerm) ||
-                        (material.getMaterial_status() != null && containsWordStartingWith(material.getMaterial_status(), searchTerm))) {
-                    otherMatches.add(material);
-                }
-            }
-        }
-
-        List<Material> result = new ArrayList<>();
-        result.addAll(titleMatches);
-        result.addAll(authorMatches);
-        result.addAll(otherMatches);
-
-        return result;
-    }
-
-    /**
-     * Check if text contains any word that starts with the search term
-     */
-    private boolean containsWordStartingWith(String text, String searchTerm) {
-        if (text == null || searchTerm == null) {
-            return false;
-        }
-
-        String lowerText = text.toLowerCase();
-        String lowerSearch = searchTerm.toLowerCase();
-        String[] words = lowerText.split("[\\s,.-]+");
-
-        for (String word : words) {
-            if (word.startsWith(lowerSearch)) {
-                return true;
-            }
-        }
-
-        return false;
     }
 
     @FXML

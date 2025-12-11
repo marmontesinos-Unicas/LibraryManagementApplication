@@ -18,7 +18,6 @@
             <TextField fx:id="searchField"
                        promptText="Search by title, author, or ISBN..."
                        HBox.hgrow="ALWAYS"/>
-            <Button fx:id="searchButton" text="Search" onAction="#handleSearch"/>
             <Button fx:id="clearButton" text="Clear" onAction="#handleClear"/>
         </HBox>
 

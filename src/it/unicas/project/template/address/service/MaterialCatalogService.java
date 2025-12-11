@@ -7,6 +7,8 @@ import java.util.stream.Collectors;
 
 public class MaterialCatalogService {
 
+    private final SearchService<Material> searchService = new SearchService<>();
+
     public List<Material> filterMaterials(
             List<Material> materials,
             Map<Integer, Set<Integer>> materialGenreMap,
@@ -60,48 +62,18 @@ public class MaterialCatalogService {
                 .collect(Collectors.toList());
 
         if (!searchTerm.isEmpty()) {
-            filtered = searchAndSort(filtered, searchTerm);
+            // Define search priority: Title > Author > ISBN/Status
+            List<java.util.function.Function<Material, String>> fieldExtractors = Arrays.asList(
+                    Material::getTitle,
+                    Material::getAuthor,
+                    Material::getISBN,
+                    Material::getMaterial_status
+            );
+
+            filtered = searchService.searchAndSort(filtered, searchTerm, fieldExtractors);
         }
 
         return filtered;
-    }
-
-    List<Material> searchAndSort(List<Material> materials, String searchTerm) {
-        String term = searchTerm.toLowerCase();
-
-        List<Material> title = new ArrayList<>();
-        List<Material> author = new ArrayList<>();
-        List<Material> other = new ArrayList<>();
-
-        for (Material m : materials) {
-            if (containsWordStartingWith(m.getTitle(), term)) {
-                title.add(m);
-            } else if (containsWordStartingWith(m.getAuthor(), term)) {
-                author.add(m);
-            } else if (
-                    containsWordStartingWith(m.getISBN(), term) ||
-                            containsWordStartingWith(m.getMaterial_status(), term)
-            ) {
-                other.add(m);
-            }
-        }
-
-        List<Material> result = new ArrayList<>();
-        result.addAll(title);
-        result.addAll(author);
-        result.addAll(other);
-        return result;
-    }
-
-    boolean containsWordStartingWith(String text, String searchTerm) {
-        if (text == null || searchTerm == null) return false;
-
-        for (String word : text.toLowerCase().split("[\\s,.-]+")) {
-            if (word.startsWith(searchTerm.toLowerCase())) {
-                return true;
-            }
-        }
-        return false;
     }
 }
 
