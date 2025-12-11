@@ -100,10 +100,6 @@ public class MainApp extends Application {
                 // 1. Fetch user data and initialize lists
                 loggedUser = UserDAOMySQLImpl.getInstance().getByUsername(username);
 
-                // Initialize lists of loans and reservations for the user
-                loadUserLoans();
-                loadUserReservations();
-
                 // Depending on the role, set the correct scene on the primaryStage (which is still hidden)
                 if (loggedUser.getIdRole() == 1) {
                     showAdminLanding();
@@ -126,20 +122,6 @@ public class MainApp extends Application {
             e.printStackTrace();
             return false;
         }
-    }
-
-    private void loadUserLoans() {
-        // Ejemplo de datos de prueba
-        userLoans.clear();
-        userLoans.addAll("Préstamo 1", "Préstamo 2", "Préstamo 3");
-        // Aquí puedes reemplazar por datos reales desde la BD
-    }
-
-    private void loadUserReservations() {
-        // Ejemplo de datos de prueba
-        userReservations.clear();
-        userReservations.addAll("Reserva A", "Reserva B");
-        // Aquí puedes reemplazar por datos reales desde la BD
     }
 
     private void showUserLandingView() {
