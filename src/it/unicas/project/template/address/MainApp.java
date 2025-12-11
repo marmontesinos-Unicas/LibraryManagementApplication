@@ -65,22 +65,30 @@ public class MainApp extends Application {
         }
     }
 
-    private boolean showLoginDialog() {
+    public boolean showLoginDialog() {
         try {
             FXMLLoader loader = new FXMLLoader();
             loader.setLocation(MainApp.class.getResource("view/LoginDialog.fxml"));
             AnchorPane page = loader.load();
 
+            // This prevents the previous dashboard (Admin or User) from remaining visible
+            // behind the modal login window when logging out.
+            if (primaryStage.isShowing()) {
+                primaryStage.hide();
+                primaryStage.setScene(null); // Explicitly remove the old scene content to ensure a clean slate
+            }
+
             Stage dialogStage = new Stage();
             dialogStage.setTitle("Login");
             dialogStage.initModality(Modality.WINDOW_MODAL);
-            dialogStage.initOwner(primaryStage);
+            dialogStage.initOwner(primaryStage); // Still owned by the primaryStage (which is currently hidden)
             Scene scene = new Scene(page);
             dialogStage.setScene(scene);
             dialogStage.setResizable(false); // Login is kept small and fixed size
 
             LoginDialogController controller = loader.getController();
             controller.setDialogStage(dialogStage);
+            controller.setMainApp(this); // Pass MainApp reference for re-login flow management
 
             dialogStage.showAndWait();
 
@@ -92,8 +100,22 @@ public class MainApp extends Application {
                 loadUserLoans();
                 loadUserReservations();
 
+                // Depending on the role, set the correct scene on the primaryStage (which is still hidden)
+                if (loggedUser.getIdRole() == 1) {
+                    showAdminLanding();
+                } else {
+                    showUserLandingView();
+                }
+
+                // Show the primaryStage with the newly loaded Admin/User scene
+                primaryStage.show();
+
                 return true;
             } else {
+                // Login failed or was cancelled.
+                // If the primaryStage was hidden (i.e., this was a logout event),
+                // returning false allows the application to remain closed if the attempt was at startup,
+                // or simply end the login attempt if it was a logout.
                 return false;
             }
         } catch (IOException | DAOException e) {
@@ -120,7 +142,9 @@ public class MainApp extends Application {
         try {
             FXMLLoader loader = new FXMLLoader();
             loader.setLocation(MainApp.class.getResource("view/UserLandingView.fxml"));
-            BorderPane userPane = loader.load();
+
+            // Cambiado de BorderPane a AnchorPane
+            AnchorPane userPane = loader.load();
 
             Scene scene = new Scene(userPane);
             primaryStage.setScene(scene);
@@ -129,12 +153,14 @@ public class MainApp extends Application {
             primaryStage.setMinHeight(520);
 
             UserLandingController controller = loader.getController();
-            controller.setMainApp(this);
+            controller.setMainApp(this);        // Pasar referencia a MainApp
+            controller.setCurrentUser(loggedUser); // Pasar el usuario loggeado
 
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
+
 
     public void showAdminLanding() {
         try {
