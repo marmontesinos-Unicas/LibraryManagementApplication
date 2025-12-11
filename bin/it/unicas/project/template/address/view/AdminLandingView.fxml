@@ -73,6 +73,18 @@
             </BorderPane.margin>
         </GridPane>
     </center>
+    <bottom>
+        <HBox alignment="CENTER_RIGHT" prefHeight="40.0" BorderPane.alignment="CENTER_RIGHT">
+            <padding>
+                <Insets bottom="10.0" right="10.0" top="10.0" />
+            </padding>
+            <Button fx:id="logoutButton" mnemonicParsing="false" onAction="#handleLogout" text="Logout" style="-fx-background-color: #607d8b; -fx-text-fill: white; -fx-background-radius: 5;">
+                <font>
+                    <Font size="14.0" />
+                </font>
+            </Button>
+        </HBox>
+    </bottom>
     <padding>
         <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
     </padding>

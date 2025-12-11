@@ -1,8 +1,9 @@
 package it.unicas.project.template.address.view;
 
+import it.unicas.project.template.address.MainApp;
 import it.unicas.project.template.address.model.User;
 import it.unicas.project.template.address.model.dao.DAOException;
-import it.unicas.project.template.address.service.LoginService; // <-- Keep this import
+import it.unicas.project.template.address.service.LoginService;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
@@ -21,11 +22,19 @@ public class LoginDialogController {
     private Label errorLabel;
 
     private Stage dialogStage;
-    private boolean loginSuccessful = false;
+    private MainApp mainApp;
+    private boolean loginSuccessful = false; // sets the boolean loginSuccessful flag to false as a default value.
     private String username; // Stores the logged-in username
 
     // 1. Service Instantiation: Instantiate the LoginService
     private final LoginService loginService = new LoginService();
+
+    /**
+     * Called by the MainApp to pass the reference of the MainApp object.
+     */
+    public void setMainApp(MainApp mainApp) {
+        this.mainApp = mainApp;
+    }
 
     /**
      * Called by the MainApp to pass the reference of the Stage.
@@ -68,7 +77,14 @@ public class LoginDialogController {
                 // Login successful
                 loginSuccessful = true;
                 username = matchedUser.getUsername(); // Store the username
-                dialogStage.close(); // Close the login dialog
+                if (dialogStage != null) {
+                    // SCENARIO 1: Startup. This is a modal dialog.
+                    dialogStage.close();
+                } else if (mainApp != null) {
+                    // SCENARIO 2: Logout. This is the main stage scene.
+                    // We call MainApp to switch the scene to the appropriate landing page.
+                    mainApp.handleSuccessfulLogin(username);
+                } // Close the login dialog
             } else {
                 // 3. Authentication failed (User not found OR incorrect password)
                 errorLabel.setText("Incorrect username or password");
@@ -88,6 +104,11 @@ public class LoginDialogController {
     @FXML
     private void handleCancel() {
         loginSuccessful = false;
-        dialogStage.close();
+        if (dialogStage != null) {
+            dialogStage.close();
+        } else if (mainApp != null) {
+            // If we are in the scene (logout), and the user cancels, we simply let the app sit on the login screen.
+            System.out.println("Login canceled on main scene.");
+        }
     }
 }

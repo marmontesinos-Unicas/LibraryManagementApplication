@@ -65,7 +65,7 @@ public class MainApp extends Application {
         }
     }
 
-    private boolean showLoginDialog() {
+    public boolean showLoginDialog() {
         try {
             FXMLLoader loader = new FXMLLoader();
             loader.setLocation(MainApp.class.getResource("view/LoginDialog.fxml"));
@@ -81,23 +81,67 @@ public class MainApp extends Application {
 
             LoginDialogController controller = loader.getController();
             controller.setDialogStage(dialogStage);
+            controller.setMainApp(this);
 
             dialogStage.showAndWait();
 
+            // The controller handles setting loggedUser/loans/reservations only if login was successful
             if (controller.isLoginSuccessful()) {
                 String username = controller.getUsername();
-                loggedUser = UserDAOMySQLImpl.getInstance().getByUsername(username);
-
-                // Inicializamos listas de préstamos y reservas del usuario
-                loadUserLoans();
-                loadUserReservations();
-
-                return true;
+                // This logic is handled by the handleSuccessfulLogin method
+                return handleSuccessfulLogin(username);
             } else {
                 return false;
             }
-        } catch (IOException | DAOException e) {
+        } catch (IOException e) {
             e.printStackTrace();
+            return false;
+        }
+    }
+
+    // Method used ONLY when LOGGING OUT (switches the primary stage scene)
+    public void showLoginScene() {
+        try {
+            FXMLLoader loader = new FXMLLoader();
+            loader.setLocation(MainApp.class.getResource("view/LoginDialog.fxml"));
+            AnchorPane loginPane = loader.load();
+
+            // Set the new scene on the primary stage
+            Scene scene = new Scene(loginPane);
+            primaryStage.setScene(scene);
+
+            primaryStage.setTitle("Login");
+            primaryStage.setResizable(false); // Keep fixed size for the login view
+
+            // Pass MainApp reference to the controller
+            LoginDialogController controller = loader.getController();
+            controller.setMainApp(this);
+
+            loggedUser = null; // Reset logged user state
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    // Centralized logic for what happens AFTER a successful login
+    public boolean handleSuccessfulLogin(String username) {
+        try {
+            loggedUser = UserDAOMySQLImpl.getInstance().getByUsername(username);
+
+            // Initialize user data
+            loadUserLoans();
+            loadUserReservations();
+
+            // Determine role and switch scene on primary stage depending on the identified role
+            if (loggedUser.getIdRole() == 1) {
+                showAdminLanding();
+            } else {
+                showUserLandingView();
+            }
+            return true;
+        } catch (DAOException e) {
+            System.err.println("Error fetching user data after login: " + e.getMessage());
             return false;
         }
     }
