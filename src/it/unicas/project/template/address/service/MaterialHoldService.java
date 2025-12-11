@@ -32,12 +32,7 @@ public class MaterialHoldService {
         Connection conn = null; // should be static in your project
         try {
             conn = DAOMySQLSettings.getConnection();
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
-        try {
             conn.setAutoCommit(false);
-
             // Update material status
             material.setMaterial_status("holded"); // keep same status string you use elsewhere
             materialDAO.update(material);
@@ -47,11 +42,12 @@ public class MaterialHoldService {
             holdDAO.insert(hold);
 
             conn.commit();
+
         } catch (Exception e) {
-            try { conn.rollback(); } catch (SQLException ignore) {}
+            try { if (conn != null) conn.rollback(); } catch (SQLException ignored) {}
             throw new DAOException("Failed to place hold: " + e.getMessage());
         } finally {
-            try { conn.setAutoCommit(true); } catch (SQLException ignore) {}
+            try { if (conn != null) { conn.setAutoCommit(true); conn.close(); } } catch (SQLException ignored) {}
         }
     }
 
@@ -63,25 +59,23 @@ public class MaterialHoldService {
         Connection conn = null;
         try {
             conn = DAOMySQLSettings.getConnection();
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
-        try {
             conn.setAutoCommit(false);
 
-            // delete hold record
+            // Delete the hold record
             holdDAO.delete(hold);
 
-            // update material status
             material.setMaterial_status("available");
             materialDAO.update(material);
 
             conn.commit();
-        } catch (Exception e) {
-            try { conn.rollback(); } catch (SQLException ignore) {}
-            throw new DAOException("Failed to release hold: " + e.getMessage());
+
+        } catch (SQLException e) {
+            try { if (conn != null) conn.rollback(); } catch (SQLException ex) {
+                throw new DAOException("Rollback failed");
+            }
+            throw new DAOException("Failed to release hold");
         } finally {
-            try { conn.setAutoCommit(true); } catch (SQLException ignore) {}
+            try { if (conn != null) { conn.setAutoCommit(true); conn.close(); } } catch (SQLException ignored) {}
         }
     }
 }
