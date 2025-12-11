@@ -3,14 +3,8 @@ package it.unicas.project.template.address;
 import it.unicas.project.template.address.model.User;
 import it.unicas.project.template.address.model.dao.DAOException;
 import it.unicas.project.template.address.model.dao.mysql.UserDAOMySQLImpl;
-import it.unicas.project.template.address.view.AddMaterialController;
+import it.unicas.project.template.address.view.*;
 import it.unicas.project.template.address.view.AdminLandingController;
-import it.unicas.project.template.address.view.AdminLandingController;
-import it.unicas.project.template.address.view.LoginDialogController;
-import it.unicas.project.template.address.view.MaterialCatalogController;
-import it.unicas.project.template.address.view.UserLandingController;
-import it.unicas.project.template.address.view.UserManagementController;
-import it.unicas.project.template.address.view.UserEditController;
 
 import javafx.application.Application;
 import javafx.collections.FXCollections;
@@ -116,7 +110,8 @@ public class MainApp extends Application {
         // Aquí puedes reemplazar por datos reales desde la BD
     }
 
-    private void showUserLandingView() {
+    // //needed to make it public to be seen in class UserCatalogController
+    public void showUserLandingView() {
         try {
             FXMLLoader loader = new FXMLLoader();
             loader.setLocation(MainApp.class.getResource("view/UserLandingView.fxml"));
@@ -293,6 +288,34 @@ public class MainApp extends Application {
         }
     }
 
+    /**
+     * Displays the User Catalog view
+     */
+    public void showUserCatalogView() {
+        try {
+            FXMLLoader loader = new FXMLLoader();
+            loader.setLocation(MainApp.class.getResource("view/UserCatalog.fxml"));
+            AnchorPane page = loader.load();
+
+            Scene scene = new Scene(page);
+            primaryStage.setScene(scene);
+            primaryStage.setTitle("Material Catalog");
+            primaryStage.setMinWidth(800);
+            primaryStage.setMinHeight(520);
+
+            UserCatalogController controller = loader.getController();
+            controller.setMainApp(this);
+            controller.setCurrentUser(loggedUser); // <-- pass the logged-in user
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Error");
+            alert.setHeaderText("View Loading Failed");
+            alert.setContentText("Could not load UserCatalog.fxml.");
+            alert.showAndWait();
+        }
+    }
 
 
 

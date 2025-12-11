@@ -30,20 +30,21 @@ public class HoldDAOMySQLImpl implements DAO<Hold> {
     @Override
     public List<Hold> select(Hold h) throws DAOException {
         List<Hold> list = new ArrayList<>();
-        if (h == null) h = new Hold(null, null, null);
+        if (h == null) {
+            h = new Hold(); // all -1
+        }
+        StringBuilder sql = new StringBuilder("SELECT * FROM holds WHERE 1=1");
+        if (h.getIdHold() != -1) sql.append(" AND idHold = ?");
+        if (h.getIdUser() != -1) sql.append(" AND idUser = ?");
+        if (h.getIdMaterial() != -1) sql.append(" AND idMaterial = ?");
+        if (h.getHold_date() != null) sql.append(" AND hold_date = ?");
 
-        String sql = "SELECT * FROM holds WHERE 1=1";
-        if (h.getIdHold() != -1) sql += " AND idHold=?";
-        if (h.getIdUser() != -1) sql += " AND idUser=?";
-        if (h.getIdMaterial() != -1) sql += " AND idMaterial=?";
-        if (h.getHold_date() != null) sql += " AND hold_date LIKE ?";
-
-        try (PreparedStatement ps = DAOMySQLSettings.getConnection().prepareStatement(sql)) {
+        try (PreparedStatement ps = DAOMySQLSettings.getConnection().prepareStatement(sql.toString())) {
             int index = 1;
             if (h.getIdHold() != -1) ps.setInt(index++, h.getIdHold());
             if (h.getIdUser() != -1) ps.setInt(index++, h.getIdUser());
             if (h.getIdMaterial() != -1) ps.setInt(index++, h.getIdMaterial());
-            if (h.getHold_date() != null) ps.setString(index++, h.getHold_date().format(FORMATTER));
+            if (h.getHold_date() != null) ps.setTimestamp(index++, java.sql.Timestamp.valueOf(h.getHold_date()));
 
             logger.info("SQL: " + ps);
             ResultSet rs = ps.executeQuery();
@@ -52,14 +53,13 @@ public class HoldDAOMySQLImpl implements DAO<Hold> {
                         rs.getInt("idHold"),
                         rs.getInt("idUser"),
                         rs.getInt("idMaterial"),
-                        rs.getTimestamp("hold_date").toLocalDateTime()
+                        rs.getTimestamp("hold_date") != null ? rs.getTimestamp("hold_date").toLocalDateTime() : null
                 );
                 list.add(hold);
             }
         } catch (SQLException e) {
             throw new DAOException("In select(): " + e.getMessage());
         }
-
         return list;
     }
 
@@ -67,18 +67,15 @@ public class HoldDAOMySQLImpl implements DAO<Hold> {
     public void insert(Hold h) throws DAOException {
         verifyObject(h);
         String sql = "INSERT INTO holds (idUser, idMaterial, hold_date) VALUES (?, ?, ?)";
-
         try (PreparedStatement ps = DAOMySQLSettings.getConnection().prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setInt(1, h.getIdUser());
             ps.setInt(2, h.getIdMaterial());
-            ps.setString(3, h.getHold_date().format(FORMATTER));
-
+            ps.setTimestamp(3, java.sql.Timestamp.valueOf(h.getHold_date()));
             logger.info("SQL: " + ps);
             ps.executeUpdate();
-
-            ResultSet rs = ps.getGeneratedKeys();
-            if (rs.next()) h.setIdHold(rs.getInt(1));
-
+            try (ResultSet rs = ps.getGeneratedKeys()) {
+                if (rs.next()) h.setIdHold(rs.getInt(1));
+            }
         } catch (SQLException e) {
             throw new DAOException("In insert(): " + e.getMessage());
         }
@@ -120,7 +117,7 @@ public class HoldDAOMySQLImpl implements DAO<Hold> {
 
     @Override
     public List<Hold> selectAll() throws DAOException {
-        return List.of();
+        return select(null);
     }
 
     private void verifyObject(Hold h) throws DAOException {

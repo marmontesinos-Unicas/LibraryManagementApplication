@@ -34,7 +34,11 @@ public class UserLandingController {
 
     @FXML
     protected void handleSearch(ActionEvent event) {
-        System.out.println("Acción: Búsqueda de material (Pendiente de implementación).");
+        if (mainApp != null) {
+            mainApp.showUserCatalogView();
+        } else {
+            System.err.println("mainApp is null - call setMainApp(...) when loading the user view.");
+        }
     }
 
     @FXML

@@ -42,7 +42,6 @@
 
         @FXML
         protected void handleAddMaterial(ActionEvent event) {
-            // Open the Add Material dialog (modal). mainApp provides the method.
             if (mainApp != null) {
                 mainApp.showAddMaterialView();
             } else {
