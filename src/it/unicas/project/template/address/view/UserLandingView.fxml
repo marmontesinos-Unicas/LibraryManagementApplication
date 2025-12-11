@@ -1,62 +1,58 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.geometry.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.*?>
 
-<AnchorPane prefWidth="800" prefHeight="520"
-            xmlns="http://javafx.com/javafx/17.0.12"
-            xmlns:fx="http://javafx.com/fxml/1"
-            fx:controller="it.unicas.project.template.address.view.UserLandingController">
+<AnchorPane prefHeight="520" prefWidth="800" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="it.unicas.project.template.address.view.UserLandingController">
 
     <!-- My Loans -->
-    <VBox spacing="10" AnchorPane.topAnchor="10" AnchorPane.leftAnchor="10"
-          prefWidth="360" prefHeight="500"
-          style="-fx-border-color: gray; -fx-border-width: 1;">
+    <VBox prefHeight="500" prefWidth="360" spacing="10" style="-fx-border-color: gray; -fx-border-width: 1;" AnchorPane.leftAnchor="10" AnchorPane.topAnchor="10">
 
-        <Label text="My Loans" alignment="CENTER" maxWidth="Infinity">
-            <font><Font size="20"/></font>
+        <Label alignment="CENTER" maxWidth="Infinity" text="My Loans">
+            <font><Font size="20" /></font>
         </Label>
 
-        <TableView fx:id="myLoansTable" VBox.vgrow="ALWAYS" prefHeight="470">
+        <TableView fx:id="myLoansTable" prefHeight="470" VBox.vgrow="ALWAYS">
             <columns>
-                <TableColumn fx:id="loanTitleColumn" text="Title" prefWidth="170"/>
-                <TableColumn fx:id="loanReturnDateColumn" text="Return Date" prefWidth="100"/>
-                <TableColumn fx:id="loanStatusColumn" text="Status" prefWidth="90"/>
+                <TableColumn fx:id="loanTitleColumn" prefWidth="170" text="Title" />
+                <TableColumn fx:id="loanReturnDateColumn" prefWidth="100" text="Return Date" />
+                <TableColumn fx:id="loanStatusColumn" prefWidth="90" text="Status" />
             </columns>
         </TableView>
     </VBox>
 
 
     <!-- My Holds -->
-    <VBox spacing="10" AnchorPane.topAnchor="10" AnchorPane.leftAnchor="380"
-          prefWidth="260" prefHeight="500"
-          style="-fx-border-color: gray; -fx-border-width: 1;">
+    <VBox prefHeight="500" prefWidth="260" spacing="10" style="-fx-border-color: gray; -fx-border-width: 1;" AnchorPane.leftAnchor="380" AnchorPane.topAnchor="10">
 
-        <Label text="My Holds" alignment="CENTER" maxWidth="Infinity">
-            <font><Font size="20"/></font>
+        <Label alignment="CENTER" maxWidth="Infinity" text="My Holds">
+            <font><Font size="20" /></font>
         </Label>
 
-        <TableView fx:id="myHoldsTable" VBox.vgrow="ALWAYS" prefHeight="470">
+        <TableView fx:id="myHoldsTable" prefHeight="470" VBox.vgrow="ALWAYS">
             <columns>
-                <TableColumn fx:id="holdTitleColumn" text="Title" prefWidth="150"/>
-                <TableColumn fx:id="holdMaxDateColumn" text="Max Pickup Date" prefWidth="110"/>
+                <TableColumn fx:id="holdTitleColumn" prefWidth="150" text="Title" />
+                <TableColumn fx:id="holdMaxDateColumn" prefWidth="110" text="Max Pickup Date" />
             </columns>
         </TableView>
     </VBox>
 
-
     <!-- Botones -->
-    <VBox spacing="10"
-          AnchorPane.bottomAnchor="10"
-          AnchorPane.rightAnchor="10"
-          prefWidth="120"
-          alignment="BOTTOM_CENTER">
+    <VBox alignment="BOTTOM_CENTER" prefWidth="120" spacing="10" AnchorPane.bottomAnchor="10" AnchorPane.rightAnchor="10">
 
-        <Button fx:id="searchButton" text="Search" onAction="#handleSearch" prefWidth="120"/>
-        <Button fx:id="notificationsButton" text="Notifications" onAction="#handleNotifications" prefWidth="120"/>
-        <Button fx:id="deleteHoldButton" text="Delete Hold" onAction="#handleDeleteHold" prefWidth="120"/>
+        <Button fx:id="searchButton" onAction="#handleSearch" prefWidth="120" text="Search" />
+        <Button fx:id="notificationsButton" onAction="#handleNotifications" prefWidth="120" text="Notifications" />
+        <Button fx:id="deleteHoldButton" onAction="#handleDeleteHold" prefWidth="120" text="Delete Hold" />
     </VBox>
+
+    <HBox alignment="TOP_RIGHT" AnchorPane.topAnchor="10" AnchorPane.rightAnchor="10" prefWidth="120">
+        <Button fx:id="logoutButton" text="Log Out" onAction="#handleLogout" prefWidth="120"
+                style="-fx-background-color: #607d8b; -fx-text-fill: white; -fx-background-radius: 5;">
+            <font>
+                <Font size="14.0" />
+            </font>
+        </Button>
+    </HBox>
 
 </AnchorPane>

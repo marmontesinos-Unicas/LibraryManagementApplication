@@ -22,6 +22,9 @@ import javafx.scene.control.ButtonType;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.util.Callback;
+import javafx.event.ActionEvent;
+import javafx.scene.Node;
+import javafx.stage.Stage;
 
 
 import java.time.format.DateTimeFormatter;
@@ -46,6 +49,7 @@ public class UserLandingController {
     @FXML private Button searchButton;
     @FXML private Button notificationsButton;
     @FXML private Button deleteHoldButton;
+    @FXML private Button logoutButton;
 
     private User currentUser;
 
@@ -54,11 +58,9 @@ public class UserLandingController {
 
     private final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
-    // ------------------- AÑADIDO -------------------
     public void setMainApp(MainApp mainApp) {
         this.mainApp = mainApp;
     }
-    // ------------------------------------------------
 
     public void setCurrentUser(User user) {
         this.currentUser = user;
@@ -260,6 +262,36 @@ public class UserLandingController {
             error.setHeaderText("Operation failed");
             error.setContentText("An error occurred while removing the hold. Please try again.");
             error.showAndWait();
+        }
+    }
+
+    /**
+     * Handles the action for the "Logout" button.
+     * Logic: Calls MainApp to show the Login Dialog, then explicitly CLOSES
+     * the current User Landing stage to remove it from the screen.
+     *
+     * @param event The action event.
+     */
+    @FXML
+    protected void handleLogout(ActionEvent event) {
+        if (mainApp != null) {
+            System.out.println("Action: Logging out.");
+
+            // 1. Show the Login Dialog (opens the new modal Stage)
+            // This must happen first so the app has an open window after the next step.
+            mainApp.showLoginDialog();
+
+            // 2. Explicitly CLOSE the current User Landing window/stage (the primaryStage)
+//            try {
+//                // Correctly casts the Window object to a Stage before calling close()
+//                ((Stage) ((Node) event.getSource()).getScene().getWindow()).close();
+//            } catch (Exception e) {
+//                // Should only occur if the event source is somehow invalid
+//                System.err.println("Error closing User Landing stage: " + e.getMessage());
+//            }
+
+        } else {
+            System.err.println("Error: MainApp reference is null. Cannot log out.");
         }
     }
 }
