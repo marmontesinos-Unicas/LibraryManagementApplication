@@ -85,43 +85,33 @@ public class UserLandingController {
 
     public void setMainApp(MainApp mainApp) {
         this.mainApp = mainApp;
-        myLoansList.setItems(mainApp.getUserLoans());
-        myReservationsList.setItems(mainApp.getUserReservations());
+        // The FXML fields myLoansList and myReservationsList are now guaranteed to be
+        // initialized by the time initialize() finishes. Since MainApp calls
+        // setMainApp() *before* initialize() can complete (due to FXMLLoader timing),
+        // we need to set the list items later.
 
-        // Use the proper MainApp getter to retrieve the logged-in user
-        User currentUser = mainApp.getLoggedUser();
+        // Instead of calling setItems here, we call a new setup method:
+        setupListBindings();
 
-        // Run the overdue check after the mainApp is set
+        // The logic to check overdue status is better placed in setCurrentUser/loadUserData
+        // or setupListBindings to ensure the MainApp ref and the FXML button are available.
+        // For now, we rely on setCurrentUser to call checkOverdueStatus.
+
+        // The following section is REDUNDANT/INCORRECT since currentUser is set later.
+        // User currentUser = mainApp.getLoggedUser();
+        // if (currentUser != null) {
+        //     checkOverdueStatus(currentUser);
+        // }
+    }
+
+    public void setCurrentUser(User user) {
+        this.currentUser = user;
+        // Check overdue status needs the user object and the notificationsButton FXML field
+        // which should be initialized by now, so running it here is fine.
         if (currentUser != null) {
             checkOverdueStatus(currentUser);
         }
-    }
-
-    /**
-     * Executes the overdue check, retrieves the messages, and updates the button's appearance.
-     */
-    private void checkOverdueStatus(User currentUser) {
-
-        try {
-            // 1. Retrieve the list of formatted messages
-            overdueNotifications = notificationsService.getFormattedNotifications(currentUser.getIdUser());
-            int count = overdueNotifications.size();
-
-            if (count > 0) {
-                // Update button text and style
-                notificationsButton.setStyle("-fx-background-color: #D32F2F; -fx-text-fill: white; -fx-font-weight: bold;");
-                notificationsButton.setText("Notifications (" + count + ")");
-            } else {
-                // Ensure default state
-                notificationsButton.setStyle("");
-                notificationsButton.setText("Notifications");
-                overdueNotifications = null;
-            }
-        } catch (DAOException e) {
-            System.err.println("CRITICAL ERROR: Could not load overdue status: " + e.getMessage());
-            notificationsButton.setText("Notifications (Error)");
-            overdueNotifications = null;
-        }
+        loadUserData();
     }
 
     /**
@@ -133,13 +123,11 @@ public class UserLandingController {
         mainApp.showNotificationsView(overdueNotifications);
     }
 
-    public void setCurrentUser(User user) {
-        this.currentUser = user;
-        loadUserData();
-    }
-
     @FXML
     public void initialize() {
+        // This is the correct place to set up the ListViews as FXML fields are now injected.
+        // NOTE: We rely on setMainApp() being called later to get the MainApp reference.
+
         // ---------- Loan Table ----------
         loanTitleColumn.setCellValueFactory(cell -> cell.getValue().titleProperty());
         loanReturnDateColumn.setCellValueFactory(cell -> cell.getValue().dueDateProperty());
@@ -178,6 +166,39 @@ public class UserLandingController {
         );
     }
 
+    private void setupListBindings() {
+        if (mainApp != null && myLoansList != null) {
+            myLoansList.setItems(mainApp.getUserLoans());
+            myReservationsList.setItems(mainApp.getUserReservations());
+        }
+    }
+
+    /**
+     * Executes the overdue check, retrieves the messages, and updates the button's appearance.
+     */
+    private void checkOverdueStatus(User currentUser) {
+
+        try {
+            // 1. Retrieve the list of formatted messages
+            overdueNotifications = notificationsService.getFormattedNotifications(currentUser.getIdUser());
+            int count = overdueNotifications.size();
+
+            if (count > 0) {
+                // Update button text and style
+                notificationsButton.setStyle("-fx-background-color: #D32F2F; -fx-text-fill: white; -fx-font-weight: bold;");
+                notificationsButton.setText("Notifications (" + count + ")");
+            } else {
+                // Ensure default state
+                notificationsButton.setStyle("");
+                notificationsButton.setText("Notifications");
+                overdueNotifications = null;
+            }
+        } catch (DAOException e) {
+            System.err.println("CRITICAL ERROR: Could not load overdue status: " + e.getMessage());
+            notificationsButton.setText("Notifications (Error)");
+            overdueNotifications = null;
+        }
+    }
 
     private void loadUserData() {
         if (currentUser == null) return;
