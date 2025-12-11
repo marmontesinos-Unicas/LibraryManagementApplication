@@ -10,6 +10,9 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
+import it.unicas.project.template.address.model.OverdueLoan;
+import java.time.LocalDate;
+import java.time.ZoneId;
 
 public class LoanDAOMySQLImpl implements DAO<Loan> {
 
@@ -17,7 +20,22 @@ public class LoanDAOMySQLImpl implements DAO<Loan> {
     private static Logger logger = null;
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
-    private LoanDAOMySQLImpl() {}
+    private static final String SQL_SELECT_OVERDUE_FOR_USER =
+            "SELECT " +
+                    "l.idLoan, " +
+                    "l.due_date, " +
+                    "m.title, " +
+                    "m.author " +
+                    "FROM " +
+                    "loans l " +
+                    "JOIN " +
+                    "materials m ON l.idMaterial = m.idMaterial " + // Joining to get material details
+                    "WHERE " +
+                    "l.idUser = ? " +              // Filter by current user
+                    "AND l.due_date < NOW() " +    // Checks if the due date is before the current time
+                    "AND l.return_date IS NULL";   // Ensures the loan is still active
+
+    protected LoanDAOMySQLImpl() {}
 
     public static DAO<Loan> getInstance() {
         if (dao == null) {
@@ -149,8 +167,7 @@ public class LoanDAOMySQLImpl implements DAO<Loan> {
         }
     }
 
-    // *** NEW METHOD ADDED FOR DELETION VALIDATION ***
-    /**
+      /**
      * Counts the number of loans associated with a user that have not yet been returned.
      * An active loan is defined as one where the return_date is NULL.
      * @param userId The ID of the user.
@@ -173,4 +190,45 @@ public class LoanDAOMySQLImpl implements DAO<Loan> {
         }
         return count;
     }
+
+    /**
+     * Retrieves a list of all materials that are currently overdue for a specific user.
+     * @param userId The ID of the currently logged-in user.
+     * @return A List of OverdueLoan objects, or an empty list if none are found.
+     * @throws DAOException if a database error occurs.
+     */
+    public List<OverdueLoan> getOverdueLoansForUser(int userId) throws DAOException { // <-- Return type changed
+        List<OverdueLoan> overdueItems = new ArrayList<>(); // <-- List type changed
+
+        // Use try-with-resources for automatic resource closing
+        try (Connection conn = DAOMySQLSettings.getConnection();
+             PreparedStatement ps = conn.prepareStatement(SQL_SELECT_OVERDUE_FOR_USER)) {
+
+            ps.setInt(1, userId);
+
+            logger.info("SQL: " + ps);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    // Map the ResultSet fields to the OverdueLoan model
+                    int loanId = rs.getInt("idLoan");
+                    String title = rs.getString("title");
+                    String author = rs.getString("author");
+
+                    // Convert java.sql.Timestamp to java.time.LocalDate for clean display
+                    LocalDate dueDate = rs.getTimestamp("due_date")
+                            .toLocalDateTime()
+                            .toLocalDate();
+
+                    OverdueLoan item = new OverdueLoan(loanId, title, author, dueDate); // <-- Object creation changed
+                    overdueItems.add(item);
+                }
+            }
+        } catch (SQLException e) {
+            throw new DAOException("In getOverdueLoansForUser(): " + e.getMessage());
+        }
+
+        return overdueItems;
+    }
 }
+

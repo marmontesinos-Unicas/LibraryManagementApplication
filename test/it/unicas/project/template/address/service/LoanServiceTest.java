@@ -55,6 +55,11 @@ public class LoanServiceTest {
             }
 
             @Override
+            public List<User> selectAll() throws DAOException {
+                return List.of();
+            }
+
+            @Override
             public void update(User entity) {}
             @Override
             public List<User> select(User filter) {
@@ -75,6 +80,11 @@ public class LoanServiceTest {
             @Override
             public void delete(Material a) throws DAOException {
 
+            }
+
+            @Override
+            public List<Material> selectAll() throws DAOException {
+                return List.of();
             }
 
             @Override
@@ -108,6 +118,11 @@ public class LoanServiceTest {
             @Override
             public void delete(Loan a) throws DAOException {
 
+            }
+
+            @Override
+            public List<Loan> selectAll() throws DAOException {
+                return List.of();
             }
 
             @Override

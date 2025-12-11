@@ -1,4 +1,3 @@
-
 package it.unicas.project.template.address.view;
 
 import it.unicas.project.template.address.MainApp;
@@ -12,6 +11,12 @@ import it.unicas.project.template.address.model.dao.mysql.LoanDAOMySQLImpl;
 import it.unicas.project.template.address.model.dao.mysql.MaterialDAOMySQLImpl;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import it.unicas.project.template.address.model.dao.DAOException;
+import it.unicas.project.template.address.service.NotificationsService;
+import it.unicas.project.template.address.model.User;
+import java.util.List;
+
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.TableColumn;
@@ -25,6 +30,7 @@ import javafx.util.Callback;
 import javafx.event.ActionEvent;
 import javafx.scene.Node;
 import javafx.stage.Stage;
+import javafx.scene.control.ListView;
 
 
 import java.time.format.DateTimeFormatter;
@@ -33,26 +39,45 @@ import java.util.stream.Collectors;
 
 public class UserLandingController {
 
-    private MainApp mainApp; // <--- AÑADIDO
+    private MainApp mainApp;
+
+    // Notification Logic Fields
+    private final NotificationsService notificationsService = new NotificationsService();
+    private List<String> overdueNotifications;
 
     // Tables
-    @FXML private TableView<LoanRow> myLoansTable;
-    @FXML private TableColumn<LoanRow, String> loanTitleColumn;
-    @FXML private TableColumn<LoanRow, String> loanReturnDateColumn;
-    @FXML private TableColumn<LoanRow, String> loanStatusColumn;
+    @FXML
+    private TableView<LoanRow> myLoansTable;
+    @FXML
+    private TableColumn<LoanRow, String> loanTitleColumn;
+    @FXML
+    private TableColumn<LoanRow, String> loanReturnDateColumn;
+    @FXML
+    private TableColumn<LoanRow, String> loanStatusColumn;
+    @FXML
+    private TableView<HoldRow> myHoldsTable;
+    @FXML
+    private TableColumn<HoldRow, String> holdTitleColumn;
+    @FXML
+    private TableColumn<HoldRow, String> holdMaxDateColumn;
 
-    @FXML private TableView<HoldRow> myHoldsTable;
-    @FXML private TableColumn<HoldRow, String> holdTitleColumn;
-    @FXML private TableColumn<HoldRow, String> holdMaxDateColumn;
+    // Lists
+    @FXML
+    private ListView<String> myLoansList;
+    @FXML
+    private ListView<String> myReservationsList;
 
     // Buttons
-    @FXML private Button searchButton;
-    @FXML private Button notificationsButton;
-    @FXML private Button deleteHoldButton;
-    @FXML private Button logoutButton;
+    @FXML
+    private Button searchButton;
+    @FXML
+    private Button notificationsButton;
+    @FXML
+    private Button deleteHoldButton;
+    @FXML
+    private Button logoutButton;
 
     private User currentUser;
-
     private final ObservableList<LoanRow> loanList = FXCollections.observableArrayList();
     private final ObservableList<HoldRow> holdList = FXCollections.observableArrayList();
 
@@ -60,6 +85,52 @@ public class UserLandingController {
 
     public void setMainApp(MainApp mainApp) {
         this.mainApp = mainApp;
+        myLoansList.setItems(mainApp.getUserLoans());
+        myReservationsList.setItems(mainApp.getUserReservations());
+
+        // Use the proper MainApp getter to retrieve the logged-in user
+        User currentUser = mainApp.getLoggedUser();
+
+        // Run the overdue check after the mainApp is set
+        if (currentUser != null) {
+            checkOverdueStatus(currentUser);
+        }
+    }
+
+    /**
+     * Executes the overdue check, retrieves the messages, and updates the button's appearance.
+     */
+    private void checkOverdueStatus(User currentUser) {
+
+        try {
+            // 1. Retrieve the list of formatted messages
+            overdueNotifications = notificationsService.getFormattedNotifications(currentUser.getIdUser());
+            int count = overdueNotifications.size();
+
+            if (count > 0) {
+                // Update button text and style
+                notificationsButton.setStyle("-fx-background-color: #D32F2F; -fx-text-fill: white; -fx-font-weight: bold;");
+                notificationsButton.setText("Notifications (" + count + ")");
+            } else {
+                // Ensure default state
+                notificationsButton.setStyle("");
+                notificationsButton.setText("Notifications");
+                overdueNotifications = null;
+            }
+        } catch (DAOException e) {
+            System.err.println("CRITICAL ERROR: Could not load overdue status: " + e.getMessage());
+            notificationsButton.setText("Notifications (Error)");
+            overdueNotifications = null;
+        }
+    }
+
+    /**
+     * Handles the click on the Notifications button.
+     */
+    @FXML
+    protected void handleNotifications(ActionEvent event) {
+        // Pass the list of messages to the MainApp method for display
+        mainApp.showNotificationsView(overdueNotifications);
     }
 
     public void setCurrentUser(User user) {
@@ -179,10 +250,7 @@ public class UserLandingController {
         System.out.println("Search clicked");
     }
 
-    @FXML
-    private void handleNotifications() {
-        System.out.println("Notifications clicked");
-    }
+
 
     @FXML
     private void handleDeleteHold() {
@@ -277,18 +345,9 @@ public class UserLandingController {
         if (mainApp != null) {
             System.out.println("Action: Logging out.");
 
-            // 1. Show the Login Dialog (opens the new modal Stage)
+            // Show the Login Dialog (opens the new modal Stage)
             // This must happen first so the app has an open window after the next step.
             mainApp.showLoginDialog();
-
-            // 2. Explicitly CLOSE the current User Landing window/stage (the primaryStage)
-//            try {
-//                // Correctly casts the Window object to a Stage before calling close()
-//                ((Stage) ((Node) event.getSource()).getScene().getWindow()).close();
-//            } catch (Exception e) {
-//                // Should only occur if the event source is somehow invalid
-//                System.err.println("Error closing User Landing stage: " + e.getMessage());
-//            }
 
         } else {
             System.err.println("Error: MainApp reference is null. Cannot log out.");
