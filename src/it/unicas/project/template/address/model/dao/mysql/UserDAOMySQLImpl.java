@@ -60,7 +60,7 @@ public class UserDAOMySQLImpl {
         if (u.getName() != null && !u.getName().isEmpty()) sql += " AND name LIKE ?";
         if (u.getSurname() != null && !u.getSurname().isEmpty()) sql += " AND surname LIKE ?";
         if (u.getUsername() != null && !u.getUsername().isEmpty()) sql += " AND username LIKE ?";
-        if (u.getNationalID() != null && !u.getNationalID().isEmpty()) sql += " AND nationalID LIKE ?";
+        if (u.getNationalID() != null && !u.getNationalID().isEmpty()) sql += " AND nationalID = ?";
         if (u.getEmail() != null && !u.getEmail().isEmpty()) sql += " AND email LIKE ?";
 
         try (PreparedStatement ps = DAOMySQLSettings.getConnection().prepareStatement(sql)) {
@@ -69,7 +69,7 @@ public class UserDAOMySQLImpl {
             if (u.getName() != null && !u.getName().isEmpty()) ps.setString(index++, u.getName() + "%");
             if (u.getSurname() != null && !u.getSurname().isEmpty()) ps.setString(index++, u.getSurname() + "%");
             if (u.getUsername() != null && !u.getUsername().isEmpty()) ps.setString(index++, u.getUsername() + "%");
-            if (u.getNationalID() != null && !u.getNationalID().isEmpty()) ps.setString(index++, u.getNationalID() + "%");
+            if (u.getNationalID() != null && !u.getNationalID().isEmpty()) ps.setString(index++, u.getNationalID());
             if (u.getEmail() != null && !u.getEmail().isEmpty()) ps.setString(index++, "%" + u.getEmail() + "%");
 
             logger.info("SQL: " + ps);
