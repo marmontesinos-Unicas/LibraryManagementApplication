@@ -133,8 +133,8 @@ public class MainApp extends Application {
             Scene scene = new Scene(userPane);
             primaryStage.setScene(scene);
             primaryStage.setTitle("User Dashboard");
-            primaryStage.setMinWidth(800);
-            primaryStage.setMinHeight(520);
+            //primaryStage.setMinWidth(800);
+            //primaryStage.setMinHeight(520);
 
             UserLandingController controller = loader.getController();
             controller.setMainApp(this);        // Pass reference to MainApp
@@ -154,8 +154,8 @@ public class MainApp extends Application {
             Scene scene = new Scene(adminPane);
             primaryStage.setScene(scene);
             primaryStage.setTitle("Admin Dashboard"); // Set title back
-            primaryStage.setMinWidth(800);
-            primaryStage.setMinHeight(520);
+            //primaryStage.setMinWidth(800);
+            //primaryStage.setMinHeight(520);
 
             // Pass the MainApp reference to the AdminLandingController
             it.unicas.project.template.address.view.AdminLandingController controller = loader.getController();
@@ -179,8 +179,8 @@ public class MainApp extends Application {
             Scene scene = new Scene(userManagementPane);
             primaryStage.setScene(scene);
             primaryStage.setTitle("User Management");
-            primaryStage.setMinWidth(800);
-            primaryStage.setMinHeight(520);
+            //primaryStage.setMinWidth(800);
+            //primaryStage.setMinHeight(520);
 
             // Get the controller and initialize if needed (already done in initialize method)
             UserManagementController controller = loader.getController();
@@ -283,8 +283,8 @@ public class MainApp extends Application {
             Scene scene = new Scene(loadReturnPane);
             primaryStage.setScene(scene);
             primaryStage.setTitle("Loan and Return Management");
-            primaryStage.setMinWidth(800);
-            primaryStage.setMinHeight(520);
+            //primaryStage.setMinWidth(800);
+            //primaryStage.setMinHeight(520);
 
             // Get the controller and pass the MainApp reference
             it.unicas.project.template.address.view.LoadReturnController controller = loader.getController();
