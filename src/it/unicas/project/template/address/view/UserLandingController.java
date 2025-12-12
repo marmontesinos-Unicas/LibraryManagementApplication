@@ -32,20 +32,23 @@ import javafx.scene.Node;
 import javafx.stage.Stage;
 import javafx.scene.control.ListView;
 
-
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * Controller for the User Landing page.
+ * This class manages the UI for loans, holds, notifications, and user interactions.
+ */
 public class UserLandingController {
 
-    private MainApp mainApp;
+    private MainApp mainApp; // Reference to MainApp so we can navigate between scenes
 
-    // Notification Logic Fields
-    private final NotificationsService notificationsService = new NotificationsService();
-    private List<String> overdueNotifications;
+    // Notification logic fields
+    private final NotificationsService notificationsService = new NotificationsService(); // Service for overdue notifications
+    private List<String> overdueNotifications; // Cached list of notifications to display
 
-    // Tables
+    // ----- TableView references (Loans) -----
     @FXML
     private TableView<LoanRow> myLoansTable;
     @FXML
@@ -54,6 +57,8 @@ public class UserLandingController {
     private TableColumn<LoanRow, String> loanReturnDateColumn;
     @FXML
     private TableColumn<LoanRow, String> loanStatusColumn;
+
+    // ----- TableView references (Holds) -----
     @FXML
     private TableView<HoldRow> myHoldsTable;
     @FXML
@@ -63,9 +68,9 @@ public class UserLandingController {
 
     // Lists
     @FXML
-    private ListView<String> myLoansList;
+    private ListView<String> myLoansList; // Old UI component, still used for display
     @FXML
-    private ListView<String> myReservationsList;
+    private ListView<String> myReservationsList; // Same as above
 
     // Buttons
     @FXML
@@ -77,64 +82,63 @@ public class UserLandingController {
     @FXML
     private Button logoutButton;
 
-    private User currentUser;
+    private User currentUser; // Logged-in user reference
+
+    // Observable lists that back the TableViews
     private final ObservableList<LoanRow> loanList = FXCollections.observableArrayList();
     private final ObservableList<HoldRow> holdList = FXCollections.observableArrayList();
 
     private final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
+    /**
+     * Called by MainApp after loading the FXML. Sets the reference to MainApp.
+     * @param mainApp main application reference
+     */
     public void setMainApp(MainApp mainApp) {
         this.mainApp = mainApp;
-        // The FXML fields myLoansList and myReservationsList are now guaranteed to be
-        // initialized by the time initialize() finishes. Since MainApp calls
-        // setMainApp() *before* initialize() can complete (due to FXMLLoader timing),
-        // we need to set the list items later.
 
-        // Instead of calling setItems here, we call a new setup method:
+        // Prepare binding of ListViews after MainApp reference is set
         setupListBindings();
-
-        // The logic to check overdue status is better placed in setCurrentUser/loadUserData
-        // or setupListBindings to ensure the MainApp ref and the FXML button are available.
-        // For now, we rely on setCurrentUser to call checkOverdueStatus.
-
-        // The following section is REDUNDANT/INCORRECT since currentUser is set later.
-        // User currentUser = mainApp.getLoggedUser();
-        // if (currentUser != null) {
-        //     checkOverdueStatus(currentUser);
-        // }
-    }
-
-    public void setCurrentUser(User user) {
-        this.currentUser = user;
-        // Check overdue status needs the user object and the notificationsButton FXML field
-        // which should be initialized by now, so running it here is fine.
-        if (currentUser != null) {
-            checkOverdueStatus(currentUser);
-        }
-        loadUserData();
     }
 
     /**
-     * Handles the click on the Notifications button.
+     * Sets the current logged user and loads user data.
+     * @param user the logged user
+     */
+    public void setCurrentUser(User user) {
+        this.currentUser = user;
+
+        if (currentUser != null) {
+            // Check overdue notifications for this user
+            checkOverdueStatus(currentUser);
+        }
+
+        loadUserData(); // Load loans and holds for the user
+    }
+
+    /**
+     * Handle the Notifications button click.
+     * Opens the notifications view.
      */
     @FXML
     protected void handleNotifications(ActionEvent event) {
-        // Pass the list of messages to the MainApp method for display
         mainApp.showNotificationsView(overdueNotifications);
     }
 
+    /**
+     * Called automatically after FXML initialization.
+     * Sets up table columns, formatting, and bindings.
+     */
     @FXML
     public void initialize() {
-        // This is the correct place to set up the ListViews as FXML fields are now injected.
-        // NOTE: We rely on setMainApp() being called later to get the MainApp reference.
 
-        // ---------- Loan Table ----------
+        // ----- Loan Table Setup -----
         loanTitleColumn.setCellValueFactory(cell -> cell.getValue().titleProperty());
         loanReturnDateColumn.setCellValueFactory(cell -> cell.getValue().dueDateProperty());
         loanStatusColumn.setCellValueFactory(cell -> cell.getValue().delayedProperty());
         myLoansTable.setItems(loanList);
 
-        // Colorear status: Active = verde, Delayed = rojo
+        // Color the loan status column depending on the value
         loanStatusColumn.setCellFactory(column -> new TableCell<LoanRow, String>() {
             @Override
             protected void updateItem(String item, boolean empty) {
@@ -147,25 +151,26 @@ public class UserLandingController {
                     switch (item) {
                         case "Delayed" -> setStyle("-fx-text-fill: red; -fx-font-weight: bold;");
                         case "Active" -> setStyle("-fx-text-fill: green;-fx-font-weight: bold;");
-                        default -> setStyle(""); // Returned u otros
+                        default -> setStyle("");
                     }
                 }
             }
         });
 
-        // ---------- Hold Table ----------
+        // ----- Hold Table Setup -----
         holdTitleColumn.setCellValueFactory(cell -> cell.getValue().titleProperty());
         holdMaxDateColumn.setCellValueFactory(cell -> cell.getValue().maxDateProperty());
         myHoldsTable.setItems(holdList);
 
-        // -----------------------------------------
-        // Disable Delete button if nothing selected
-        // -----------------------------------------
+        // Disable delete button when nothing is selected
         deleteHoldButton.disableProperty().bind(
                 myHoldsTable.getSelectionModel().selectedItemProperty().isNull()
         );
     }
 
+    /**
+     * Binds the ListViews to values coming from MainApp.
+     */
     private void setupListBindings() {
         if (mainApp != null && myLoansList != null) {
             myLoansList.setItems(mainApp.getUserLoans());
@@ -174,21 +179,18 @@ public class UserLandingController {
     }
 
     /**
-     * Executes the overdue check, retrieves the messages, and updates the button's appearance.
+     * Checks overdue notifications for the user and updates the notifications button UI.
      */
     private void checkOverdueStatus(User currentUser) {
 
         try {
-            // 1. Retrieve the list of formatted messages
             overdueNotifications = notificationsService.getFormattedNotifications(currentUser.getIdUser());
             int count = overdueNotifications.size();
 
             if (count > 0) {
-                // Update button text and style
                 notificationsButton.setStyle("-fx-background-color: #D32F2F; -fx-text-fill: white; -fx-font-weight: bold;");
                 notificationsButton.setText("Notifications (" + count + ")");
             } else {
-                // Ensure default state
                 notificationsButton.setStyle("");
                 notificationsButton.setText("Notifications");
                 overdueNotifications = null;
@@ -200,30 +202,34 @@ public class UserLandingController {
         }
     }
 
+    /**
+     * Loads loans and holds from the database and fills the UI tables.
+     */
     private void loadUserData() {
         if (currentUser == null) return;
 
         try {
-            // Load Loans
+            // ----- Load Loans -----
             List<Loan> userLoans = LoanDAOMySQLImpl.getInstance()
                     .select(new Loan(null, currentUser.getIdUser(), null, null, null, null))
                     .stream().collect(Collectors.toList());
 
             loanList.clear();
+
             for (Loan loan : userLoans) {
 
+                // Fetch the material to get its title
                 Material mat = new Material();
                 mat.setIdMaterial(loan.getIdMaterial());
                 mat = MaterialDAOMySQLImpl.getInstance().select(mat).stream().findFirst().orElse(null);
 
                 String title = (mat != null && mat.getTitle() != null) ? mat.getTitle() : "Unknown";
+
                 String returnDate = (loan.getReturn_date() != null)
                         ? loan.getReturn_date().format(dateFormatter)
                         : "Not Returned";
 
-                // ---------------------------
-                // STATUS LOGIC
-                // ---------------------------
+                // Determine loan status (Active, Delayed, Returned)
                 String status;
 
                 if (loan.getReturn_date() != null) {
@@ -238,7 +244,7 @@ public class UserLandingController {
                 loanList.add(new LoanRow(loan.getIdLoan(), "", title, "", returnDate, status));
             }
 
-            // Load Holds
+            // ----- Load Holds -----
             List<Hold> userHolds = HoldDAOMySQLImpl.getInstance()
                     .select(new Hold(null, currentUser.getIdUser(), null, null))
                     .stream().collect(Collectors.toList());
@@ -246,6 +252,7 @@ public class UserLandingController {
             holdList.clear();
             for (Hold hold : userHolds) {
                 Material mat = null;
+
                 if (hold.getIdMaterial() != null) {
                     mat = new Material();
                     mat.setIdMaterial(hold.getIdMaterial());
@@ -265,14 +272,18 @@ public class UserLandingController {
         }
     }
 
-
+    /**
+     * Event handler for the search button.
+     */
     @FXML
     private void handleSearch() {
         System.out.println("Search clicked");
     }
 
-
-
+    /**
+     * Handles deleting a selected hold.
+     * Confirms with the user, updates material status, removes the hold from DB and UI.
+     */
     @FXML
     private void handleDeleteHold() {
         HoldRow selected = myHoldsTable.getSelectionModel().getSelectedItem();
@@ -286,7 +297,7 @@ public class UserLandingController {
             return;
         }
 
-        // Confirm with user (show title for friendliness)
+        // Confirm deletion
         Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
         confirm.setTitle("Confirm Hold Removal");
         confirm.setHeaderText(null);
@@ -296,11 +307,11 @@ public class UserLandingController {
         confirm.getButtonTypes().setAll(yes, no);
 
         if (confirm.showAndWait().orElse(no) != yes) {
-            return; // user cancelled
+            return;
         }
 
         try {
-            // 1) Retrieve the real Hold from DB (so we have idMaterial)
+            // Retrieve the real hold using the ID
             Hold filter = new Hold();
             filter.setIdHold(selected.getIdHold());
             var holds = HoldDAOMySQLImpl.getInstance().select(filter);
@@ -316,13 +327,15 @@ public class UserLandingController {
 
             Hold realHold = holds.get(0);
 
-            // 2) If the hold references a material, mark that material as available
+            // Update material status if linked
             Integer matId = realHold.getIdMaterial();
             boolean materialUpdated = false;
+
             if (matId != null && matId != -1) {
                 Material mFilter = new Material();
                 mFilter.setIdMaterial(matId);
                 var mats = MaterialDAOMySQLImpl.getInstance().select(mFilter);
+
                 if (mats != null && !mats.isEmpty()) {
                     Material mat = mats.get(0);
                     mat.setMaterial_status("available");
@@ -331,13 +344,13 @@ public class UserLandingController {
                 }
             }
 
-            // 3) Delete the hold from DB
+            // Delete hold
             HoldDAOMySQLImpl.getInstance().delete(realHold);
 
-            // 4) Remove from UI list
+            // Remove from UI
             holdList.removeIf(h -> h.getIdHold() == selected.getIdHold());
 
-            // 5) Inform the user
+            // Show success
             Alert info = new Alert(Alert.AlertType.INFORMATION);
             info.setTitle("Hold Removed");
             info.setHeaderText(null);
@@ -355,20 +368,14 @@ public class UserLandingController {
     }
 
     /**
-     * Handles the action for the "Logout" button.
-     * Logic: Calls MainApp to show the Login Dialog, then explicitly CLOSES
-     * the current User Landing stage to remove it from the screen.
-     *
-     * @param event The action event.
+     * Handles logout logic.
+     * Opens the login dialog and closes the current window.
      */
     @FXML
     protected void handleLogout(ActionEvent event) {
         if (mainApp != null) {
             System.out.println("Action: Logging out.");
-
-            // Show the Login Dialog (opens the new modal Stage)
-            // This must happen first so the app has an open window after the next step.
-            mainApp.showLoginDialog();
+            mainApp.showLoginDialog(); // Show login window again
 
         } else {
             System.err.println("Error: MainApp reference is null. Cannot log out.");

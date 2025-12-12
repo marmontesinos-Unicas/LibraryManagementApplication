@@ -13,6 +13,11 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+/**
+ * Unit tests for the LoanService class.
+ * This test suite validates loan creation, material availability,
+ * user lookup, and error handling using inline DAO stubs.
+ */
 public class LoanServiceTest {
 
     private LoanService service;
@@ -20,39 +25,40 @@ public class LoanServiceTest {
     private List<Material> materials;
     private List<Loan> loans;
 
+    /**
+     * Initializes in-memory test data and inline DAO implementations before each test.
+     */
     @BeforeEach
     public void setUp() {
         users = new ArrayList<>();
         materials = new ArrayList<>();
         loans = new ArrayList<>();
 
-        // Crear un usuario
+        // Create a user
         User u = new User();
         u.setIdUser(1);
         u.setNationalID("1234A");
         users.add(u);
 
-        // Material disponible
+        // Available material
         Material m1 = new Material();
         m1.setIdMaterial(1);
         m1.setMaterial_status("available");
         materials.add(m1);
 
-        // Material no disponible
+        // Material that is not available
         Material m2 = new Material();
         m2.setIdMaterial(2);
         m2.setMaterial_status("loaned");
         materials.add(m2);
 
-        // DAOs "inline" para pasar al servicio
+        // Inline DAOs to pass to the service
         DAO<User> userDao = new DAO<>() {
             @Override
             public void insert(User entity) {}
 
             @Override
-            public void delete(User a) throws DAOException {
-
-            }
+            public void delete(User a) throws DAOException {}
 
             @Override
             public List<User> selectAll() throws DAOException {
@@ -61,6 +67,10 @@ public class LoanServiceTest {
 
             @Override
             public void update(User entity) {}
+
+            /**
+             * Returns users matching the filter. Simulates a database lookup.
+             */
             @Override
             public List<User> select(User filter) {
                 List<User> result = new ArrayList<>();
@@ -78,15 +88,16 @@ public class LoanServiceTest {
             public void insert(Material entity) {}
 
             @Override
-            public void delete(Material a) throws DAOException {
-
-            }
+            public void delete(Material a) throws DAOException {}
 
             @Override
             public List<Material> selectAll() throws DAOException {
                 return List.of();
             }
 
+            /**
+             * Updates a material in the in-memory collection to simulate a database update.
+             */
             @Override
             public void update(Material entity) {
                 for (int i = 0; i < materials.size(); i++) {
@@ -96,6 +107,10 @@ public class LoanServiceTest {
                     }
                 }
             }
+
+            /**
+             * Returns materials matching the filter. Simulates a database select.
+             */
             @Override
             public List<Material> select(Material filter) {
                 List<Material> result = new ArrayList<>();
@@ -109,6 +124,9 @@ public class LoanServiceTest {
         };
 
         DAO<Loan> loanDao = new DAO<>() {
+            /**
+             * Inserts a loan into the in-memory list and simulates auto-increment ID.
+             */
             @Override
             public void insert(Loan entity) {
                 entity.setIdLoan(loans.size() + 1);
@@ -116,9 +134,7 @@ public class LoanServiceTest {
             }
 
             @Override
-            public void delete(Loan a) throws DAOException {
-
-            }
+            public void delete(Loan a) throws DAOException {}
 
             @Override
             public List<Loan> selectAll() throws DAOException {
@@ -127,13 +143,22 @@ public class LoanServiceTest {
 
             @Override
             public void update(Loan entity) {}
+
+            /**
+             * Returns all loans stored in memory.
+             */
             @Override
-            public List<Loan> select(Loan filter) { return new ArrayList<>(loans); }
+            public List<Loan> select(Loan filter) {
+                return new ArrayList<>(loans);
+            }
         };
 
         service = new LoanService(userDao, materialDao, loanDao);
     }
 
+    /**
+     * Tests that only available materials are returned by getAvailableMaterials().
+     */
     @Test
     public void testGetAvailableMaterials() throws DAOException {
         List<Material> available = service.getAvailableMaterials();
@@ -141,6 +166,9 @@ public class LoanServiceTest {
         assertEquals("available", available.get(0).getMaterial_status());
     }
 
+    /**
+     * Tests successful loan creation and material status update.
+     */
     @Test
     public void testCreateLoanSuccess() throws DAOException {
         Loan loan = service.createLoan("1234A", 1);
@@ -149,11 +177,14 @@ public class LoanServiceTest {
         assertEquals(1, loan.getIdMaterial());
         assertEquals(1, loan.getIdUser());
 
-        // Material debe actualizarse
+        // Material should now be updated
         List<Material> available = service.getAvailableMaterials();
-        assertEquals(0, available.size()); // ya no hay materiales disponibles
+        assertEquals(0, available.size()); // no available materials left
     }
 
+    /**
+     * Tests that creating a loan with a non-existing user throws an exception.
+     */
     @Test
     public void testCreateLoanUserNotFound() {
         DAOException ex = assertThrows(DAOException.class, () -> {
@@ -162,6 +193,9 @@ public class LoanServiceTest {
         assertEquals("User not found", ex.getMessage());
     }
 
+    /**
+     * Tests that creating a loan with a non-available material throws an exception.
+     */
     @Test
     public void testCreateLoanMaterialNotAvailable() {
         DAOException ex = assertThrows(DAOException.class, () -> {
