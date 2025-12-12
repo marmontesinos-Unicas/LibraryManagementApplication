@@ -3,15 +3,18 @@ package it.unicas.project.template.address.view;
 import it.unicas.project.template.address.model.Loan;
 import it.unicas.project.template.address.model.Material;
 import it.unicas.project.template.address.model.User;
+import it.unicas.project.template.address.model.Hold;
 import it.unicas.project.template.address.model.dao.DAOException;
 import it.unicas.project.template.address.model.dao.mysql.LoanDAOMySQLImpl;
 import it.unicas.project.template.address.model.dao.mysql.MaterialDAOMySQLImpl;
 import it.unicas.project.template.address.model.dao.mysql.UserDAOMySQLImpl;
+import it.unicas.project.template.address.model.dao.mysql.HoldDAOMySQLImpl;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.stage.Stage;
+import javafx.scene.paint.Color;
 
 public class AddLoanController {
 
@@ -34,17 +37,33 @@ public class AddLoanController {
         authorColumn.setCellValueFactory(cellData -> cellData.getValue().authorProperty());
         isbnColumn.setCellValueFactory(cellData -> cellData.getValue().ISBNProperty());
 
+        // Cambiar color de título si está en hold
+        titleColumn.setCellFactory(column -> new TableCell<>() {
+            @Override
+            protected void updateItem(String item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText(null);
+                    setTextFill(Color.BLACK);
+                } else {
+                    Material material = getTableView().getItems().get(getIndex());
+                    setText(item);
+                    if ("hold".equalsIgnoreCase(material.getMaterial_status())) {
+                        setTextFill(Color.ORANGE);
+                    } else {
+                        setTextFill(Color.BLACK);
+                    }
+                }
+            }
+        });
+
         materialTable.setItems(materialList);
         loadAvailableMaterials();
 
-        // -----------------------------
         // Búsqueda en tiempo real
-        // -----------------------------
         searchMaterialField.textProperty().addListener((obs, oldText, newText) -> handleSearch());
 
-        // -----------------------------
         // Botón Search -> Clear
-        // -----------------------------
         searchButton.setText("Clear");
         searchButton.setOnAction(e -> handleClear());
     }
@@ -55,7 +74,9 @@ public class AddLoanController {
             var results = MaterialDAOMySQLImpl.getInstance().select(null);
             if (results != null) {
                 for (Material m : results) {
-                    if ("available".equalsIgnoreCase(m.getMaterial_status())) {
+                    // Solo disponibles o en hold
+                    if ("available".equalsIgnoreCase(m.getMaterial_status()) ||
+                            "hold".equalsIgnoreCase(m.getMaterial_status())) {
                         materialList.add(m);
                     }
                 }
@@ -66,18 +87,12 @@ public class AddLoanController {
         }
     }
 
-    // -----------------------------
-    // Método Clear
-    // -----------------------------
     @FXML
     private void handleClear() {
         searchMaterialField.clear();
         loadAvailableMaterials();
     }
 
-    // -----------------------------
-    // Búsqueda multi-palabra al inicio de cada palabra
-    // -----------------------------
     private boolean matchesWords(String textToCheck, String searchText) {
         if (textToCheck == null || searchText == null) return false;
         String[] searchWords = searchText.toLowerCase().split("\\s+");
@@ -91,14 +106,11 @@ public class AddLoanController {
                     break;
                 }
             }
-            if (!wordMatch) return false; // alguna palabra no coincide
+            if (!wordMatch) return false;
         }
-        return true; // todas las palabras coinciden
+        return true;
     }
 
-    // -----------------------------
-    // Búsqueda
-    // -----------------------------
     @FXML
     private void handleSearch() {
         String searchText = searchMaterialField.getText().trim().toLowerCase();
@@ -108,16 +120,14 @@ public class AddLoanController {
             var results = MaterialDAOMySQLImpl.getInstance().select(null);
             if (results != null) {
                 for (Material m : results) {
-                    if (!"available".equalsIgnoreCase(m.getMaterial_status())) continue;
+                    if (!"available".equalsIgnoreCase(m.getMaterial_status()) &&
+                            !"hold".equalsIgnoreCase(m.getMaterial_status())) continue;
 
                     boolean matches = searchText.isEmpty();
 
                     if (!matches) {
-                        // Buscar en título
                         if (!matches && matchesWords(m.getTitle(), searchText)) matches = true;
-                        // Buscar en autor
                         if (!matches && matchesWords(m.getAuthor(), searchText)) matches = true;
-                        // Buscar en ISBN (simple startsWith)
                         if (!matches && m.getISBN() != null && m.getISBN().toLowerCase().startsWith(searchText)) matches = true;
                     }
 
@@ -158,12 +168,41 @@ public class AddLoanController {
             Material materialFilter = new Material();
             materialFilter.setIdMaterial(selectedMaterial.getIdMaterial());
             var materials = MaterialDAOMySQLImpl.getInstance().select(materialFilter);
-            if (materials.isEmpty() || !"available".equals(materials.get(0).getMaterial_status())) {
-                showAlert(Alert.AlertType.ERROR, "Error", "Selected material is not available.");
+            if (materials.isEmpty()) {
+                showAlert(Alert.AlertType.ERROR, "Error", "Material not found.");
                 return;
             }
 
             Material materialToUpdate = materials.get(0);
+
+            // 2️⃣b Si está en hold
+            if ("hold".equalsIgnoreCase(materialToUpdate.getMaterial_status())) {
+                Hold holdFilter = new Hold();
+                holdFilter.setIdMaterial(materialToUpdate.getIdMaterial());
+                var holds = HoldDAOMySQLImpl.getInstance().select(holdFilter);
+
+                // Buscar hold del usuario actual
+                Hold userHold = null;
+                for (Hold h : holds) {
+                    if (h.getIdUser().equals(users.get(0).getIdUser())) {
+                        userHold = h;
+                        break;
+                    }
+                }
+
+                if (userHold == null) {
+                    showAlert(Alert.AlertType.WARNING, "Hold Notice",
+                            "Material \"" + materialToUpdate.getTitle() + "\" is on hold for another user.");
+                    return; // Bloquear préstamo
+                }
+
+                // Eliminar hold del usuario actual
+                HoldDAOMySQLImpl.getInstance().delete(userHold);
+
+            } else if (!"available".equalsIgnoreCase(materialToUpdate.getMaterial_status())) {
+                showAlert(Alert.AlertType.ERROR, "Error", "Selected material is not available.");
+                return;
+            }
 
             // 3️⃣ Crear préstamo
             Loan newLoan = new Loan();

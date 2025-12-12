@@ -19,14 +19,13 @@ public class Hold {
     }
 
     // Constructor completo
-    public Hold(Integer idHold, Integer idUser, Integer idMaterial,
-                LocalDateTime hold_date) {
-
-        this.idHold = (idHold != null) ? new SimpleIntegerProperty(idHold) : new SimpleIntegerProperty();
-        this.idUser = new SimpleIntegerProperty(idUser);
-        this.idMaterial = new SimpleIntegerProperty(idMaterial);
+    public Hold(Integer idHold, Integer idUser, Integer idMaterial, LocalDateTime hold_date) {
+        this.idHold = (idHold != null) ? new SimpleIntegerProperty(idHold) : new SimpleIntegerProperty(-1);
+        this.idUser = (idUser != null) ? new SimpleIntegerProperty(idUser) : new SimpleIntegerProperty(-1);
+        this.idMaterial = (idMaterial != null) ? new SimpleIntegerProperty(idMaterial) : new SimpleIntegerProperty(-1);
         this.hold_date = new SimpleObjectProperty<>(hold_date);
     }
+
 
     // Constructor sin idHold
     public Hold(Integer idUser, Integer idMaterial, LocalDateTime hold_date) {

@@ -290,58 +290,31 @@ public class LoadReturnController {
         Optional<ButtonType> result = confirm.showAndWait();
         if (result.isPresent() && result.get() == yes) {
             try {
-
-                // -----------------------------------------
-                // CAMBIO 1: Buscar el Loan real por title + user + dueDate
-                // -----------------------------------------
+                // -------------------------------
+                // NUEVO: Buscar préstamo por idLoan
+                // -------------------------------
                 Loan filtro = new Loan();
-                filtro.setReturn_date(null); // solo préstamos NO devueltos
+                filtro.setIdLoan(selected.getIdLoan());
 
                 List<Loan> loans = LoanDAOMySQLImpl.getInstance().select(filtro);
 
-                Loan loanReal = null;
-
-                for (Loan loan : loans) {
-
-                    // Obtener material
-                    Material m = new Material();
-                    m.setIdMaterial(loan.getIdMaterial());
-                    m = MaterialDAOMySQLImpl.getInstance().select(m).stream().findFirst().orElse(null);
-
-                    // Obtener usuario
-                    User u = new User();
-                    u.setIdUser(loan.getIdUser());
-                    u = UserDAOMySQLImpl.getInstance().select(u).stream().findFirst().orElse(null);
-
-                    if (m == null || u == null) continue;
-
-                    String fullUser = u.getName() + " " + u.getSurname();
-
-                    // Comprobar coincidencia por title + user + dueDate
-                    if (m.getTitle().equals(selected.getTitle()) &&
-                            fullUser.equals(selected.getUser()) &&
-                            loan.getDue_date().toLocalDate().toString().equals(selected.dueDate.get())) {
-
-                        loanReal = loan;
-                        break;
-                    }
-                }
-
-                if (loanReal == null) {
+                if (loans.isEmpty()) {
                     Alert error = new Alert(Alert.AlertType.ERROR, "Error: loan not found in database.");
                     error.showAndWait();
                     return;
                 }
 
-                // -----------------------------------------
-                // CAMBIO 2: Actualizar el préstamo real
-                // -----------------------------------------
+                Loan loanReal = loans.get(0);
+
+                // -------------------------------
+                // Actualizar préstamo
+                // -------------------------------
                 loanReal.setReturn_date(LocalDateTime.now());
                 LoanDAOMySQLImpl.getInstance().update(loanReal);
 
-                // -----------------------------------------
-                // NUEVO: MARCAR MATERIAL COMO AVAILABLE
-                // -----------------------------------------
+                // -------------------------------
+                // Marcar material como available
+                // -------------------------------
                 Material material = new Material();
                 material.setIdMaterial(loanReal.getIdMaterial());
                 material = MaterialDAOMySQLImpl.getInstance().select(material).get(0);
@@ -349,7 +322,7 @@ public class LoadReturnController {
                 material.setMaterial_status("available");
                 MaterialDAOMySQLImpl.getInstance().update(material);
 
-
+                // Recargar tabla
                 loadAllLoans();
 
             } catch (DAOException e) {
