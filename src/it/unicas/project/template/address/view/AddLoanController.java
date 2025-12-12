@@ -16,28 +16,36 @@ import javafx.scene.control.*;
 import javafx.stage.Stage;
 import javafx.scene.paint.Color;
 
+/**
+ * Controller class for adding a new loan in the library system.
+ * Handles user input, material selection, validation, and database operations.
+ */
 public class AddLoanController {
 
-    @FXML private TextField nationalIDField;
-    @FXML private TextField searchMaterialField;
-    @FXML private Button searchButton;
-    @FXML private TableView<Material> materialTable;
+    @FXML private TextField nationalIDField;        // Field for entering user national ID
+    @FXML private TextField searchMaterialField;    // Field for searching materials
+    @FXML private Button searchButton;              // Button to clear search
+    @FXML private TableView<Material> materialTable; // Table displaying materials
     @FXML private TableColumn<Material, String> titleColumn;
     @FXML private TableColumn<Material, String> authorColumn;
     @FXML private TableColumn<Material, String> isbnColumn;
-    @FXML private Button addLoanButton;
+    @FXML private Button addLoanButton;             // Button to create a loan
 
-    private Stage dialogStage;
+    private Stage dialogStage;                       // Reference to the stage for dialogs
     private final ObservableList<Material> materialList = FXCollections.observableArrayList();
 
+    /**
+     * Initializes the controller.
+     * Sets up table columns, color formatting, loads materials, and configures search behavior.
+     */
     @FXML
     public void initialize() {
-        // Configurar columnas
+        // Configure table columns
         titleColumn.setCellValueFactory(cellData -> cellData.getValue().titleProperty());
         authorColumn.setCellValueFactory(cellData -> cellData.getValue().authorProperty());
         isbnColumn.setCellValueFactory(cellData -> cellData.getValue().ISBNProperty());
 
-        // Cambiar color de título si está en hold
+        // Change title text color if material is on hold
         titleColumn.setCellFactory(column -> new TableCell<>() {
             @Override
             protected void updateItem(String item, boolean empty) {
@@ -60,21 +68,24 @@ public class AddLoanController {
         materialTable.setItems(materialList);
         loadAvailableMaterials();
 
-        // Búsqueda en tiempo real
+        // Real-time search listener
         searchMaterialField.textProperty().addListener((obs, oldText, newText) -> handleSearch());
 
-        // Botón Search -> Clear
+        // Configure search button as Clear
         searchButton.setText("Clear");
         searchButton.setOnAction(e -> handleClear());
     }
 
+    /**
+     * Loads all available or hold materials into the table.
+     */
     private void loadAvailableMaterials() {
         materialList.clear();
         try {
             var results = MaterialDAOMySQLImpl.getInstance().select(null);
             if (results != null) {
                 for (Material m : results) {
-                    // Solo disponibles o en hold
+                    // Only include materials that are available or on hold
                     if ("available".equalsIgnoreCase(m.getMaterial_status()) ||
                             "hold".equalsIgnoreCase(m.getMaterial_status())) {
                         materialList.add(m);
@@ -87,12 +98,23 @@ public class AddLoanController {
         }
     }
 
+    /**
+     * Clears the search field and reloads all available materials.
+     */
     @FXML
     private void handleClear() {
         searchMaterialField.clear();
         loadAvailableMaterials();
     }
 
+    /**
+     * Checks if all search words are present in the target text.
+     * Used for multi-word search matching.
+     *
+     * @param textToCheck Text to search in
+     * @param searchText Text entered by the user
+     * @return true if all words in searchText are found in textToCheck
+     */
     private boolean matchesWords(String textToCheck, String searchText) {
         if (textToCheck == null || searchText == null) return false;
         String[] searchWords = searchText.toLowerCase().split("\\s+");
@@ -111,6 +133,10 @@ public class AddLoanController {
         return true;
     }
 
+    /**
+     * Handles searching materials based on user input.
+     * Filters materials by title, author, or ISBN.
+     */
     @FXML
     private void handleSearch() {
         String searchText = searchMaterialField.getText().trim().toLowerCase();
@@ -140,6 +166,10 @@ public class AddLoanController {
         }
     }
 
+    /**
+     * Handles the creation of a new loan.
+     * Validates user, material availability, handles holds, updates the database, and refreshes the table.
+     */
     @FXML
     private void handleAddLoan() {
         String userID = nationalIDField.getText().trim();
@@ -155,7 +185,7 @@ public class AddLoanController {
         }
 
         try {
-            // 1️⃣ Validar usuario
+            // 1 Validate user exists
             User userFilter = new User();
             userFilter.setNationalID(userID);
             var users = UserDAOMySQLImpl.getInstance().select(userFilter);
@@ -164,7 +194,7 @@ public class AddLoanController {
                 return;
             }
 
-            // 2️⃣ Validar material
+            // 2 Validate material exists
             Material materialFilter = new Material();
             materialFilter.setIdMaterial(selectedMaterial.getIdMaterial());
             var materials = MaterialDAOMySQLImpl.getInstance().select(materialFilter);
@@ -175,13 +205,13 @@ public class AddLoanController {
 
             Material materialToUpdate = materials.get(0);
 
-            // 2️⃣b Si está en hold
+            // 3 Handle material on hold
             if ("hold".equalsIgnoreCase(materialToUpdate.getMaterial_status())) {
                 Hold holdFilter = new Hold();
                 holdFilter.setIdMaterial(materialToUpdate.getIdMaterial());
                 var holds = HoldDAOMySQLImpl.getInstance().select(holdFilter);
 
-                // Buscar hold del usuario actual
+                // Check if hold belongs to current user
                 Hold userHold = null;
                 for (Hold h : holds) {
                     if (h.getIdUser().equals(users.get(0).getIdUser())) {
@@ -193,10 +223,10 @@ public class AddLoanController {
                 if (userHold == null) {
                     showAlert(Alert.AlertType.WARNING, "Hold Notice",
                             "Material \"" + materialToUpdate.getTitle() + "\" is on hold for another user.");
-                    return; // Bloquear préstamo
+                    return; // Block the loan
                 }
 
-                // Eliminar hold del usuario actual
+                // Remove the hold for the user
                 HoldDAOMySQLImpl.getInstance().delete(userHold);
 
             } else if (!"available".equalsIgnoreCase(materialToUpdate.getMaterial_status())) {
@@ -204,7 +234,7 @@ public class AddLoanController {
                 return;
             }
 
-            // 3️⃣ Crear préstamo
+            // 4 Create loan
             Loan newLoan = new Loan();
             newLoan.setIdUser(users.get(0).getIdUser());
             newLoan.setIdMaterial(materialToUpdate.getIdMaterial());
@@ -213,11 +243,11 @@ public class AddLoanController {
             newLoan.setReturn_date(null);
             LoanDAOMySQLImpl.getInstance().insert(newLoan);
 
-            // 4️⃣ Actualizar status del material
+            // 5 Update material status
             materialToUpdate.setMaterial_status("loaned");
             MaterialDAOMySQLImpl.getInstance().update(materialToUpdate);
 
-            // 5️⃣ Refrescar tabla
+            // 6 Refresh table
             handleSearch();
 
             showAlert(Alert.AlertType.INFORMATION, "Success",
@@ -229,6 +259,12 @@ public class AddLoanController {
         }
     }
 
+    /**
+     * Utility method to show an alert dialog.
+     * @param type Alert type (ERROR, INFORMATION, WARNING)
+     * @param title Dialog title
+     * @param content Message to display
+     */
     private void showAlert(Alert.AlertType type, String title, String content) {
         Alert alert = new Alert(type);
         alert.setTitle(title);
@@ -237,6 +273,10 @@ public class AddLoanController {
         alert.showAndWait();
     }
 
+    /**
+     * Sets the stage for this dialog.
+     * @param dialogStage Stage instance
+     */
     public void setDialogStage(Stage dialogStage) {
         this.dialogStage = dialogStage;
     }

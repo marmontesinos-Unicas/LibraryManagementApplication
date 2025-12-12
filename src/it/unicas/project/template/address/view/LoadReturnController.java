@@ -16,7 +16,6 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 
-
 import javafx.scene.control.*;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
@@ -24,45 +23,59 @@ import javafx.stage.Stage;
 import java.time.LocalDateTime;
 import java.util.*;
 
+/**
+ * Controller class for loading, searching, and returning loans.
+ * Handles user interactions, table display, real-time search, and loan return logic.
+ */
 public class LoadReturnController {
 
-    @FXML private TextField searchField;
-    @FXML private Button searchButton;
-    @FXML private Button returnLoanButton;
+    @FXML private TextField searchField;                 // Field for searching loans
+    @FXML private Button searchButton;                   // Button to clear search
+    @FXML private Button returnLoanButton;               // Button to return selected loan
 
-    @FXML private TableView<LoanRow> loansTable;
+    @FXML private TableView<LoanRow> loansTable;        // Table to display loans
     @FXML private TableColumn<LoanRow, String> materialTypeColumn;
     @FXML private TableColumn<LoanRow, String> titleColumn;
     @FXML private TableColumn<LoanRow, String> userColumn;
     @FXML private TableColumn<LoanRow, String> dueDateColumn;
     @FXML private TableColumn<LoanRow, String> delayedColumn;
 
-    private Stage dialogStage;
+    private Stage dialogStage;                           // Reference to the dialog stage
     private ObservableList<LoanRow> loanRows = FXCollections.observableArrayList();
-    private MainApp mainApp; // NEW FIELD
+    private MainApp mainApp;                             // Reference to main application
 
+    /**
+     * Sets the dialog stage for this controller.
+     * @param dialogStage The stage object.
+     */
     public void setDialogStage(Stage dialogStage) {
         this.dialogStage = dialogStage;
     }
 
     /**
-     * Is called by the MainApp to give a reference back to itself.
-     * @param mainApp
+     * Sets a reference back to the main application.
+     * @param mainApp The main application object.
      */
     public void setMainApp(MainApp mainApp) {
         this.mainApp = mainApp;
     }
 
+    /**
+     * Initializes the controller.
+     * Sets up table columns, colors for delayed loans, search functionality, and button actions.
+     */
     @FXML
     private void initialize() {
         loansTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
 
+        // Configure table columns
         materialTypeColumn.setCellValueFactory(data -> data.getValue().materialTypeProperty());
         titleColumn.setCellValueFactory(data -> data.getValue().titleProperty());
         userColumn.setCellValueFactory(data -> data.getValue().userProperty());
         dueDateColumn.setCellValueFactory(data -> data.getValue().dueDateProperty());
         delayedColumn.setCellValueFactory(data -> data.getValue().delayedProperty());
 
+        // Color delayed loans in red
         delayedColumn.setCellFactory(column -> new TableCell<>() {
             @Override
             protected void updateItem(String item, boolean empty) {
@@ -80,32 +93,34 @@ public class LoadReturnController {
         loansTable.setItems(loanRows);
         loadAllLoans();
 
+        // Return loan button
         returnLoanButton.setOnAction(e -> handleReturnLoan());
 
-        // -----------------------------
-        // SEARCH en tiempo real
-        // -----------------------------
+        // Real-time search listener
         searchField.textProperty().addListener((obs, oldText, newText) -> handleSearch());
 
-        // -----------------------------
-        // Botón Search -> Clear
-        // -----------------------------
+        // Configure search button as Clear
         searchButton.setText("Clear");
         searchButton.setOnAction(e -> handleClear());
     }
 
-    // Nuevo metodo Clear
+    /**
+     * Clears the search field and reloads all active loans.
+     */
     private void handleClear() {
         searchField.clear();
         loadAllLoans();
     }
 
-    // Modificación handleSearch()
+    /**
+     * Handles searching loans based on user input.
+     * Supports searching by user name, surname, material title, or delayed loans keywords.
+     */
     @FXML
     private void handleSearch() {
         String searchText = searchField.getText().trim().toLowerCase();
 
-        // Buscar préstamos "delayed" si se escribe "delayed", "late", etc.
+        // Search for delayed loans using keywords
         if (searchText.equals("delayed") || searchText.equals("delay") || searchText.equals("late") || searchText.equals("overdue")) {
             loanRows.clear();
             try {
@@ -126,18 +141,18 @@ public class LoadReturnController {
             return;
         }
 
-        // Si el texto está vacío -> mostrar todos los préstamos activos
+        // If search is empty, load all active loans
         if (searchText.isEmpty()) {
             loadAllLoans();
             return;
         }
 
-        // Búsqueda normal: título, nombre o apellido del usuario
+        // Normal search: match title, user's first or last name
         try {
             Set<Integer> userIDs = new HashSet<>();
             Set<Integer> materialIDs = new HashSet<>();
 
-            // Buscar por nombre y apellido del usuario
+            // Search by user name or surname
             List<User> allUsers = UserDAOMySQLImpl.getInstance().select(null);
             for (User u : allUsers) {
                 if ((u.getName() != null && matchesWords(u.getName(), searchText)) ||
@@ -146,7 +161,7 @@ public class LoadReturnController {
                 }
             }
 
-// Buscar por título del material
+            // Search by material title
             List<Material> allMaterials = MaterialDAOMySQLImpl.getInstance().select(null);
             for (Material m : allMaterials) {
                 if (m.getTitle() != null && matchesWords(m.getTitle(), searchText)) {
@@ -154,8 +169,7 @@ public class LoadReturnController {
                 }
             }
 
-
-            // Filtrar préstamos activos
+            // Filter active loans
             List<Loan> allLoans = LoanDAOMySQLImpl.getInstance().select(null);
             loanRows.clear();
             for (Loan loan : allLoans) {
@@ -173,13 +187,17 @@ public class LoadReturnController {
         }
     }
 
-    // ------------------------
-// Helper method for multi-word search (title o nombre de usuario)
-// ------------------------
+    /**
+     * Helper method for multi-word search.
+     * Matches search words at the beginning of any word in the target text.
+     * @param textToCheck Text to search in
+     * @param searchText Text entered by the user
+     * @return true if all search words match
+     */
     private boolean matchesWords(String textToCheck, String searchText) {
         if (textToCheck == null || searchText == null) return false;
-        String[] searchWords = searchText.toLowerCase().split("\\s+"); // dividir búsqueda por palabras
-        String[] targetWords = textToCheck.toLowerCase().split("\\s+"); // dividir texto en palabras
+        String[] searchWords = searchText.toLowerCase().split("\\s+");
+        String[] targetWords = textToCheck.toLowerCase().split("\\s+");
 
         for (String sWord : searchWords) {
             boolean wordMatch = false;
@@ -189,12 +207,14 @@ public class LoadReturnController {
                     break;
                 }
             }
-            if (!wordMatch) return false; // si alguna palabra no coincide, fallo
+            if (!wordMatch) return false;
         }
-        return true; // todas las palabras coinciden al inicio de alguna palabra
+        return true;
     }
 
-
+    /**
+     * Handles navigation back to the admin landing page.
+     */
     @FXML
     private void handleBackToHome() {
         if (mainApp != null) {
@@ -202,6 +222,9 @@ public class LoadReturnController {
         }
     }
 
+    /**
+     * Loads all active loans into the table.
+     */
     private void loadAllLoans() {
         loanRows.clear();
         try {
@@ -218,6 +241,12 @@ public class LoadReturnController {
         }
     }
 
+    /**
+     * Builds a LoanRow object for table display.
+     * @param loan Loan entity from the database
+     * @return LoanRow object for TableView, or null if material/user not found
+     * @throws DAOException if database access fails
+     */
     private LoanRow buildLoanRow(Loan loan) throws DAOException {
         Material m = new Material(); m.setIdMaterial(loan.getIdMaterial());
         m = MaterialDAOMySQLImpl.getInstance().select(m).stream().findFirst().orElse(null);
@@ -243,7 +272,9 @@ public class LoadReturnController {
         return new LoanRow(loan.getIdLoan(), materialType, title, userName, due, delayed ? "Yes" : "No");
     }
 
-
+    /**
+     * Opens the Add Loan dialog and refreshes the table after closing.
+     */
     @FXML
     public void handleAddLoan() {
         try {
@@ -261,14 +292,17 @@ public class LoadReturnController {
             dialog.setScene(scene);
             dialog.showAndWait();
 
-            loadAllLoans(); // refrescar tabla
+            loadAllLoans(); // Refresh table
 
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-
+    /**
+     * Handles returning the selected loan.
+     * Updates the loan return date and sets the material status to "available".
+     */
     @FXML
     private void handleReturnLoan() {
         LoanRow selected = loansTable.getSelectionModel().getSelectedItem();
@@ -290,9 +324,7 @@ public class LoadReturnController {
         Optional<ButtonType> result = confirm.showAndWait();
         if (result.isPresent() && result.get() == yes) {
             try {
-                // -------------------------------
-                // NUEVO: Buscar préstamo por idLoan
-                // -------------------------------
+                // Find the loan by id
                 Loan filtro = new Loan();
                 filtro.setIdLoan(selected.getIdLoan());
 
@@ -306,15 +338,11 @@ public class LoadReturnController {
 
                 Loan loanReal = loans.get(0);
 
-                // -------------------------------
-                // Actualizar préstamo
-                // -------------------------------
+                // Update return date
                 loanReal.setReturn_date(LocalDateTime.now());
                 LoanDAOMySQLImpl.getInstance().update(loanReal);
 
-                // -------------------------------
-                // Marcar material como available
-                // -------------------------------
+                // Mark material as available
                 Material material = new Material();
                 material.setIdMaterial(loanReal.getIdMaterial());
                 material = MaterialDAOMySQLImpl.getInstance().select(material).get(0);
@@ -322,7 +350,7 @@ public class LoadReturnController {
                 material.setMaterial_status("available");
                 MaterialDAOMySQLImpl.getInstance().update(material);
 
-                // Recargar tabla
+                // Refresh table
                 loadAllLoans();
 
             } catch (DAOException e) {
@@ -331,10 +359,9 @@ public class LoadReturnController {
         }
     }
 
-
-    // ---------------------------
-    // LoanRow inner class
-    // ---------------------------
+    /**
+     * Inner class representing a row in the loans TableView.
+     */
     public static class LoanRow {
         private final int idLoan;
         private final SimpleStringProperty materialType;
@@ -362,6 +389,10 @@ public class LoadReturnController {
         public String getTitle() { return title.get(); }
         public String getUser() { return user.get(); }
 
+        /**
+         * Converts due date string to LocalDateTime.
+         * @return LocalDateTime of due date or MAX if invalid
+         */
         public LocalDateTime getDueDateAsLocalDate() {
             if (dueDate.get() == null || dueDate.get().equals("—")) return LocalDateTime.MAX;
             return LocalDateTime.parse(dueDate.get() + "T00:00:00");
