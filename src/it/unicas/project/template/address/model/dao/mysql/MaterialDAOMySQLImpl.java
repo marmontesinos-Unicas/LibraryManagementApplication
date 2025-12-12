@@ -1,6 +1,7 @@
 package it.unicas.project.template.address.model.dao.mysql;
 
 import it.unicas.project.template.address.model.Material;
+import it.unicas.project.template.address.model.MaterialInventory;
 import it.unicas.project.template.address.model.dao.DAO;
 import it.unicas.project.template.address.model.dao.DAOException;
 
@@ -22,6 +23,117 @@ public class MaterialDAOMySQLImpl implements DAO<Material> {
             logger = Logger.getLogger(MaterialDAOMySQLImpl.class.getName());
         }
         return dao;
+    }
+
+    // Helper Method for Inventory Creation
+    private MaterialInventory createMaterialInventoryFromResultSet(ResultSet rs) throws SQLException {
+        // Recreate the original Material object
+        Material baseMaterial = new Material(
+                rs.getInt("idMaterial"),
+                rs.getString("title"),
+                rs.getString("author"),
+                rs.getInt("year"),
+                rs.getString("ISBN"),
+                rs.getInt("idMaterialType"),
+                rs.getString("material_status_summary")
+        );
+
+        // Extract the calculated quantity (aliased as 'quantity_count')
+        MaterialInventory mi = new MaterialInventory(
+                baseMaterial,
+                rs.getInt("quantity_count")
+        );
+
+        // Set the new properties using the setters
+        mi.setMaterialTypeName(rs.getString("material_type_name"));
+        mi.setAvailableCount(rs.getInt("available_count"));
+        mi.setOnHoldCount(rs.getInt("on_hold_count"));
+        mi.setLoanedCount(rs.getInt("loaned_count"));
+
+        return mi;
+    }
+
+    // --- Centralized SQL for Inventory View (with conditional grouping) ---
+    private static final String INVENTORY_SELECT_BASE_SQL =
+            "SELECT " +
+                    "    MIN(m.idMaterial) AS idMaterial, " +
+                    "    m.title, " +
+                    "    m.author, " +
+                    "    m.year, " +
+                    "    m.ISBN, " +
+                    "    m.idMaterialType, " +
+                    "    mt.material_type AS material_type_name, " + // ADDED Material Type Name
+                    "    GROUP_CONCAT(DISTINCT m.material_status SEPARATOR ', ') AS material_status_summary, " +
+                    "    COUNT(*) AS quantity_count, " +
+                    // ADDED STATUS BREAKDOWN using conditional aggregation
+                    "    SUM(CASE WHEN m.material_status = 'available' THEN 1 ELSE 0 END) AS available_count, " +
+                    "    SUM(CASE WHEN m.material_status = 'hold' THEN 1 ELSE 0 END) AS on_hold_count, " +
+                    "    SUM(CASE WHEN m.material_status = 'loaned' THEN 1 ELSE 0 END) AS loaned_count " +
+                    "FROM materials m " +
+                    "JOIN material_type mt ON m.idMaterialType = mt.idMaterialType "; // JOIN to get the Material Type Name
+
+    private static final String INVENTORY_GROUP_BY_SQL =
+            "GROUP BY " +
+                    "    m.title, " +
+                    "    m.author, " +
+                    "    m.year, " +
+                    "    m.ISBN, " +
+                    "    m.idMaterialType, " +
+                    "    mt.material_type " + // Must be included in GROUP BY
+                    "ORDER BY m.title";
+
+    /**
+     * Finds all materials grouped by their inventory key (ISBN for book, T+A+Y+Type for others)
+     * Returns a list of MaterialInventory objects with calculated quantities.
+     */
+    public List<MaterialInventory> selectAllInventory() throws DAOException {
+        // Returns List<MaterialInventory>
+        String sql = INVENTORY_SELECT_BASE_SQL + INVENTORY_GROUP_BY_SQL;
+
+        List<MaterialInventory> list = new ArrayList<>();
+        try (PreparedStatement ps = DAOMySQLSettings.getConnection().prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+
+            while (rs.next()) {
+                list.add(createMaterialInventoryFromResultSet(rs));
+            }
+        } catch (SQLException e) {
+            logger.severe("SQL Error in selectAllInventory: " + e.getMessage()); // Log the error
+            throw new DAOException("In selectAllInventory(): " + e.getMessage());
+        }
+        return list;
+    }
+
+    /**
+     * Searches materials by title, author, or ISBN using the inventory grouping.
+     */
+    public List<MaterialInventory> selectInventoryBySearchTerm(String searchTerm) throws DAOException {
+        List<MaterialInventory> list = new ArrayList<>();
+        if (searchTerm == null || searchTerm.trim().isEmpty()) {
+            return selectAllInventory();
+        }
+
+        String sql = INVENTORY_SELECT_BASE_SQL +
+                "WHERE m.title LIKE ? OR m.author LIKE ? OR m.ISBN LIKE ? " +
+                INVENTORY_GROUP_BY_SQL;
+
+        try (PreparedStatement ps = DAOMySQLSettings.getConnection().prepareStatement(sql)) {
+            String searchPattern = "%" + searchTerm + "%";
+            ps.setString(1, searchPattern);
+            ps.setString(2, searchPattern);
+            ps.setString(3, searchPattern);
+
+            logger.info("SQL: " + ps);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(createMaterialInventoryFromResultSet(rs));
+                }
+            }
+        } catch (SQLException e) {
+            logger.severe("SQL Error in selectInventoryBySearchTerm: " + e.getMessage());
+            throw new DAOException("In selectInventoryBySearchTerm(): " + e.getMessage());
+        }
+        return list;
     }
 
     @Override
@@ -182,6 +294,66 @@ public class MaterialDAOMySQLImpl implements DAO<Material> {
 
         } catch (SQLException e) {
             throw new DAOException("In insert(): " + e.getMessage());
+        }
+    }
+
+    /**
+     * Updates all materials belonging to the same inventory group as the original material.
+     * This ensures consistency across the grouped items (e.g., all copies of a book).
+     * * @param updatedMaterial A Material object containing the new data (Title, Author, Year, ISBN).
+     * @param originalGroup A MaterialInventory object representing the material group selected in the UI.
+     */
+    public void updateMaterialGroup(Material updatedMaterial, MaterialInventory originalGroup) throws DAOException {
+        // 1. Determine the grouping key values from the original selected item
+        String originalGroupingKeyTitle = originalGroup.getTitle();
+        String originalGroupingKeyAuthor = originalGroup.getAuthor();
+        Integer originalGroupingKeyYear = originalGroup.getYear();
+        String originalGroupingKeyISBN = originalGroup.getISBN();
+        Integer materialType = originalGroup.getIdMaterialType();
+
+        // 2. Define the WHERE clause based on the material type grouping rules
+        String whereClause = "";
+
+        // Material Type = 1 (Book): Group by ISBN
+        if (materialType == 1) {
+            if (originalGroupingKeyISBN == null || originalGroupingKeyISBN.isEmpty()) {
+                throw new DAOException("Cannot update book group: Original ISBN is missing.");
+            }
+            whereClause = "WHERE idMaterialType = ? AND ISBN = ?";
+        } else {
+            // Material Type != 1 (CD, Movie, Magazine, etc.): Group by Title, Author, Year, Type
+            whereClause = "WHERE idMaterialType = ? AND title = ? AND author = ? AND year = ?";
+        }
+
+        String sql = "UPDATE materials SET title=?, author=?, year=?, ISBN=? " + whereClause;
+
+        try (PreparedStatement ps = DAOMySQLSettings.getConnection().prepareStatement(sql)) {
+
+            // Set the NEW values
+            int paramIndex = 1;
+            ps.setString(paramIndex++, updatedMaterial.getTitle());
+            ps.setString(paramIndex++, updatedMaterial.getAuthor());
+            ps.setInt(paramIndex++, updatedMaterial.getYear());
+            ps.setString(paramIndex++, updatedMaterial.getISBN());
+
+            // Set the original WHERE clause parameters (Grouping Key)
+            ps.setInt(paramIndex++, materialType); // idMaterialType is always a key
+
+            if (materialType == 1) {
+                // Book: WHERE idMaterialType = 1 AND ISBN = originalISBN
+                ps.setString(paramIndex++, originalGroupingKeyISBN);
+            } else {
+                // Non-Book: WHERE idMaterialType = type AND title=origTitle AND author=origAuthor AND year=origYear
+                ps.setString(paramIndex++, originalGroupingKeyTitle);
+                ps.setString(paramIndex++, originalGroupingKeyAuthor);
+                ps.setInt(paramIndex++, originalGroupingKeyYear);
+            }
+
+            logger.info("SQL (MaterialGroup Update): " + ps);
+            ps.executeUpdate();
+
+        } catch (SQLException e) {
+            throw new DAOException("In updateMaterialGroup(): " + e.getMessage());
         }
     }
 

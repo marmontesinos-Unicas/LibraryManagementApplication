@@ -96,6 +96,27 @@ public class MaterialGenreDAOMySQLImpl implements DAO<MaterialGenre> {
         }
     }
 
+    /**
+     * Deletes all genre associations for a given material ID.
+     * Used to clear genres before inserting the updated list.
+     * @param materialId The ID of the representative material.
+     * @throws DAOException If a database error occurs.
+     */
+    public void deleteAllByMaterialId(Integer materialId) throws DAOException {
+        if (materialId == null || materialId == -1) {
+            throw new DAOException("In deleteAllByMaterialId: idMaterial cannot be null");
+        }
+
+        String sql = "DELETE FROM materials_genres WHERE idMaterial=?";
+        try (PreparedStatement ps = DAOMySQLSettings.getConnection().prepareStatement(sql)) {
+            ps.setInt(1, materialId);
+            logger.info("SQL (Delete Genres): " + ps);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new DAOException("In deleteAllByMaterialId(): " + e.getMessage());
+        }
+    }
+
     @Override
     public List<MaterialGenre> selectAll() throws DAOException {
         return List.of();

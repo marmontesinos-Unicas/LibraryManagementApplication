@@ -31,8 +31,8 @@
                 <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
             </rowConstraints>
             <children>
-                <!-- Button 1: Add material (Dark Green - 📚 Books Icon) -->
-                <Button fx:id="addMaterialButton" contentDisplay="TOP" alignment="CENTER" mnemonicParsing="false" onAction="#handleAddMaterial" prefHeight="100.0" prefWidth="250.0" text="Add Material" GridPane.halignment="CENTER" GridPane.valignment="CENTER" style="-fx-background-color: #006600; -fx-text-fill: white; -fx-background-radius: 8;">
+                <!-- Button 1: Manage material (Dark Green - 📚 Books Icon) -->
+                <Button fx:id="MaterialManagementButton" contentDisplay="TOP" alignment="CENTER" mnemonicParsing="false" onAction="#handleMaterialManagement" prefHeight="100.0" prefWidth="250.0" text="Material Management" GridPane.halignment="CENTER" GridPane.valignment="CENTER" style="-fx-background-color: #006600; -fx-text-fill: white; -fx-background-radius: 8;">
                     <font>
                         <Font size="18.0" />
                     </font>

@@ -3,15 +3,9 @@
     import it.unicas.project.template.address.MainApp;
     import javafx.event.ActionEvent;
     import javafx.fxml.FXML;
-    import javafx.fxml.FXMLLoader;
     import javafx.scene.Node;
-    import javafx.scene.Scene;
     import javafx.scene.control.Button;
-    import javafx.scene.layout.AnchorPane;
-    import javafx.stage.Modality;
     import javafx.stage.Stage;
-
-    import java.io.IOException;
 
     /**
      * Controller for the FXML interface of the administrator landing screen.
@@ -32,7 +26,7 @@
 
         // References to the buttons
         @FXML
-        private Button addMaterialButton;
+        private Button MaterialManagementButton;
         @FXML
         private Button manageUsersButton;
         @FXML
@@ -42,10 +36,11 @@
 
 
         @FXML
-        protected void handleAddMaterial(ActionEvent event) {
-            // Open the Add Material dialog (modal). mainApp provides the method.
+        protected void handleMaterialManagement(ActionEvent event) {
+            // MODIFIED: Open the Material Management view instead of the Add Material dialog
             if (mainApp != null) {
-                mainApp.showAddMaterialView();
+                System.out.println("Action: Managing Material. Switching to Material Management view.");
+                mainApp.showMaterialManagement(); // CALL TO THE NEW METHOD IN MainApp
             } else {
                 System.err.println("mainApp is null - call setMainApp(...) when loading the admin view.");
             }
