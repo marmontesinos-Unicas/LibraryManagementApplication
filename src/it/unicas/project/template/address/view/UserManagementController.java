@@ -4,6 +4,8 @@ import it.unicas.project.template.address.MainApp;
 import it.unicas.project.template.address.model.User;
 import it.unicas.project.template.address.model.dao.DAOException;
 import it.unicas.project.template.address.model.dao.mysql.UserDAOMySQLImpl;
+import it.unicas.project.template.address.service.UserCatalogService;
+import java.util.Collections;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.SortedList;
@@ -50,6 +52,8 @@ public class UserManagementController {
 
     // Data structure
     private ObservableList<User> userList = FXCollections.observableArrayList();
+    // Service for user catalog operations
+    private UserCatalogService userCatalogService = new UserCatalogService();
 
 
     @FXML
@@ -112,46 +116,33 @@ public class UserManagementController {
      * Handles the 'Search' button click event.
      * Filters the user list by Name, Surname, National ID, and Email using the DAO's select method.
      */
+    /**
+     * Handles the 'Search' button click event.
+     * Filters the user list using UserCatalogService with priority-based search.
+     */
     @FXML
     private void handleSearch() {
         String query = searchField.getText().trim();
         userList.clear(); // Clear the current list
 
-        if (query.isEmpty()) {
-            // If the search field is empty, reload all initial data
-            loadInitialUserData();
-            return;
-        }
-
         try {
-            // Use a Set to store unique users retrieved from all search fields
-            // This is crucial because a single user might match both 'name' AND 'email' for the same query.
-            Set<User> uniqueResults = new HashSet<>();
+            // Load all users from database
+            List<User> allUsers = UserDAOMySQLImpl.getInstance().select(null);
 
-            // --- Emulating OR Search using multiple DAO calls (due to DAO's AND logic) ---
-
-            // 1. Search by Name
-            User searchByName = new User();
-            searchByName.setName(query);
-            uniqueResults.addAll(UserDAOMySQLImpl.getInstance().select(searchByName));
-
-            // 2. Search by Surname
-            User searchBySurname = new User();
-            searchBySurname.setSurname(query);
-            uniqueResults.addAll(UserDAOMySQLImpl.getInstance().select(searchBySurname));
-
-            // 3. Search by National ID
-            User searchByID = new User();
-            searchByID.setNationalID(query);
-            uniqueResults.addAll(UserDAOMySQLImpl.getInstance().select(searchByID));
-
-            // 4. Search by Email
-            User searchByEmail = new User();
-            searchByEmail.setEmail(query);
-            uniqueResults.addAll(UserDAOMySQLImpl.getInstance().select(searchByEmail));
-
-            // Add all unique results to the observable list
-            userList.addAll(uniqueResults);
+            if (query.isEmpty()) {
+                // If search is empty, show all users
+                userList.addAll(allUsers);
+            } else {
+                // Use UserCatalogService to search with priority-based matching
+                // Pass empty role filter (since we're not filtering by roles in this view)
+                List<User> searchResults = userCatalogService.filterUsers(
+                        allUsers,
+                        Collections.emptyMap(),  // No role map needed
+                        Collections.emptySet(),  // No role filter
+                        query
+                );
+                userList.addAll(searchResults);
+            }
 
             System.out.println("Search executed. Found " + userList.size() + " matches for query: " + query);
 

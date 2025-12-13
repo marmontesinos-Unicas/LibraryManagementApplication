@@ -8,6 +8,7 @@ import it.unicas.project.template.address.model.dao.DAOException;
 import it.unicas.project.template.address.model.dao.mysql.LoanDAOMySQLImpl;
 import it.unicas.project.template.address.model.dao.mysql.MaterialDAOMySQLImpl;
 import it.unicas.project.template.address.model.dao.mysql.UserDAOMySQLImpl;
+import it.unicas.project.template.address.service.LoanCatalogService;
 import javafx.collections.FXCollections;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.ObservableList;
@@ -40,6 +41,7 @@ public class LoadReturnController {
     private Stage dialogStage;
     private ObservableList<LoanRow> loanRows = FXCollections.observableArrayList();
     private MainApp mainApp; // NEW FIELD
+    private final LoanCatalogService loanCatalogService = new LoanCatalogService();
 
     public void setDialogStage(Stage dialogStage) {
         this.dialogStage = dialogStage;

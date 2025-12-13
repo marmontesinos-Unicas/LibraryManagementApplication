@@ -3,11 +3,21 @@ package it.unicas.project.template.address.service;
 import it.unicas.project.template.address.model.Material;
 
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class MaterialCatalogService {
 
     private final SearchService<Material> searchService = new SearchService<>();
+
+    // Define search fields once as a constant - Priority: Title > Author > ISBN > Status
+    private static final List<Function<Material, String>> MATERIAL_SEARCH_FIELDS =
+            SearchService.<Material>fieldsBuilder()
+                    .addField(Material::getTitle)
+                    .addField(Material::getAuthor)
+                    .addField(Material::getISBN)
+                    .addField(Material::getMaterial_status)
+                    .build();
 
     public List<Material> filterMaterials(
             List<Material> materials,
@@ -24,7 +34,6 @@ public class MaterialCatalogService {
 
         List<Material> filtered = materials.stream()
                 .filter(material -> {
-
                     boolean matchesType =
                             selectedTypes.isEmpty() ||
                                     selectedTypes.contains(materialTypeMap.get(material.getIdMaterialType()));
@@ -61,16 +70,9 @@ public class MaterialCatalogService {
                 })
                 .collect(Collectors.toList());
 
+        // Apply search with prioritized fields
         if (!searchTerm.isEmpty()) {
-            // Define search priority: Title > Author > ISBN/Status
-            List<java.util.function.Function<Material, String>> fieldExtractors = Arrays.asList(
-                    Material::getTitle,
-                    Material::getAuthor,
-                    Material::getISBN,
-                    Material::getMaterial_status
-            );
-
-            filtered = searchService.searchAndSort(filtered, searchTerm, fieldExtractors);
+            filtered = searchService.searchAndSort(filtered, searchTerm, MATERIAL_SEARCH_FIELDS);
         }
 
         return filtered;

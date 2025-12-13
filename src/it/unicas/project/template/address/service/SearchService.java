@@ -33,14 +33,11 @@ public class SearchService<T> {
 
         // Categorize each item into the highest priority bucket that matches
         for (T item : items) {
-            boolean matched = false;
-
             for (int i = 0; i < fieldExtractors.size(); i++) {
                 String fieldValue = fieldExtractors.get(i).apply(item);
 
                 if (containsWordStartingWith(fieldValue, term)) {
                     buckets.get(i).add(item);
-                    matched = true;
                     break; // Item goes in highest priority match only
                 }
             }
@@ -70,5 +67,37 @@ public class SearchService<T> {
             }
         }
         return false;
+    }
+
+    /**
+     * Builder for creating prioritized search field configurations
+     */
+    public static class SearchFieldsBuilder<T> {
+        private final List<Function<T, String>> fieldExtractors = new ArrayList<>();
+
+        /**
+         * Adds a field to search with the given priority (order matters)
+         * @param extractor Function to extract the field value from the object
+         * @return this builder for chaining
+         */
+        public SearchFieldsBuilder<T> addField(Function<T, String> extractor) {
+            fieldExtractors.add(extractor);
+            return this;
+        }
+
+        /**
+         * Builds the list of field extractors
+         * @return Immutable list of field extractors in priority order
+         */
+        public List<Function<T, String>> build() {
+            return Collections.unmodifiableList(new ArrayList<>(fieldExtractors));
+        }
+    }
+
+    /**
+     * Creates a new builder for search fields
+     */
+    public static <T> SearchFieldsBuilder<T> fieldsBuilder() {
+        return new SearchFieldsBuilder<>();
     }
 }
