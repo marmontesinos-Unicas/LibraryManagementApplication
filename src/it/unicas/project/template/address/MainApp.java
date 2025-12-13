@@ -291,7 +291,7 @@ public class MainApp extends Application {
     /**
      * Displays the User Catalog view
      */
-    public void showUserCatalogView() {
+    public void showUserCatalog() {
         try {
             FXMLLoader loader = new FXMLLoader();
             loader.setLocation(MainApp.class.getResource("view/UserCatalog.fxml"));

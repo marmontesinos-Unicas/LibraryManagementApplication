@@ -6,7 +6,6 @@ import it.unicas.project.template.address.model.dao.DAO;
 import it.unicas.project.template.address.model.dao.DAOException;
 import it.unicas.project.template.address.model.dao.GenreDAO;
 import it.unicas.project.template.address.model.dao.mysql.*;
-import it.unicas.project.template.address.service.MaterialCatalogService;
 import it.unicas.project.template.address.service.MaterialHoldService;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -71,7 +70,6 @@ public class UserCatalogController {
     private Popup materialTypePopup;
     private Popup genrePopup;
 
-    private final MaterialCatalogService catalogService = new MaterialCatalogService();
     private final MaterialHoldService holdService = new MaterialHoldService();
 
     /**

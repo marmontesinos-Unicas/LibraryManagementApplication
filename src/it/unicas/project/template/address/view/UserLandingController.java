@@ -35,7 +35,7 @@ public class UserLandingController {
     @FXML
     protected void handleSearch(ActionEvent event) {
         if (mainApp != null) {
-            mainApp.showUserCatalogView();
+            mainApp.showUserCatalog();
         } else {
             System.err.println("mainApp is null - call setMainApp(...) when loading the user view.");
         }
