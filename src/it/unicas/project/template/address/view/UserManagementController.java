@@ -82,10 +82,8 @@ public class UserManagementController {
 
         userTable.setPlaceholder(new Label("No users registered in the database."));
 
-        searchField.setOnKeyReleased(event -> {
-            if (event.getCode().equals(javafx.scene.input.KeyCode.ENTER)) {
-                handleSearch();
-            }
+        searchField.textProperty().addListener((observable, oldValue, newValue) -> {
+            handleSearch();
         });
     }
 

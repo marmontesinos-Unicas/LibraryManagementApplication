@@ -86,10 +86,8 @@ public class LoadReturnController {
 
         returnLoanButton.setOnAction(e -> handleReturnLoan());
 
-        searchField.setOnKeyReleased(event -> {
-            if (event.getCode().toString().equals("ENTER")) {
-                handleSearch();
-            }
+        searchField.textProperty().addListener((observable, oldValue, newValue) -> {
+            handleSearch();
         });
     }
 

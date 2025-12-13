@@ -43,6 +43,24 @@ public class LoanCatalogService {
                     Material material = materialMap.get(loan.getIdMaterial());
                     return material != null ? material.getISBN() : "";
                 })
+                // NEW: Add material type as searchable field
+                .addField(loan -> {
+                    Material material = materialMap.get(loan.getIdMaterial());
+                    if (material == null || material.getIdMaterialType() == null) return "";
+
+                    return switch (material.getIdMaterialType()) {
+                        case 1 -> "Book";
+                        case 2 -> "CD";
+                        case 3 -> "Movie";
+                        case 4 -> "Magazine";
+                        default -> "";
+                    };
+                })
+                // NEW: Add due date as searchable field (format: yyyy-MM-dd)
+                .addField(loan -> {
+                    return loan.getDue_date() != null ?
+                            loan.getDue_date().toLocalDate().toString() : "";
+                })
                 .build();
     }
 
@@ -67,20 +85,44 @@ public class LoanCatalogService {
             String dateTo,
             String searchTerm
     ) {
-        // First apply status filter
+        // First apply status and date filters
         List<Loan> filtered = loans.stream()
                 .filter(loan -> {
-                    if (selectedStatuses.isEmpty()) {
-                        return true; // No status filter, show all
+                    // Status filter
+                    if (!selectedStatuses.isEmpty()) {
+                        if (selectedStatuses.contains("overdue")) {
+                            boolean isOverdue = loan.getDue_date() != null &&
+                                    loan.getDue_date().isBefore(java.time.LocalDateTime.now());
+                            if (!isOverdue) return false;
+                        }
                     }
 
-                    // Check if loan is overdue
-                    if (selectedStatuses.contains("overdue")) {
-                        return loan.getDue_date() != null &&
-                                loan.getDue_date().isBefore(java.time.LocalDateTime.now());
+                    // Date range filter (due_date)
+                    if (dateFrom != null && !dateFrom.trim().isEmpty()) {
+                        try {
+                            java.time.LocalDate fromDate = java.time.LocalDate.parse(dateFrom);
+                            if (loan.getDue_date() == null ||
+                                    loan.getDue_date().toLocalDate().isBefore(fromDate)) {
+                                return false;
+                            }
+                        } catch (Exception e) {
+                            // Invalid date format, skip filter
+                        }
                     }
 
-                    return false;
+                    if (dateTo != null && !dateTo.trim().isEmpty()) {
+                        try {
+                            java.time.LocalDate toDate = java.time.LocalDate.parse(dateTo);
+                            if (loan.getDue_date() == null ||
+                                    loan.getDue_date().toLocalDate().isAfter(toDate)) {
+                                return false;
+                            }
+                        } catch (Exception e) {
+                            // Invalid date format, skip filter
+                        }
+                    }
+
+                    return true;
                 })
                 .collect(Collectors.toList());
 
