@@ -197,8 +197,8 @@ public class LoadReturnController {
                     materialMap,
                     userMap,
                     statusFilter,
-                    null,  // dateFrom - not used in your case
-                    null,  // dateTo - not used in your case
+                    null,
+                    null,
                     searchTerm
             );
 
