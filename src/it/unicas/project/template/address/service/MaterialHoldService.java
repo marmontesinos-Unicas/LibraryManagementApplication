@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
 
 /**
  * Service layer that groups material + hold operations into a single transaction.
- * Uses DAO<T> interface types to avoid getInstance() return-type problems.
+ * Uses DAO<T> interface types.
  */
 public class MaterialHoldService {
 

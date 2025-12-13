@@ -14,7 +14,7 @@ public class Hold {
     private final IntegerProperty idMaterial = new SimpleIntegerProperty(-1);
     private final ObjectProperty<LocalDateTime> hold_date = new SimpleObjectProperty<>(null);
 
-    // Constructor por defecto
+    // In order to avoid errors in the TableView when no-arg constructor is needed
     public Hold() {
         // defaults already set (-1, -1, -1, null)
     }
