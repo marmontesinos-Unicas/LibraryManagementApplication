@@ -67,23 +67,20 @@ public class LoanCatalogService {
             String dateTo,
             String searchTerm
     ) {
-
-        // First apply filters
+        // First apply status filter
         List<Loan> filtered = loans.stream()
                 .filter(loan -> {
-                    // Add your status filtering logic here
-                    // For example, you might determine status based on dates:
-                    // - "active" if return_date is null and due_date > now
-                    // - "returned" if return_date is not null
-                    // - "overdue" if return_date is null and due_date < now
+                    if (selectedStatuses.isEmpty()) {
+                        return true; // No status filter, show all
+                    }
 
-                    boolean matchesStatus = selectedStatuses.isEmpty();
-                    // TODO: Implement actual status checking based on your business logic
+                    // Check if loan is overdue
+                    if (selectedStatuses.contains("overdue")) {
+                        return loan.getDue_date() != null &&
+                                loan.getDue_date().isBefore(java.time.LocalDateTime.now());
+                    }
 
-                    // Add date filtering logic if needed
-                    // boolean matchesDateRange = ...
-
-                    return matchesStatus;
+                    return false;
                 })
                 .collect(Collectors.toList());
 

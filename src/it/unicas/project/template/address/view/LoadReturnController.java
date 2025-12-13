@@ -9,6 +9,7 @@ import it.unicas.project.template.address.model.dao.mysql.LoanDAOMySQLImpl;
 import it.unicas.project.template.address.model.dao.mysql.MaterialDAOMySQLImpl;
 import it.unicas.project.template.address.model.dao.mysql.UserDAOMySQLImpl;
 import it.unicas.project.template.address.service.LoanCatalogService;
+import java.util.stream.Collectors;
 import javafx.collections.FXCollections;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.ObservableList;
@@ -41,7 +42,8 @@ public class LoadReturnController {
     private Stage dialogStage;
     private ObservableList<LoanRow> loanRows = FXCollections.observableArrayList();
     private MainApp mainApp; // NEW FIELD
-    private final LoanCatalogService loanCatalogService = new LoanCatalogService();
+
+    private LoanCatalogService loanCatalogService = new LoanCatalogService();
 
     public void setDialogStage(Stage dialogStage) {
         this.dialogStage = dialogStage;
@@ -141,88 +143,87 @@ public class LoadReturnController {
 
     @FXML
     private void handleSearch() {
-        String text = searchField.getText().trim().toLowerCase();
+        String text = searchField.getText().trim();
 
-        // -------------------------------------------
-        // NEW: search for delayed loans by keywords
-        // -------------------------------------------
-        if (text.equals("delayed") || text.equals("delay") || text.equals("delays")
-                || text.equals("late") || text.equals("overdue")) {
+        loanRows.clear();
 
-            loanRows.clear();
+        try {
+            // Get all active (not returned) loans
+            List<Loan> loans = LoanDAOMySQLImpl.getInstance().select(null);
+            loans = loans.stream()
+                    .filter(loan -> loan.getReturn_date() == null)
+                    .toList();
 
-            try {
-                List<Loan> loans = LoanDAOMySQLImpl.getInstance().select(null);
+            // Build material and user maps for the service
+            Map<Integer, Material> materialMap = new HashMap<>();
+            Map<Integer, User> userMap = new HashMap<>();
 
-                for (Loan loan : loans) {
-                    if (loan.getReturn_date() == null &&
-                            loan.getDue_date() != null &&
-                            loan.getDue_date().isBefore(java.time.LocalDateTime.now())) {
-
-                        LoanRow row = buildLoanRow(loan);
-                        if (row != null) loanRows.add(row);
+            for (Loan loan : loans) {
+                // Get material if not already in map
+                if (!materialMap.containsKey(loan.getIdMaterial())) {
+                    Material m = new Material();
+                    m.setIdMaterial(loan.getIdMaterial());
+                    Material found = MaterialDAOMySQLImpl.getInstance().select(m)
+                            .stream().findFirst().orElse(null);
+                    if (found != null) {
+                        materialMap.put(loan.getIdMaterial(), found);
                     }
                 }
 
-                loanRows.sort(Comparator.comparing(LoanRow::getDueDateAsLocalDate));
-
-            } catch (DAOException e) {
-                e.printStackTrace();
+                // Get user if not already in map
+                if (!userMap.containsKey(loan.getIdUser())) {
+                    User u = new User();
+                    u.setIdUser(loan.getIdUser());
+                    User found = UserDAOMySQLImpl.getInstance().select(u)
+                            .stream().findFirst().orElse(null);
+                    if (found != null) {
+                        userMap.put(loan.getIdUser(), found);
+                    }
+                }
             }
 
-            return;
-        }
+            // Determine status filter based on search text
+            Set<String> statusFilter = new HashSet<>();
+            if (text.equals("delayed") || text.equals("delay") || text.equals("delays")
+                    || text.equals("late") || text.equals("overdue")) {
+                statusFilter.add("overdue");
+            } else {
+                // Empty set means no status filtering (show all active loans)
+                statusFilter = new HashSet<>();
+            }
 
-        // ----------------------------------------------------
-        // If no text → show ALL active (not returned) loans
-        // ----------------------------------------------------
-        if (text.isEmpty()) {
-            loadAllLoans();
-            return;
-        }
-
-        // ----------------------------------------------------
-        // Normal search (title, name, surname, material)
-        // ----------------------------------------------------
-        try {
-            Set<Integer> userIDs = new HashSet<>();
-            Set<Integer> materialIDs = new HashSet<>();
-
-            // Search by user name
-            User searchByName = new User();
-            searchByName.setName(text);
-            userIDs.addAll(
-                    UserDAOMySQLImpl.getInstance().select(searchByName)
-                            .stream().map(User::getIdUser).toList()
+            // Use the service to filter and search
+            String searchTerm = statusFilter.contains("overdue") ? "" : text;
+            List<Loan> filteredLoans = loanCatalogService.filterLoans(
+                    loans,
+                    materialMap,
+                    userMap,
+                    statusFilter,
+                    null,  // dateFrom - not used in your case
+                    null,  // dateTo - not used in your case
+                    searchTerm
             );
 
-            // Search by user surname
-            User searchBySurname = new User();
-            searchBySurname.setSurname(text);
-            userIDs.addAll(
-                    UserDAOMySQLImpl.getInstance().select(searchBySurname)
-                            .stream().map(User::getIdUser).toList()
-            );
+            // Build rows from filtered loans
+            for (Loan loan : filteredLoans) {
+                Material m = materialMap.get(loan.getIdMaterial());
+                User u = userMap.get(loan.getIdUser());
 
-            // Search by material title
-            Material searchByTitle = new Material();
-            searchByTitle.setTitle(text);
-            materialIDs.addAll(
-                    MaterialDAOMySQLImpl.getInstance().select(searchByTitle)
-                            .stream().map(Material::getIdMaterial).toList()
-            );
+                if (m != null && u != null) {
+                    String materialType = switch (m.getIdMaterialType() != null ? m.getIdMaterialType() : 0) {
+                        case 1 -> "Book";
+                        case 2 -> "CD";
+                        case 3 -> "Movie";
+                        case 4 -> "Magazine";
+                        default -> "Unknown";
+                    };
 
-            // Apply filtering
-            List<Loan> allLoans = LoanDAOMySQLImpl.getInstance().select(null);
-            loanRows.clear();
+                    String title = m.getTitle() != null ? m.getTitle() : "—";
+                    String userName = (u.getName() != null ? u.getName() : "") + " " + (u.getSurname() != null ? u.getSurname() : "");
+                    String due = loan.getDue_date() != null ? loan.getDue_date().toLocalDate().toString() : "—";
+                    boolean delayed = loan.getDue_date() != null && loan.getDue_date().isBefore(LocalDateTime.now());
 
-            for (Loan loan : allLoans) {
-                if (loan.getReturn_date() == null &&
-                        (userIDs.contains(loan.getIdUser()) ||
-                                materialIDs.contains(loan.getIdMaterial()))) {
-
-                    LoanRow row = buildLoanRow(loan);
-                    if (row != null) loanRows.add(row);
+                    loanRows.add(new LoanRow(loan.getIdLoan(), materialType, title, userName, due, delayed ? "Yes" : "No"));
                 }
             }
 
