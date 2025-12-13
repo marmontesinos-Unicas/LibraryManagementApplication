@@ -9,7 +9,6 @@ import it.unicas.project.template.address.model.dao.mysql.LoanDAOMySQLImpl;
 import it.unicas.project.template.address.model.dao.mysql.MaterialDAOMySQLImpl;
 import it.unicas.project.template.address.model.dao.mysql.UserDAOMySQLImpl;
 import it.unicas.project.template.address.service.LoanCatalogService;
-import java.util.stream.Collectors;
 import javafx.collections.FXCollections;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.ObservableList;
