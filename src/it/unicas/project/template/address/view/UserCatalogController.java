@@ -139,7 +139,7 @@ public class UserCatalogController {
         loadGenres();
         loadMaterialGenreRelationships();
         setupTableColumns();
-        loadAllMaterials();
+        //loadAllMaterials();
 
         setupFilterButtons();
 
@@ -698,5 +698,9 @@ public class UserCatalogController {
 
     public void setCurrentUser(User user) {
         this.currentUser = user;
+        // Cargar datos después de establecer el usuario
+        if (allMaterials.isEmpty()) {
+            loadAllMaterials();
+        }
     }
 }

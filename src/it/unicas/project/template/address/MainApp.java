@@ -287,25 +287,21 @@ public class MainApp extends Application {
             alert.showAndWait();
         }
     }
-
-    /**
-     * Displays the User Catalog view
-     */
     public void showUserCatalog() {
         try {
             FXMLLoader loader = new FXMLLoader();
             loader.setLocation(MainApp.class.getResource("view/UserCatalog.fxml"));
             AnchorPane page = loader.load();
 
+            UserCatalogController controller = loader.getController();
+            controller.setMainApp(this);
+            controller.setCurrentUser(loggedUser); // Esto ahora cargará los materiales
+
             Scene scene = new Scene(page);
             primaryStage.setScene(scene);
             primaryStage.setTitle("Material Catalog");
             primaryStage.setMinWidth(800);
             primaryStage.setMinHeight(520);
-
-            UserCatalogController controller = loader.getController();
-            controller.setMainApp(this);
-            controller.setCurrentUser(loggedUser); // <-- pass the logged-in user
 
         } catch (IOException e) {
             e.printStackTrace();

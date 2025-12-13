@@ -4,7 +4,11 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<AnchorPane prefHeight="520" prefWidth="800" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="it.unicas.project.template.address.view.UserCatalogController">
+<AnchorPane prefHeight="520" prefWidth="800"
+            style="-fx-background-color: white;"
+            xmlns="http://javafx.com/javafx/17.0.12"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="it.unicas.project.template.address.view.UserCatalogController">
 
     <!-- Search and Filter Section -->
     <VBox spacing="10" styleClass="filter-section"
@@ -14,10 +18,9 @@
 
         <!-- Search Bar -->
         <HBox spacing="10" alignment="CENTER_LEFT">
-            <Label text="Search:" minWidth="60" style="-fx-text-fill: black;"/>
+            <Label text="Search:" minWidth="60"/>
             <TextField fx:id="searchField"
                        promptText="Search by title, author, or ISBN..."
-                       style="-fx-text-fill: black;"
                        HBox.hgrow="ALWAYS"/>
             <Button fx:id="clearButton" text="Clear" onAction="#handleClear"/>
         </HBox>
@@ -26,38 +29,34 @@
         <HBox spacing="20" alignment="CENTER_LEFT">
             <!-- Material Type Filter -->
             <VBox spacing="5">
-                <Label text="Material Type:" style="-fx-font-weight: bold; -fx-text-fill: black;"/>
+                <Label text="Material Type:" style="-fx-font-weight: bold;"/>
                 <ComboBox fx:id="materialTypeFilterButton"
                           promptText="All Types"
                           prefWidth="150"
                           editable="false"
-                          style="-fx-text-fill: black;"
                           styleClass="filter-combo"/>
             </VBox>
 
             <!-- Genre Filter -->
             <VBox spacing="5">
-                <Label text="Genre:" style="-fx-font-weight: bold; -fx-text-fill: black;"/>
+                <Label text="Genre:" style="-fx-font-weight: bold;"/>
                 <ComboBox fx:id="genreFilterButton"
                           promptText="All Genres"
                           prefWidth="150"
                           editable="false"
-                          style="-fx-text-fill: black;"
                           styleClass="filter-combo"/>
             </VBox>
 
             <!-- Year Range -->
             <VBox spacing="5">
-                <Label text="Year:" style="-fx-font-weight: bold; -fx-text-fill: black;"/>
+                <Label text="Year:" style="-fx-font-weight: bold;"/>
                 <HBox spacing="5">
                     <TextField fx:id="yearFromField"
                                promptText="From"
-                               style="-fx-text-fill: black;"
                                prefWidth="70"/>
-                    <Label text="-" style="-fx-text-fill: black;"/>
+                    <Label text="-"/>
                     <TextField fx:id="yearToField"
                                promptText="To"
-                               style="-fx-text-fill: black;"
                                prefWidth="70"/>
                 </HBox>
             </VBox>
@@ -66,19 +65,18 @@
 
     <!-- Table View -->
     <TableView fx:id="materialTable"
-               style="-fx-text-fill: black;"
                AnchorPane.topAnchor="165.0"
                AnchorPane.bottomAnchor="60.0"
                AnchorPane.leftAnchor="15.0"
                AnchorPane.rightAnchor="15.0">
         <columns>
-            <TableColumn fx:id="titleColumn" text="Title" prefWidth="180" minWidth="150" style="-fx-text-fill: black;"/>
-            <TableColumn fx:id="authorColumn" text="Author" prefWidth="130" minWidth="100" style="-fx-text-fill: black;"/>
-            <TableColumn fx:id="yearColumn" text="Year" prefWidth="60" minWidth="50" style="-fx-text-fill: black;"/>
-            <TableColumn fx:id="isbnColumn" text="ISBN" prefWidth="110" minWidth="90" style="-fx-text-fill: black;"/>
-            <TableColumn fx:id="typeColumn" text="Type" prefWidth="90" minWidth="70" style="-fx-text-fill: black;"/>
-            <TableColumn fx:id="genreColumn" text="Genre(s)" prefWidth="120" minWidth="100" style="-fx-text-fill: black;"/>
-            <TableColumn fx:id="actionColumn" text="Action" prefWidth="110" minWidth="110" style="-fx-text-fill: black;"/>
+            <TableColumn fx:id="titleColumn" text="Title" prefWidth="180" minWidth="150"/>
+            <TableColumn fx:id="authorColumn" text="Author" prefWidth="130" minWidth="100"/>
+            <TableColumn fx:id="yearColumn" text="Year" prefWidth="60" minWidth="50"/>
+            <TableColumn fx:id="isbnColumn" text="ISBN" prefWidth="110" minWidth="90"/>
+            <TableColumn fx:id="typeColumn" text="Type" prefWidth="90" minWidth="70"/>
+            <TableColumn fx:id="genreColumn" text="Genre(s)" prefWidth="120" minWidth="100"/>
+            <TableColumn fx:id="actionColumn" text="Action" prefWidth="110" minWidth="110"/>
         </columns>
     </TableView>
 
@@ -87,6 +85,7 @@
             text="&lt; Back to Home"
             onAction="#handleBack"
             styleClass="back-button"
+            style="-fx-font-size: 14px;"
             AnchorPane.topAnchor="15.0"
             AnchorPane.leftAnchor="15.0"/>
 
@@ -95,7 +94,7 @@
           AnchorPane.bottomAnchor="15.0"
           AnchorPane.leftAnchor="15.0"
           AnchorPane.rightAnchor="15.0">
-        <Label fx:id="resultCountLabel" text="Total: 0 materials" style="-fx-text-fill: black; -fx-font-weight: bold;"/>
+        <Label fx:id="resultCountLabel" text="Total: 0 materials" style="-fx-font-weight: bold;"/>
     </HBox>
 
 </AnchorPane>
