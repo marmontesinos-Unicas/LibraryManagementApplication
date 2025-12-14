@@ -116,7 +116,7 @@ public class UserLandingServiceTest {
             public List<Hold> select(Hold filter) {
                 List<Hold> result = new ArrayList<>();
                 for (Hold h : holds) {
-                    if (filter == null || filter.getIdUser() == null || filter.getIdUser().equals(h.getIdUser())) {
+                    if (filter == null || filter.getIdUser() == -1 || filter.getIdUser() == h.getIdUser()) {
                         result.add(h);
                     }
                 }

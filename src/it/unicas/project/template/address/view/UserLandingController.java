@@ -183,7 +183,6 @@ public class    UserLandingController {
      * Checks overdue notifications for the user and updates the notifications button UI.
      */
     private void checkOverdueStatus(User currentUser) {
-
         try {
             overdueNotifications = notificationsService.getFormattedNotifications(currentUser.getIdUser());
             int count = overdueNotifications.size();
