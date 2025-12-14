@@ -404,14 +404,13 @@ public class MainApp extends Application {
     public void showNotificationsView(List<String> notifications) {
         try {
             FXMLLoader loader = new FXMLLoader();
-            // Assuming the FXML is located at: address/view/NotificationsView.fxml
             loader.setLocation(MainApp.class.getResource("view/NotificationsView.fxml"));
             AnchorPane page = loader.load();
 
             // Create the dialog Stage
             Stage dialogStage = new Stage();
             dialogStage.setTitle("Overdue Notifications");
-            // Set modality to BLOCKING, typical for alerts/modals
+
             dialogStage.initModality(Modality.WINDOW_MODAL);
             dialogStage.initOwner(primaryStage);
 

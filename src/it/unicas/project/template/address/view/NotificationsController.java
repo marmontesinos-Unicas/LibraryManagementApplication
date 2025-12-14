@@ -9,7 +9,7 @@ import javafx.stage.Stage;
 import java.util.List;
 
 /**
- * Controller for the Notifications Modal view. (Task #158)
+ * Controller for the Notifications Modal view.
  */
 public class NotificationsController {
 
@@ -28,7 +28,7 @@ public class NotificationsController {
 
     /**
      * Called by MainApp to pass the list of notification messages.
-     * @param notifications The list of formatted overdue messages.
+     * @param notifications The list of formatted notification messages (overdue and holds).
      */
     public void setNotifications(List<String> notifications) {
         ObservableList<String> items = FXCollections.observableArrayList();
@@ -36,7 +36,7 @@ public class NotificationsController {
         if (notifications != null && !notifications.isEmpty()) {
             items.addAll(notifications);
         } else {
-            items.add("You currently have no overdue materials.");
+            items.add("You currently have no pending notifications.");
         }
 
         notificationsListView.setItems(items);
