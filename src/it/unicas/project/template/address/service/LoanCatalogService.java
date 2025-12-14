@@ -71,8 +71,6 @@ public class LoanCatalogService {
      * @param materialMap Map of material ID to Material object (for search lookups)
      * @param userMap Map of user ID to User object (for search lookups)
      * @param selectedStatuses Filter by loan status (active, returned, overdue, etc.)
-     * @param dateFrom Filter loans from this date
-     * @param dateTo Filter loans to this date
      * @param searchTerm Search term for title, user names, author, ISBN
      * @return Filtered and sorted list of loans
      */
@@ -81,52 +79,21 @@ public class LoanCatalogService {
             Map<Integer, Material> materialMap,
             Map<Integer, User> userMap,
             Set<String> selectedStatuses,
-            String dateFrom,
-            String dateTo,
             String searchTerm
     ) {
-        // First apply status and date filters
+        // Apply status filter
         List<Loan> filtered = loans.stream()
                 .filter(loan -> {
-                    // Status filter
-                    if (!selectedStatuses.isEmpty()) {
-                        if (selectedStatuses.contains("overdue")) {
-                            boolean isOverdue = loan.getDue_date() != null &&
-                                    loan.getDue_date().isBefore(java.time.LocalDateTime.now());
-                            if (!isOverdue) return false;
-                        }
+                    // Status filter (overdue)
+                    if (selectedStatuses.contains("overdue")) {
+                        return loan.getDue_date() != null &&
+                                loan.getDue_date().isBefore(java.time.LocalDateTime.now());
                     }
-
-                    // Date range filter (due_date)
-                    if (dateFrom != null && !dateFrom.trim().isEmpty()) {
-                        try {
-                            java.time.LocalDate fromDate = java.time.LocalDate.parse(dateFrom);
-                            if (loan.getDue_date() == null ||
-                                    loan.getDue_date().toLocalDate().isBefore(fromDate)) {
-                                return false;
-                            }
-                        } catch (Exception e) {
-                            // Invalid date format, skip filter
-                        }
-                    }
-
-                    if (dateTo != null && !dateTo.trim().isEmpty()) {
-                        try {
-                            java.time.LocalDate toDate = java.time.LocalDate.parse(dateTo);
-                            if (loan.getDue_date() == null ||
-                                    loan.getDue_date().toLocalDate().isAfter(toDate)) {
-                                return false;
-                            }
-                        } catch (Exception e) {
-                            // Invalid date format, skip filter
-                        }
-                    }
-
                     return true;
                 })
                 .collect(Collectors.toList());
 
-        // Apply search with loan-specific priority
+        // Apply search
         if (searchTerm != null && !searchTerm.trim().isEmpty()) {
             List<Function<Loan, String>> searchFields = buildLoanSearchFields(materialMap, userMap);
             filtered = searchService.searchAndSort(filtered, searchTerm, searchFields);
