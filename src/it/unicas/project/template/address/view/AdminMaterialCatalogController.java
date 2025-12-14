@@ -577,6 +577,10 @@ public class AdminMaterialCatalogController {
             dialogStage.initOwner(addButton.getScene().getWindow());
             dialogStage.setScene(new Scene(root));
 
+            // IMPORTANT: pass the stage to the controller so its handlers can close it
+            AddMaterialController controller = loader.getController();
+            controller.setDialogStage(dialogStage);
+
             dialogStage.showAndWait();
             refresh();
 
@@ -585,6 +589,7 @@ public class AdminMaterialCatalogController {
             e.printStackTrace();
         }
     }
+
 
     @FXML
     private void handleEdit() {
@@ -700,12 +705,4 @@ public class AdminMaterialCatalogController {
         this.mainApp = mainApp;
     }
 
-    /**
-     * Cleanup when controller is destroyed
-     */
-    public void cleanup() {
-        if (searchScheduler != null && !searchScheduler.isShutdown()) {
-            searchScheduler.shutdown();
-        }
-    }
 }
