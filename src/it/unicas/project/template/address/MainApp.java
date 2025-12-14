@@ -187,9 +187,9 @@ public class MainApp extends Application {
 
     public void showUserLandingView() {
         try {
-            double currentWidth = primaryStage.getWidth();
-            double currentHeight = primaryStage.getHeight();
-            boolean wasMaximized = primaryStage.isMaximized();
+            double currentWidth = primaryStage.isShowing() ? primaryStage.getWidth() : 800;
+            double currentHeight = primaryStage.isShowing() ? primaryStage.getHeight() : 520;
+            boolean wasMaximized = primaryStage.isShowing() && primaryStage.isMaximized();
 
             FXMLLoader loader = new FXMLLoader();
             loader.setLocation(MainApp.class.getResource("view/UserLandingView.fxml"));
@@ -218,9 +218,9 @@ public class MainApp extends Application {
     public void showAdminLanding() {
         try {
             // Store current dimensions
-            double currentWidth = primaryStage.getWidth();
-            double currentHeight = primaryStage.getHeight();
-            boolean wasMaximized = primaryStage.isMaximized();
+            double currentWidth = primaryStage.isShowing() ? primaryStage.getWidth() : 800;
+            double currentHeight = primaryStage.isShowing() ? primaryStage.getHeight() : 520;
+            boolean wasMaximized = primaryStage.isShowing() && primaryStage.isMaximized();
 
             FXMLLoader loader = new FXMLLoader();
             loader.setLocation(MainApp.class.getResource("view/AdminLandingView.fxml"));
