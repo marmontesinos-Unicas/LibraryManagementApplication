@@ -25,47 +25,61 @@ import javafx.stage.Stage;
 import java.time.LocalDateTime;
 import java.util.*;
 
+/**
+ * Controller class for loading, searching, and returning loans.
+ * Handles user interactions, table display, real-time search, and loan return logic.
+ */
 public class LoadReturnController {
 
-    @FXML private TextField searchField;
-    @FXML private Button searchButton;
-    @FXML private Button returnLoanButton;
+    @FXML private TextField searchField;                 // Field for searching loans
+    @FXML private Button searchButton;                   // Button to clear search
+    @FXML private Button returnLoanButton;               // Button to return selected loan
 
-    @FXML private TableView<LoanRow> loansTable;
+    @FXML private TableView<LoanRow> loansTable;        // Table to display loans
     @FXML private TableColumn<LoanRow, String> materialTypeColumn;
     @FXML private TableColumn<LoanRow, String> titleColumn;
     @FXML private TableColumn<LoanRow, String> userColumn;
     @FXML private TableColumn<LoanRow, String> dueDateColumn;
     @FXML private TableColumn<LoanRow, String> delayedColumn;
 
-    private Stage dialogStage;
+    private Stage dialogStage;                           // Reference to the dialog stage
     private ObservableList<LoanRow> loanRows = FXCollections.observableArrayList();
-    private MainApp mainApp; // NEW FIELD
-
+    private MainApp mainApp;
     private LoanCatalogService loanCatalogService = new LoanCatalogService();
 
+
+    /**
+     * Sets the dialog stage for this controller.
+     * @param dialogStage The stage object.
+     */
     public void setDialogStage(Stage dialogStage) {
         this.dialogStage = dialogStage;
     }
 
     /**
-     * Is called by the MainApp to give a reference back to itself.
-     * @param mainApp
+     * Sets a reference back to the main application.
+     * @param mainApp The main application object.
      */
     public void setMainApp(MainApp mainApp) {
         this.mainApp = mainApp;
     }
 
+    /**
+     * Initializes the controller.
+     * Sets up table columns, colors for delayed loans, search functionality, and button actions.
+     */
     @FXML
     private void initialize() {
         loansTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
 
+        // Configure table columns
         materialTypeColumn.setCellValueFactory(data -> data.getValue().materialTypeProperty());
         titleColumn.setCellValueFactory(data -> data.getValue().titleProperty());
         userColumn.setCellValueFactory(data -> data.getValue().userProperty());
         dueDateColumn.setCellValueFactory(data -> data.getValue().dueDateProperty());
         delayedColumn.setCellValueFactory(data -> data.getValue().delayedProperty());
 
+        // Color delayed loans in red
         delayedColumn.setCellFactory(column -> new TableCell<>() {
             @Override
             protected void updateItem(String item, boolean empty) {
@@ -83,13 +97,27 @@ public class LoadReturnController {
         loansTable.setItems(loanRows);
         loadAllLoans();
 
+        // Return loan button
         returnLoanButton.setOnAction(e -> handleReturnLoan());
 
-        searchField.textProperty().addListener((observable, oldValue, newValue) -> {
-            handleSearch();
-        });
+        // Real-time search listener
+        searchField.textProperty().addListener((obs, oldText, newText) -> handleSearch());
+
+        // Configure search button as Clear
+        searchButton.setText("Clear");
+        searchButton.setOnAction(e -> handleClear());
     }
 
+    /**
+     * Clears the search field and reloads all active loans.
+     */
+    private void handleClear() {
+        searchField.clear();
+        loadAllLoans();
+    }
+    /**
+     * Handles navigation back to the admin landing page.
+     */
     @FXML
     private void handleBackToHome() {
         if (mainApp != null) {
@@ -97,6 +125,9 @@ public class LoadReturnController {
         }
     }
 
+    /**
+     * Loads all active loans into the table.
+     */
     private void loadAllLoans() {
         loanRows.clear();
         try {
@@ -113,6 +144,12 @@ public class LoadReturnController {
         }
     }
 
+    /**
+     * Builds a LoanRow object for table display.
+     * @param loan Loan entity from the database
+     * @return LoanRow object for TableView, or null if material/user not found
+     * @throws DAOException if database access fails
+     */
     private LoanRow buildLoanRow(Loan loan) throws DAOException {
         Material m = new Material(); m.setIdMaterial(loan.getIdMaterial());
         m = MaterialDAOMySQLImpl.getInstance().select(m).stream().findFirst().orElse(null);
@@ -138,6 +175,10 @@ public class LoadReturnController {
         return new LoanRow(loan.getIdLoan(), materialType, title, userName, due, delayed ? "Yes" : "No");
     }
 
+    /**
+     * Handles searching loans based on user input.
+     * Supports searching by user name, surname, material title, or delayed loans keywords.
+     */
     @FXML
     private void handleSearch() {
         String text = searchField.getText().trim();
@@ -231,7 +272,9 @@ public class LoadReturnController {
         }
     }
 
-
+    /**
+     * Opens the Add Loan dialog and refreshes the table after closing.
+     */
     @FXML
     public void handleAddLoan() {
         try {
@@ -249,14 +292,17 @@ public class LoadReturnController {
             dialog.setScene(scene);
             dialog.showAndWait();
 
-            loadAllLoans(); // refrescar tabla
+            loadAllLoans(); // Refresh table
 
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-
+    /**
+     * Handles returning the selected loan.
+     * Updates the loan return date and sets the material status to "available".
+     */
     @FXML
     private void handleReturnLoan() {
         LoanRow selected = loansTable.getSelectionModel().getSelectedItem();
@@ -278,58 +324,25 @@ public class LoadReturnController {
         Optional<ButtonType> result = confirm.showAndWait();
         if (result.isPresent() && result.get() == yes) {
             try {
-
-                // -----------------------------------------
-                // CAMBIO 1: Buscar el Loan real por title + user + dueDate
-                // -----------------------------------------
+                // Find the loan by id
                 Loan filtro = new Loan();
-                filtro.setReturn_date(null); // solo préstamos NO devueltos
+                filtro.setIdLoan(selected.getIdLoan());
 
                 List<Loan> loans = LoanDAOMySQLImpl.getInstance().select(filtro);
 
-                Loan loanReal = null;
-
-                for (Loan loan : loans) {
-
-                    // Obtener material
-                    Material m = new Material();
-                    m.setIdMaterial(loan.getIdMaterial());
-                    m = MaterialDAOMySQLImpl.getInstance().select(m).stream().findFirst().orElse(null);
-
-                    // Obtener usuario
-                    User u = new User();
-                    u.setIdUser(loan.getIdUser());
-                    u = UserDAOMySQLImpl.getInstance().select(u).stream().findFirst().orElse(null);
-
-                    if (m == null || u == null) continue;
-
-                    String fullUser = u.getName() + " " + u.getSurname();
-
-                    // Comprobar coincidencia por title + user + dueDate
-                    if (m.getTitle().equals(selected.getTitle()) &&
-                            fullUser.equals(selected.getUser()) &&
-                            loan.getDue_date().toLocalDate().toString().equals(selected.dueDate.get())) {
-
-                        loanReal = loan;
-                        break;
-                    }
-                }
-
-                if (loanReal == null) {
+                if (loans.isEmpty()) {
                     Alert error = new Alert(Alert.AlertType.ERROR, "Error: loan not found in database.");
                     error.showAndWait();
                     return;
                 }
 
-                // -----------------------------------------
-                // CAMBIO 2: Actualizar el préstamo real
-                // -----------------------------------------
+                Loan loanReal = loans.get(0);
+
+                // Update return date
                 loanReal.setReturn_date(LocalDateTime.now());
                 LoanDAOMySQLImpl.getInstance().update(loanReal);
 
-                // -----------------------------------------
-                // NUEVO: MARCAR MATERIAL COMO AVAILABLE
-                // -----------------------------------------
+                // Mark material as available
                 Material material = new Material();
                 material.setIdMaterial(loanReal.getIdMaterial());
                 material = MaterialDAOMySQLImpl.getInstance().select(material).get(0);
@@ -337,7 +350,7 @@ public class LoadReturnController {
                 material.setMaterial_status("available");
                 MaterialDAOMySQLImpl.getInstance().update(material);
 
-
+                // Refresh table
                 loadAllLoans();
 
             } catch (DAOException e) {
@@ -346,10 +359,9 @@ public class LoadReturnController {
         }
     }
 
-
-    // ---------------------------
-    // LoanRow inner class
-    // ---------------------------
+    /**
+     * Inner class representing a row in the loans TableView.
+     */
     public static class LoanRow {
         private final int idLoan;
         private final SimpleStringProperty materialType;
@@ -377,6 +389,10 @@ public class LoadReturnController {
         public String getTitle() { return title.get(); }
         public String getUser() { return user.get(); }
 
+        /**
+         * Converts due date string to LocalDateTime.
+         * @return LocalDateTime of due date or MAX if invalid
+         */
         public LocalDateTime getDueDateAsLocalDate() {
             if (dueDate.get() == null || dueDate.get().equals("—")) return LocalDateTime.MAX;
             return LocalDateTime.parse(dueDate.get() + "T00:00:00");

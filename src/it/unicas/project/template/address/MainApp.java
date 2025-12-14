@@ -1,10 +1,19 @@
 package it.unicas.project.template.address;
 
+import it.unicas.project.template.address.model.Hold;
+import it.unicas.project.template.address.model.Material;
 import it.unicas.project.template.address.model.User;
 import it.unicas.project.template.address.model.dao.DAOException;
+import it.unicas.project.template.address.model.dao.mysql.HoldDAOMySQLImpl;
+import it.unicas.project.template.address.model.dao.mysql.MaterialDAOMySQLImpl;
 import it.unicas.project.template.address.model.dao.mysql.UserDAOMySQLImpl;
 import it.unicas.project.template.address.view.*;
 import it.unicas.project.template.address.view.AdminLandingController;
+import it.unicas.project.template.address.view.LoginDialogController;
+import it.unicas.project.template.address.view.MaterialCatalogController;
+import it.unicas.project.template.address.view.UserLandingController;
+import it.unicas.project.template.address.view.UserManagementController;
+import it.unicas.project.template.address.view.UserEditController;
 
 import javafx.application.Application;
 import javafx.collections.FXCollections;
@@ -19,6 +28,12 @@ import javafx.stage.Modality;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
 import javafx.scene.control.*;
+import javafx.scene.control.Alert;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.time.ZonedDateTime;
+import java.time.ZoneId;
+
 
 import java.io.IOException;
 import java.util.List;
@@ -46,6 +61,18 @@ public class MainApp extends Application {
         this.primaryStage.setTitle("Library Management App");
         this.primaryStage.getIcons().add(new Image("file:resources/images/address_book_32.png"));
 
+        // Limpiar holds caducados antes de mostrar cualquier vista
+        try {
+            cleanupExpiredHolds();
+        } catch (DAOException e) {
+            e.printStackTrace();
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Error");
+            alert.setHeaderText("Cleanup Failed");
+            alert.setContentText("Could not clean up expired holds.");
+            alert.showAndWait();
+        }
+
         boolean loggedIn = showLoginDialog();
         if (loggedIn) {
             // Dependiendo del rol, abrir la vista correspondiente
@@ -57,6 +84,47 @@ public class MainApp extends Application {
             primaryStage.show();
         } else {
             primaryStage.close();
+        }
+    }
+
+    /**
+     * Borra los holds caducados (anteriores a ayer) y marca los materiales como available.
+     */
+    private void cleanupExpiredHolds() throws DAOException {
+        // Hora actual en Europa/Roma
+        LocalDateTime now = LocalDateTime.now(ZoneId.of("Europe/Rome"));
+        // Definimos el cutoff restando 24 horas
+        LocalDateTime cutoffDate = now.minusHours(24);
+        System.out.println("CutoffDate for expired holds: " + cutoffDate);
+
+        // Obtener todos los holds
+        List<Hold> allHolds = HoldDAOMySQLImpl.getInstance().select(new Hold());
+
+        for (Hold hold : allHolds) {
+            if (hold.getHold_date() != null) {
+                // Ajustar la hora del hold si MySQL devuelve en UTC
+                LocalDateTime holdAdjusted = hold.getHold_date().minusHours(1); // Ajusta +2 si Roma está UTC+2
+                System.out.println("Checking hold " + hold.getIdHold() + " with date " + holdAdjusted);
+
+                if (holdAdjusted.isBefore(cutoffDate)) {
+                    System.out.println("Deleting hold: " + hold.getIdHold() + " with date: " + holdAdjusted);
+
+                    // Actualizar material correspondiente a "available"
+                    Material material = new Material();
+                    material.setIdMaterial(hold.getIdMaterial());
+                    material = MaterialDAOMySQLImpl.getInstance().select(material).stream().findFirst().orElse(null);
+
+                    if (material != null) {
+                        material.setMaterial_status("available");
+                        MaterialDAOMySQLImpl.getInstance().update(material);
+                    }
+
+                    // Borrar hold caducado
+                    HoldDAOMySQLImpl.getInstance().delete(hold);
+                } else {
+                    System.out.println("Hold " + hold.getIdHold() + " is not expired yet.");
+                }
+            }
         }
     }
 

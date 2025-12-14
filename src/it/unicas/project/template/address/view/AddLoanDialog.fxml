@@ -15,7 +15,7 @@
             <Label text="Material Search:" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
             <TextField fx:id="searchMaterialField" prefWidth="300" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
 
-            <Button fx:id="searchButton" onAction="#handleSearch" text="Search" prefWidth="100" GridPane.columnIndex="2" GridPane.rowIndex="1"/>
+            <Button fx:id="searchButton" onAction="#handleSearch" text="Clear" prefWidth="100" GridPane.columnIndex="2" GridPane.rowIndex="1"/>
         </GridPane>
 
         <!-- MATERIAL TABLE WITH PANE -->
