@@ -3,37 +3,14 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<BorderPane prefHeight="600.0" prefWidth="1000.0" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="it.unicas.project.template.address.view.MaterialManagementController">
+<BorderPane prefHeight="520.0" prefWidth="800.0" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="it.unicas.project.template.address.view.MaterialManagementController">
 
     <top>
-        <VBox spacing="10" style="-fx-padding: 10;">
-            <!-- Back Button and Search Bar Row -->
-            <HBox alignment="CENTER_LEFT" spacing="10">
-                <Button fx:id="backButton" text="&lt; Back to Home" onAction="#handleGoBack" />
-                <TextField fx:id="searchField" prefWidth="482.0" promptText="Search materials (Title, Author, ISBN...)" HBox.hgrow="ALWAYS" />
-                <Button fx:id="clearButton" onAction="#handleClear" text="Clear" />
-            </HBox>
-
-            <!-- Filter Controls Row -->
-            <HBox alignment="CENTER_LEFT" spacing="10">
-                <Label text="Filters:" style="-fx-font-weight: bold;" />
-
-                <ComboBox fx:id="materialTypeFilterButton" promptText="All Types" prefWidth="150" />
-
-                <ComboBox fx:id="statusFilterButton" promptText="All Statuses" prefWidth="150" />
-
-                <ComboBox fx:id="genreFilterButton" promptText="All Genres" prefWidth="150" />
-
-                <Label text="Year:" />
-                <TextField fx:id="yearFromField" promptText="From" prefWidth="80" />
-                <Label text="-" />
-                <TextField fx:id="yearToField" promptText="To" prefWidth="80" />
-
-                <Region HBox.hgrow="ALWAYS" />
-
-                <Label fx:id="resultCountLabel" text="Total: 0 materials" style="-fx-font-weight: bold;" />
-            </HBox>
-        </VBox>
+        <HBox alignment="CENTER_LEFT" spacing="10" style="-fx-padding: 10;" BorderPane.alignment="CENTER">
+            <Button fx:id="backButton" text="&lt; Back to Home" onAction="#handleGoBack" />
+            <TextField fx:id="searchField" prefWidth="482.0" promptText="Search materials (Title, Author, ISBN...)" HBox.hgrow="ALWAYS" />
+            <Button fx:id="searchButton" onAction="#handleSearch" text="🔍" />
+        </HBox>
     </top>
 
     <center>
@@ -42,9 +19,7 @@
                 <columns>
                     <TableColumn fx:id="titleColumn" prefWidth="250" text="Title" />
                     <TableColumn fx:id="authorColumn" prefWidth="180" text="Author" />
-                    <TableColumn fx:id="yearColumn" prefWidth="70" text="Year" />
-                    <TableColumn fx:id="materialTypeColumn" prefWidth="100" text="Type" />
-                    <TableColumn fx:id="isbnColumn" prefWidth="120" text="ISBN" />
+                    <TableColumn fx:id="yearColumn" prefWidth="70" text="Year" /> <TableColumn fx:id="materialTypeColumn" prefWidth="100" text="Type" /> <TableColumn fx:id="isbnColumn" prefWidth="120" text="ISBN" />
 
                     <TableColumn text="Copies Status">
                         <columns>
@@ -66,6 +41,7 @@
     <bottom>
         <HBox alignment="CENTER_RIGHT" spacing="10" style="-fx-padding: 10;">
             <Button fx:id="viewEditMaterialButton" onAction="#handleViewEditMaterial" text="View/Edit Material" />
+
             <Button fx:id="addMaterialButton" onAction="#handleAddMaterial" text="Add New Material" />
         </HBox>
     </bottom>

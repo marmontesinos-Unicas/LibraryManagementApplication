@@ -7,6 +7,8 @@ import it.unicas.project.template.address.model.dao.DAOException;
 import it.unicas.project.template.address.model.dao.GenreDAO;
 import it.unicas.project.template.address.model.dao.mysql.*;
 import it.unicas.project.template.address.service.MaterialHoldService;
+import it.unicas.project.template.address.service.SearchService;
+import java.util.function.Function;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -75,7 +77,9 @@ public class UserCatalogController {
     private Popup genrePopup;
 
     private final MaterialHoldService holdService = new MaterialHoldService();
-
+    // Search service for prioritized field searching
+    private final SearchService<GroupedMaterial> searchService = new SearchService<>();
+    private List<Function<GroupedMaterial, String>> searchFields;
     // FIXED: Debounce mechanism for search
     private ScheduledExecutorService searchScheduler = Executors.newSingleThreadScheduledExecutor();
     private java.util.concurrent.Future<?> filterTask;
@@ -151,6 +155,14 @@ public class UserCatalogController {
         searchField.textProperty().addListener((obs, oldVal, newVal) -> scheduleFilter());
         yearFromField.textProperty().addListener((obs, oldVal, newVal) -> scheduleFilter());
         yearToField.textProperty().addListener((obs, oldVal, newVal) -> scheduleFilter());
+        // Setup search fields in priority order
+        searchFields = SearchService.<GroupedMaterial>fieldsBuilder()
+                .addField(GroupedMaterial::getTitle)     // Highest priority
+                .addField(GroupedMaterial::getAuthor)    // Second priority
+                .addField(GroupedMaterial::getISBN)      // Third priority
+                .addField(GroupedMaterial::getType)      // Fourth priority
+                .addField(GroupedMaterial::getGenres)    // Fifth priority
+                .build();
     }
 
     /**
@@ -617,59 +629,60 @@ public class UserCatalogController {
 
     /**
      * Apply the combined search and filter criteria.
-     * FIXED: Now works with cached data (groupedMaterialList)
+     * FIXED: Now uses SearchService for prioritized field searching
      */
     @FXML
     private void handleFilter() {
         try {
-            String searchText = searchField.getText().trim().toLowerCase();
+            String searchText = searchField.getText().trim();
             String yearFrom = yearFromField.getText().trim();
             String yearTo = yearToField.getText().trim();
 
-            List<GroupedMaterial> result = groupedMaterialList.stream()
+            // Start with all materials
+            List<GroupedMaterial> candidates = new ArrayList<>(groupedMaterialList);
+
+            // Apply type filter
+            candidates = candidates.stream()
+                    .filter(gm -> selectedMaterialTypes.contains(gm.getType()))
+                    .collect(Collectors.toList());
+
+            // Apply genre filter
+            candidates = candidates.stream()
                     .filter(gm -> {
-                        // Type filter
-                        if (!selectedMaterialTypes.contains(gm.getType())) return false;
-
-                        // Genre filter
-                        if (gm.getGenres() != null && !gm.getGenres().equals("—")) {
-                            boolean matchesGenre = false;
-                            for (String genre : gm.getGenres().split(", ")) {
-                                if (selectedGenres.contains(genre)) {
-                                    matchesGenre = true;
-                                    break;
-                                }
-                            }
-                            if (!matchesGenre) return false;
+                        if (gm.getGenres() == null || gm.getGenres().equals("—")) {
+                            return true; // Include materials with no genres
                         }
+                        for (String genre : gm.getGenres().split(", ")) {
+                            if (selectedGenres.contains(genre)) {
+                                return true;
+                            }
+                        }
+                        return false;
+                    })
+                    .collect(Collectors.toList());
 
-                        // Year range filter
-                        if (!yearFrom.isEmpty() || !yearTo.isEmpty()) {
+            // Apply year range filter
+            if (!yearFrom.isEmpty() || !yearTo.isEmpty()) {
+                candidates = candidates.stream()
+                        .filter(gm -> {
                             try {
                                 int year = gm.getYear();
                                 if (!yearFrom.isEmpty() && year < Integer.parseInt(yearFrom)) return false;
                                 if (!yearTo.isEmpty() && year > Integer.parseInt(yearTo)) return false;
+                                return true;
                             } catch (NumberFormatException e) {
                                 return false;
                             }
-                        }
+                        })
+                        .collect(Collectors.toList());
+            }
 
-                        // Search text filter
-                        if (!searchText.isEmpty()) {
-                            String title = gm.getTitle() != null ? gm.getTitle().toLowerCase() : "";
-                            String author = gm.getAuthor() != null ? gm.getAuthor().toLowerCase() : "";
-                            String isbn = gm.getISBN() != null ? gm.getISBN().toLowerCase() : "";
+            // Apply search text filter using SearchService for prioritized results
+            if (!searchText.isEmpty()) {
+                candidates = searchService.searchAndSort(candidates, searchText, searchFields);
+            }
 
-                            return title.contains(searchText) ||
-                                    author.contains(searchText) ||
-                                    isbn.contains(searchText);
-                        }
-
-                        return true;
-                    })
-                    .collect(Collectors.toList());
-
-            filteredList.setAll(result);
+            filteredList.setAll(candidates);
             updateResultCount();
         } catch (Exception e) {
             showError("Filter Error", "Failed to filter materials: " + e.getMessage());
