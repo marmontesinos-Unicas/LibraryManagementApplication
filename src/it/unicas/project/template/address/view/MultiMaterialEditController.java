@@ -26,7 +26,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-public class MaterialEditDialogController {
+public class MultiMaterialEditController {
 
     @FXML private TextField materialTypeField;
     @FXML private TextField titleField;

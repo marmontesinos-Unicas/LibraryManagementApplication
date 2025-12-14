@@ -7,7 +7,7 @@
 <AnchorPane prefHeight="520.0" prefWidth="800.0"
             xmlns="http://javafx.com/javafx/17.0.12"
             xmlns:fx="http://javafx.com/fxml/1"
-            fx:controller="it.unicas.project.template.address.view.LoginDialogController">
+            fx:controller="it.unicas.project.template.address.view.LoginController">
 
     <VBox alignment="CENTER"
           spacing="25"

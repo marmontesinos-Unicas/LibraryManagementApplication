@@ -44,7 +44,7 @@ import java.util.stream.Collectors;
  * Allows full CRUD operations on materials
  * FIXED: Added debouncing to prevent connection leaks
  */
-public class MaterialCatalogController {
+public class AdminMaterialCatalogController {
 
     @FXML private TextField searchField;
     @FXML private ComboBox<String> materialTypeFilterButton;
@@ -595,10 +595,10 @@ public class MaterialCatalogController {
         }
 
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/it/unicas/project/template/address/view/EditMaterial.fxml"));
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/it/unicas/project/template/address/view/MonoMaterialEdit.fxml"));
             Parent root = loader.load();
 
-            EditMaterialController controller = loader.getController();
+            MonoMaterialEditController controller = loader.getController();
             controller.setMaterial(selected);
 
             Stage dialogStage = new Stage();

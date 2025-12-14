@@ -63,7 +63,7 @@ public class MaterialDAOMySQLImpl implements DAO<Material> {
                     "    GROUP_CONCAT(DISTINCT m.material_status SEPARATOR ', ') AS material_status_summary, " +
                     "    COUNT(*) AS quantity_count, " +
                     "    SUM(CASE WHEN m.material_status = 'available' THEN 1 ELSE 0 END) AS available_count, " +
-                    "    SUM(CASE WHEN m.material_status = 'hold' THEN 1 ELSE 0 END) AS on_hold_count, " +
+                    "    SUM(CASE WHEN m.material_status = 'holded' THEN 1 ELSE 0 END) AS on_hold_count, " +
                     "    SUM(CASE WHEN m.material_status = 'loaned' THEN 1 ELSE 0 END) AS loaned_count " +
                     "FROM materials m " +
                     "JOIN material_type mt ON m.idMaterialType = mt.idMaterialType ";

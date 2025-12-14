@@ -33,7 +33,7 @@ import java.util.concurrent.TimeUnit;
  * Controller class for loading, searching, and returning loans.
  * Handles user interactions, table display, real-time search, and loan return logic.
  */
-public class LoadReturnController {
+public class LoanReturnController {
 
     @FXML private TextField searchField;                 // Field for searching loans
     @FXML private Button searchButton;                   // Button to clear search
@@ -278,7 +278,7 @@ public class LoadReturnController {
     @FXML
     public void handleAddLoan() {
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("AddLoanDialog.fxml"));
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("AddLoan.fxml"));
             Parent page = loader.load();
 
             Stage dialog = new Stage();
@@ -387,7 +387,7 @@ public class LoadReturnController {
             Loan loanToEdit = loans.get(0);
 
             // Cargar ModifyLoanDialog
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("ModifyLoanDialog.fxml"));
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("ModifyLoan.fxml"));
             Parent page = loader.load();
 
             Stage dialog = new Stage();

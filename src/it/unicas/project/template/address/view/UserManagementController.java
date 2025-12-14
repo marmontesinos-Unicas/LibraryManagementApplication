@@ -183,7 +183,7 @@ public class UserManagementController {
     private void handleRegisterNewUser() {
         try {
             FXMLLoader loader = new FXMLLoader();
-            loader.setLocation(getClass().getResource("UserRegistrationDialog.fxml"));
+            loader.setLocation(getClass().getResource("UserRegistration.fxml"));
             AnchorPane page = loader.load();
 
             Stage dialogStage = new Stage();
@@ -209,7 +209,7 @@ public class UserManagementController {
             Alert alert = new Alert(Alert.AlertType.ERROR);
             alert.setTitle("Error");
             alert.setHeaderText("Could not open registration dialog");
-            alert.setContentText("Check if 'UserRegistrationDialog.fxml' is correctly located and accessible.");
+            alert.setContentText("Check if 'UserRegistration.fxml' is correctly located and accessible.");
             alert.showAndWait();
         }
     }
@@ -244,7 +244,7 @@ public class UserManagementController {
 
         try {
             FXMLLoader loader = new FXMLLoader();
-            loader.setLocation(getClass().getResource("UserEditDialog.fxml"));
+            loader.setLocation(getClass().getResource("UserEdit.fxml"));
             AnchorPane page = loader.load();
 
             Stage dialogStage = new Stage();
@@ -267,7 +267,7 @@ public class UserManagementController {
             Alert alert = new Alert(Alert.AlertType.ERROR);
             alert.setTitle("Error");
             alert.setHeaderText("Could not open edit dialog");
-            alert.setContentText("Check if 'UserEditDialog.fxml' is correctly located and accessible.");
+            alert.setContentText("Check if 'UserEdit.fxml' is correctly located and accessible.");
             alert.showAndWait();
         }
     }

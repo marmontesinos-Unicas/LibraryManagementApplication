@@ -1,6 +1,5 @@
 package it.unicas.project.template.address.view;
 
-import it.unicas.project.template.address.MainApp;
 import it.unicas.project.template.address.model.Genre;
 import it.unicas.project.template.address.model.Material;
 import it.unicas.project.template.address.model.MaterialGenre;
@@ -24,7 +23,7 @@ import javafx.stage.Stage;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class EditMaterialController {
+public class MonoMaterialEditController {
 
     @FXML private TextField titleField;
     @FXML private TextField authorField;
@@ -50,7 +49,7 @@ public class EditMaterialController {
 
     @FXML
     public void initialize() {
-        System.out.println("EditMaterialController.initialize() called");
+        System.out.println("MonoMaterialEditController.initialize() called");
 
         loadMaterialTypes();
         loadGenres();

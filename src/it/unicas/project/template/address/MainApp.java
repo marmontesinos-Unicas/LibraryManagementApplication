@@ -13,24 +13,19 @@ import javafx.application.Application;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXMLLoader;
-import javafx.geometry.Rectangle2D;
 import javafx.scene.Scene;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.image.Image;
 import javafx.stage.Modality;
-import javafx.stage.Screen;
 import javafx.stage.Stage;
-import javafx.scene.control.*;
 import javafx.scene.control.Alert;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.time.ZonedDateTime;
 import java.time.ZoneId;
 
 
 import java.io.IOException;
-import java.util.List;
 
 public class MainApp extends Application {
 
@@ -130,7 +125,7 @@ public class MainApp extends Application {
     public boolean showLoginDialog() {
         try {
             FXMLLoader loader = new FXMLLoader();
-            loader.setLocation(MainApp.class.getResource("view/LoginDialog.fxml"));
+            loader.setLocation(MainApp.class.getResource("view/Login.fxml"));
             AnchorPane page = loader.load();
 
             // This prevents the previous dashboard (Admin or User) from remaining visible
@@ -148,7 +143,7 @@ public class MainApp extends Application {
             dialogStage.setScene(scene);
             dialogStage.setResizable(false); // Login is kept small and fixed size
 
-            LoginDialogController controller = loader.getController();
+            LoginController controller = loader.getController();
             controller.setDialogStage(dialogStage);
             controller.setMainApp(this); // Pass MainApp reference for re-login flow management
 
@@ -192,7 +187,7 @@ public class MainApp extends Application {
             boolean wasMaximized = primaryStage.isShowing() && primaryStage.isMaximized();
 
             FXMLLoader loader = new FXMLLoader();
-            loader.setLocation(MainApp.class.getResource("view/UserLandingView.fxml"));
+            loader.setLocation(MainApp.class.getResource("view/UserLanding.fxml"));
             BorderPane userPane = loader.load();
 
             Scene scene = new Scene(userPane);
@@ -223,7 +218,7 @@ public class MainApp extends Application {
             boolean wasMaximized = primaryStage.isShowing() && primaryStage.isMaximized();
 
             FXMLLoader loader = new FXMLLoader();
-            loader.setLocation(MainApp.class.getResource("view/AdminLandingView.fxml"));
+            loader.setLocation(MainApp.class.getResource("view/AdminLanding.fxml"));
             BorderPane adminPane = loader.load();
 
             Scene scene = new Scene(adminPane);
@@ -363,7 +358,7 @@ public class MainApp extends Application {
             boolean wasMaximized = primaryStage.isMaximized();
 
             FXMLLoader loader = new FXMLLoader();
-            loader.setLocation(MainApp.class.getResource("view/MaterialCatalog.fxml"));
+            loader.setLocation(MainApp.class.getResource("view/AdminMaterialCatalog.fxml"));
             AnchorPane page = loader.load();
 
             Scene scene = new Scene(page);
@@ -378,7 +373,7 @@ public class MainApp extends Application {
             }
 
 
-            MaterialCatalogController controller = loader.getController();
+            AdminMaterialCatalogController controller = loader.getController();
             controller.setMainApp(this);
 
         } catch (IOException e) {
@@ -395,7 +390,7 @@ public class MainApp extends Application {
     public void showUserEditDialog(User user, UserManagementController userManagementController) {
         try {
             FXMLLoader loader = new FXMLLoader();
-            loader.setLocation(MainApp.class.getResource("view/UserEditDialog.fxml"));
+            loader.setLocation(MainApp.class.getResource("view/UserEdit.fxml"));
             AnchorPane page = loader.load();
 
             Stage dialogStage = new Stage();
@@ -422,7 +417,7 @@ public class MainApp extends Application {
             javafx.scene.control.Alert alert = new javafx.scene.control.Alert(javafx.scene.control.Alert.AlertType.ERROR);
             alert.setTitle("Error");
             alert.setHeaderText("Dialog Loading Failed");
-            alert.setContentText("Could not load UserEditDialog.fxml.");
+            alert.setContentText("Could not load UserEdit.fxml.");
             alert.showAndWait();
         }
     }
@@ -438,7 +433,7 @@ public class MainApp extends Application {
             boolean wasMaximized = primaryStage.isMaximized();
 
             FXMLLoader loader = new FXMLLoader();
-            loader.setLocation(MainApp.class.getResource("/it/unicas/project/template/address/view/LoadReturn.fxml"));
+            loader.setLocation(MainApp.class.getResource("/it/unicas/project/template/address/view/LoanReturn.fxml"));
             AnchorPane loadReturnPane = loader.load();
 
             Scene scene = new Scene(loadReturnPane);
@@ -455,7 +450,7 @@ public class MainApp extends Application {
 
 
             // Get the controller and pass the MainApp reference
-            it.unicas.project.template.address.view.LoadReturnController controller = loader.getController();
+            LoanReturnController controller = loader.getController();
             controller.setMainApp(this); // This line ensures that we can go back to the landing page.
 
         } catch (IOException e) {
@@ -465,7 +460,7 @@ public class MainApp extends Application {
             Alert alert = new Alert(Alert.AlertType.ERROR);
             alert.setTitle("Error");
             alert.setHeaderText("View Loading Failed");
-            alert.setContentText("Could not load LoadReturn.fxml.");
+            alert.setContentText("Could not load LoanReturn.fxml.");
             alert.showAndWait();
         }
     }
@@ -477,7 +472,7 @@ public class MainApp extends Application {
     public void showNotificationsView(List<String> notifications) {
         try {
             FXMLLoader loader = new FXMLLoader();
-            loader.setLocation(MainApp.class.getResource("view/NotificationsView.fxml"));
+            loader.setLocation(MainApp.class.getResource("view/Notifications.fxml"));
             AnchorPane page = loader.load();
 
             // Create the dialog Stage
@@ -502,7 +497,7 @@ public class MainApp extends Application {
             Alert alert = new Alert(Alert.AlertType.ERROR);
             alert.setTitle("Error");
             alert.setHeaderText("View Loading Failed");
-            alert.setContentText("Could not load NotificationsView.fxml.");
+            alert.setContentText("Could not load Notifications.fxml.");
             alert.showAndWait();
         }
     }
