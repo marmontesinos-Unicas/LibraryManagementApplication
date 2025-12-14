@@ -5,7 +5,7 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.*?>
 
-<BorderPane prefHeight="520.0" prefWidth="800.0" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="it.unicas.project.template.address.view.AdminLandingController">
+<BorderPane xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="it.unicas.project.template.address.view.AdminLandingController">
     <top>
         <!-- FIXED: HBox alignment changed to CENTER to ensure the contained Label is centered. -->
         <HBox alignment="CENTER" prefHeight="50.0" BorderPane.alignment="CENTER">

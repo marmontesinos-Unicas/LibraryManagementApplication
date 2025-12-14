@@ -1,58 +1,72 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.*?>
 
-<AnchorPane prefHeight="520" prefWidth="800" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="it.unicas.project.template.address.view.UserLandingController">
+<BorderPane xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="it.unicas.project.template.address.view.UserLandingController">
 
-    <!-- My Loans -->
-    <VBox prefHeight="500" prefWidth="360" spacing="10" style="-fx-border-color: gray; -fx-border-width: 1;" AnchorPane.leftAnchor="10" AnchorPane.topAnchor="10">
+    <!-- Top: Logout Button -->
+    <top>
+        <HBox alignment="TOP_RIGHT" style="-fx-padding: 10;">
+            <Button fx:id="logoutButton" text="Log Out" onAction="#handleLogout" prefWidth="120"
+                    style="-fx-background-color: #607d8b; -fx-text-fill: white; -fx-background-radius: 5;">
+                <font>
+                    <Font size="14.0" />
+                </font>
+            </Button>
+        </HBox>
+    </top>
 
-        <Label alignment="CENTER" maxWidth="Infinity" text="My Loans">
-            <font><Font size="20" /></font>
-        </Label>
+    <!-- Center: Tables -->
+    <center>
+        <HBox alignment="CENTER" spacing="20" style="-fx-padding: 10;">
 
-        <TableView fx:id="myLoansTable" prefHeight="470" VBox.vgrow="ALWAYS">
-            <columns>
-                <TableColumn fx:id="loanTitleColumn" prefWidth="170" text="Title" />
-                <TableColumn fx:id="loanReturnDateColumn" prefWidth="100" text="Return Date" />
-                <TableColumn fx:id="loanStatusColumn" prefWidth="90" text="Status" />
-            </columns>
-        </TableView>
-    </VBox>
+            <!-- My Loans -->
+            <VBox spacing="10" style="-fx-border-color: gray; -fx-border-width: 1; -fx-padding: 10;"
+                  HBox.hgrow="ALWAYS" minWidth="360" maxWidth="500">
 
+                <Label alignment="CENTER" maxWidth="Infinity" text="My Loans">
+                    <font><Font size="20" /></font>
+                </Label>
 
-    <!-- My Holds -->
-    <VBox prefHeight="500" prefWidth="260" spacing="10" style="-fx-border-color: gray; -fx-border-width: 1;" AnchorPane.leftAnchor="380" AnchorPane.topAnchor="10">
+                <TableView fx:id="myLoansTable" VBox.vgrow="ALWAYS">
+                    <columns>
+                        <TableColumn fx:id="loanTitleColumn" prefWidth="170" text="Title" />
+                        <TableColumn fx:id="loanReturnDateColumn" prefWidth="100" text="Return Date" />
+                        <TableColumn fx:id="loanStatusColumn" prefWidth="90" text="Status" />
+                    </columns>
+                </TableView>
+            </VBox>
 
-        <Label alignment="CENTER" maxWidth="Infinity" text="My Holds">
-            <font><Font size="20" /></font>
-        </Label>
+            <!-- My Holds -->
+            <VBox spacing="10" style="-fx-border-color: gray; -fx-border-width: 1; -fx-padding: 10;"
+                  HBox.hgrow="ALWAYS" minWidth="260" maxWidth="400">
 
-        <TableView fx:id="myHoldsTable" prefHeight="470" VBox.vgrow="ALWAYS">
-            <columns>
-                <TableColumn fx:id="holdTitleColumn" prefWidth="150" text="Title" />
-                <TableColumn fx:id="holdMaxDateColumn" prefWidth="110" text="Max Pickup Date" />
-            </columns>
-        </TableView>
-    </VBox>
+                <Label alignment="CENTER" maxWidth="Infinity" text="My Holds">
+                    <font><Font size="20" /></font>
+                </Label>
 
-    <!-- Botones -->
-    <VBox alignment="BOTTOM_CENTER" prefWidth="120" spacing="10" AnchorPane.bottomAnchor="10" AnchorPane.rightAnchor="10">
+                <TableView fx:id="myHoldsTable" VBox.vgrow="ALWAYS">
+                    <columns>
+                        <TableColumn fx:id="holdTitleColumn" prefWidth="150" text="Title" />
+                        <TableColumn fx:id="holdMaxDateColumn" prefWidth="110" text="Max Pickup Date" />
+                    </columns>
+                </TableView>
+            </VBox>
 
-        <Button fx:id="searchButton" onAction="#handleSearch" prefWidth="120" text="Search" />
-        <Button fx:id="notificationsButton" onAction="#handleNotifications" prefWidth="120" text="Notifications" />
-        <Button fx:id="deleteHoldButton" onAction="#handleDeleteHold" prefWidth="120" text="Delete Hold" />
-    </VBox>
+        </HBox>
+    </center>
 
-    <HBox alignment="TOP_RIGHT" AnchorPane.topAnchor="10" AnchorPane.rightAnchor="10" prefWidth="120">
-        <Button fx:id="logoutButton" text="Log Out" onAction="#handleLogout" prefWidth="120"
-                style="-fx-background-color: #607d8b; -fx-text-fill: white; -fx-background-radius: 5;">
-            <font>
-                <Font size="14.0" />
-            </font>
-        </Button>
-    </HBox>
+    <!-- Bottom: Action Buttons -->
+    <bottom>
+        <HBox alignment="CENTER" spacing="15" style="-fx-padding: 15;">
+            <Button fx:id="searchButton" onAction="#handleSearch" prefWidth="120" text="Search" />
+            <Button fx:id="notificationsButton" onAction="#handleNotifications" prefWidth="120" text="Notifications" />
+            <Button fx:id="deleteHoldButton" onAction="#handleDeleteHold" prefWidth="120" text="Delete Hold" />
+        </HBox>
+    </bottom>
 
-</AnchorPane>
+</BorderPane>
