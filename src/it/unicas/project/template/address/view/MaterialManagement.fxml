@@ -9,7 +9,7 @@
         <HBox alignment="CENTER_LEFT" spacing="10" style="-fx-padding: 10;" BorderPane.alignment="CENTER">
             <Button fx:id="backButton" text="&lt; Back to Home" onAction="#handleGoBack" />
             <TextField fx:id="searchField" prefWidth="482.0" promptText="Search materials (Title, Author, ISBN...)" HBox.hgrow="ALWAYS" />
-            <Button fx:id="searchButton" onAction="#handleSearch" text="🔍" />
+            <Button fx:id="searchButton" onAction="#handleClear" text="Clear" />
         </HBox>
     </top>
 
