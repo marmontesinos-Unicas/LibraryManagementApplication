@@ -65,18 +65,7 @@
         </VBox>
 
 
-        <!-- Row 5: Status -->
-        <Label text="Status:" GridPane.columnIndex="0" GridPane.rowIndex="5" GridPane.valignment="TOP">
-            <GridPane.margin>
-                <Insets top="5.0" />
-            </GridPane.margin>
-        </Label>
-        <VBox spacing="2.0" GridPane.columnIndex="1" GridPane.rowIndex="5">
-            <ComboBox fx:id="statusComboBox" promptText="Select" maxWidth="Infinity" />
-        </VBox>
-
-
-        <!-- Row 6: Genres -->
+        <!-- Row 5: Genres -->
         <Label text="Genres:" GridPane.columnIndex="0" GridPane.rowIndex="6" GridPane.valignment="TOP">
             <GridPane.margin>
                 <Insets top="10.0" />

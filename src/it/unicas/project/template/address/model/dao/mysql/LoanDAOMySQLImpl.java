@@ -12,7 +12,6 @@ import java.util.List;
 import java.util.logging.Logger;
 import it.unicas.project.template.address.model.OverdueLoan;
 import java.time.LocalDate;
-import java.time.ZoneId;
 
 public class LoanDAOMySQLImpl implements DAO<Loan> {
 
@@ -29,11 +28,11 @@ public class LoanDAOMySQLImpl implements DAO<Loan> {
                     "FROM " +
                     "loans l " +
                     "JOIN " +
-                    "materials m ON l.idMaterial = m.idMaterial " + // Joining to get material details
+                    "materials m ON l.idMaterial = m.idMaterial " +
                     "WHERE " +
-                    "l.idUser = ? " +              // Filter by current user
-                    "AND l.due_date < NOW() " +    // Checks if the due date is before the current time
-                    "AND l.return_date IS NULL";   // Ensures the loan is still active
+                    "l.idUser = ? " +
+                    "AND l.due_date < NOW() " +
+                    "AND l.return_date IS NULL";
 
     protected LoanDAOMySQLImpl() {}
 
@@ -50,14 +49,16 @@ public class LoanDAOMySQLImpl implements DAO<Loan> {
         List<Loan> list = new ArrayList<>();
         if (l == null) l = new Loan(null, null, null, null, null, null);
 
-
         String sql = "SELECT * FROM loans WHERE 1=1";
         if (l.getIdLoan() != -1) sql += " AND idLoan=?";
         if (l.getIdUser() != -1) sql += " AND idUser=?";
         if (l.getIdMaterial() != -1) sql += " AND idMaterial=?";
         if (l.getStart_date() != null) sql += " AND start_date LIKE ?";
 
-        try (PreparedStatement ps = DAOMySQLSettings.getConnection().prepareStatement(sql)) {
+        // FIXED: Include Connection and ResultSet in try-with-resources
+        try (Connection conn = DAOMySQLSettings.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
             int index = 1;
             if (l.getIdLoan() != -1) ps.setInt(index++, l.getIdLoan());
             if (l.getIdUser() != -1) ps.setInt(index++, l.getIdUser());
@@ -65,19 +66,22 @@ public class LoanDAOMySQLImpl implements DAO<Loan> {
             if (l.getStart_date() != null) ps.setString(index++, l.getStart_date().format(FORMATTER) + "%");
 
             logger.info("SQL: " + ps);
-            ResultSet rs = ps.executeQuery();
-            while (rs.next()) {
-                Integer idUser = (Integer) rs.getObject("idUser");        // puede ser null
-                Integer idMaterial = (Integer) rs.getObject("idMaterial"); // puede ser null
-                Loan loan = new Loan(
-                        rs.getInt("idLoan"),
-                        idUser != null ? idUser : -1,               // manejar null
-                        idMaterial != null ? idMaterial : -1,       // manejar null
-                        rs.getTimestamp("start_date") != null ? rs.getTimestamp("start_date").toLocalDateTime() : null,
-                        rs.getTimestamp("due_date") != null ? rs.getTimestamp("due_date").toLocalDateTime() : null,
-                        rs.getTimestamp("return_date") != null ? rs.getTimestamp("return_date").toLocalDateTime() : null
-                );
-                list.add(loan);
+
+            // FIXED: Include ResultSet in try-with-resources
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Integer idUser = (Integer) rs.getObject("idUser");
+                    Integer idMaterial = (Integer) rs.getObject("idMaterial");
+                    Loan loan = new Loan(
+                            rs.getInt("idLoan"),
+                            idUser != null ? idUser : -1,
+                            idMaterial != null ? idMaterial : -1,
+                            rs.getTimestamp("start_date") != null ? rs.getTimestamp("start_date").toLocalDateTime() : null,
+                            rs.getTimestamp("due_date") != null ? rs.getTimestamp("due_date").toLocalDateTime() : null,
+                            rs.getTimestamp("return_date") != null ? rs.getTimestamp("return_date").toLocalDateTime() : null
+                    );
+                    list.add(loan);
+                }
             }
         } catch (SQLException e) {
             throw new DAOException("In select(): " + e.getMessage());
@@ -91,8 +95,9 @@ public class LoanDAOMySQLImpl implements DAO<Loan> {
         verifyObject(l);
         String sql = "INSERT INTO loans (idUser, idMaterial, start_date, due_date, return_date) VALUES (?, ?, ?, ?, ?)";
 
-        try (PreparedStatement ps = DAOMySQLSettings.getConnection()
-                .prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+        // FIXED: Include Connection in try-with-resources
+        try (Connection conn = DAOMySQLSettings.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
             ps.setInt(1, l.getIdUser());
             ps.setInt(2, l.getIdMaterial());
@@ -107,9 +112,10 @@ public class LoanDAOMySQLImpl implements DAO<Loan> {
             logger.info("SQL: " + ps);
             ps.executeUpdate();
 
-            // Obtener idLoan generado automáticamente
-            ResultSet rs = ps.getGeneratedKeys();
-            if (rs.next()) l.setIdLoan(rs.getInt(1));
+            // FIXED: Include ResultSet in try-with-resources
+            try (ResultSet rs = ps.getGeneratedKeys()) {
+                if (rs.next()) l.setIdLoan(rs.getInt(1));
+            }
         } catch (SQLException e) {
             throw new DAOException("In insert(): " + e.getMessage());
         }
@@ -120,7 +126,10 @@ public class LoanDAOMySQLImpl implements DAO<Loan> {
         verifyObject(l);
         String sql = "UPDATE loans SET idUser=?, idMaterial=?, start_date=?, due_date=?, return_date=? WHERE idLoan=?";
 
-        try (PreparedStatement ps = DAOMySQLSettings.getConnection().prepareStatement(sql)) {
+        // FIXED: Include Connection in try-with-resources
+        try (Connection conn = DAOMySQLSettings.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
             ps.setInt(1, l.getIdUser());
             ps.setInt(2, l.getIdMaterial());
             ps.setString(3, l.getStart_date().format(FORMATTER));
@@ -146,7 +155,11 @@ public class LoanDAOMySQLImpl implements DAO<Loan> {
         }
 
         String sql = "DELETE FROM loans WHERE idLoan=?";
-        try (PreparedStatement ps = DAOMySQLSettings.getConnection().prepareStatement(sql)) {
+
+        // FIXED: Include Connection in try-with-resources
+        try (Connection conn = DAOMySQLSettings.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
             ps.setInt(1, l.getIdLoan());
             logger.info("SQL: " + ps);
             ps.executeUpdate();
@@ -167,7 +180,7 @@ public class LoanDAOMySQLImpl implements DAO<Loan> {
         }
     }
 
-      /**
+    /**
      * Counts the number of loans associated with a user that have not yet been returned.
      * An active loan is defined as one where the return_date is NULL.
      * @param userId The ID of the user.
@@ -177,13 +190,18 @@ public class LoanDAOMySQLImpl implements DAO<Loan> {
     public int countActiveLoansByUserId(int userId) throws DAOException {
         String sql = "SELECT COUNT(*) FROM loans WHERE idUser = ? AND return_date IS NULL";
         int count = 0;
-        try (PreparedStatement ps = DAOMySQLSettings.getConnection().prepareStatement(sql)) {
-            ps.setInt(1, userId);
 
+        // FIXED: Include Connection and ResultSet in try-with-resources
+        try (Connection conn = DAOMySQLSettings.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, userId);
             logger.info("SQL: " + ps);
-            ResultSet rs = ps.executeQuery();
-            if (rs.next()) {
-                count = rs.getInt(1);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    count = rs.getInt(1);
+                }
             }
         } catch (SQLException e) {
             throw new DAOException("In countActiveLoansByUserId(): " + e.getMessage());
@@ -197,30 +215,26 @@ public class LoanDAOMySQLImpl implements DAO<Loan> {
      * @return A List of OverdueLoan objects, or an empty list if none are found.
      * @throws DAOException if a database error occurs.
      */
-    public List<OverdueLoan> getOverdueLoansForUser(int userId) throws DAOException { // <-- Return type changed
-        List<OverdueLoan> overdueItems = new ArrayList<>(); // <-- List type changed
+    public List<OverdueLoan> getOverdueLoansForUser(int userId) throws DAOException {
+        List<OverdueLoan> overdueItems = new ArrayList<>();
 
-        // Use try-with-resources for automatic resource closing
+        // Already correct - using try-with-resources properly
         try (Connection conn = DAOMySQLSettings.getConnection();
              PreparedStatement ps = conn.prepareStatement(SQL_SELECT_OVERDUE_FOR_USER)) {
 
             ps.setInt(1, userId);
-
             logger.info("SQL: " + ps);
 
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
-                    // Map the ResultSet fields to the OverdueLoan model
                     int loanId = rs.getInt("idLoan");
                     String title = rs.getString("title");
                     String author = rs.getString("author");
-
-                    // Convert java.sql.Timestamp to java.time.LocalDate for clean display
                     LocalDate dueDate = rs.getTimestamp("due_date")
                             .toLocalDateTime()
                             .toLocalDate();
 
-                    OverdueLoan item = new OverdueLoan(loanId, title, author, dueDate); // <-- Object creation changed
+                    OverdueLoan item = new OverdueLoan(loanId, title, author, dueDate);
                     overdueItems.add(item);
                 }
             }
@@ -231,4 +245,3 @@ public class LoanDAOMySQLImpl implements DAO<Loan> {
         return overdueItems;
     }
 }
-

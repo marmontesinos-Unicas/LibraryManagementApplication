@@ -23,7 +23,9 @@ public class MaterialTypeDAOMySQLImpl {
         List<MaterialType> list = new ArrayList<>();
         String sql = "SELECT * FROM MATERIAL_TYPE ORDER BY material_type";
 
-        try (PreparedStatement ps = DAOMySQLSettings.getConnection().prepareStatement(sql);
+        // FIXED: Added Connection to try-with-resources
+        try (Connection conn = DAOMySQLSettings.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
 
             while (rs.next()) {
@@ -40,4 +42,3 @@ public class MaterialTypeDAOMySQLImpl {
         return list;
     }
 }
-

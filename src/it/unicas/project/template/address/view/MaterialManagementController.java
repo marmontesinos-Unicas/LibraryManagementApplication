@@ -5,6 +5,13 @@ import it.unicas.project.template.address.model.MaterialInventory;
 import it.unicas.project.template.address.model.dao.DAOException;
 import it.unicas.project.template.address.model.dao.mysql.MaterialDAOMySQLImpl;
 
+import it.unicas.project.template.address.service.SearchService;
+import javafx.application.Platform;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
+import java.util.List;
 import javafx.beans.binding.Bindings;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -48,7 +55,14 @@ public class MaterialManagementController {
 
 
     private ObservableList<MaterialInventory> materialList = FXCollections.observableArrayList();
+    private ObservableList<MaterialInventory> allMaterialList = FXCollections.observableArrayList();
+    private ObservableList<MaterialInventory> filteredList = FXCollections.observableArrayList();
 
+    // Search service and debounce mechanism
+    private final SearchService<MaterialInventory> searchService = new SearchService<>();
+    private ScheduledExecutorService searchScheduler = Executors.newSingleThreadScheduledExecutor();
+    private java.util.concurrent.Future<?> searchTask;
+    private List<Function<MaterialInventory, String>> searchFields;
     public void setMainApp(MainApp mainApp) {
         this.mainApp = mainApp;
     }
@@ -72,21 +86,29 @@ public class MaterialManagementController {
 
         loadMaterialData();
 
-        materialTable.setItems(materialList);
+        materialTable.setItems(filteredList);
         materialTable.setPlaceholder(new Label("No materials registered in the catalog."));
 
-        searchField.setOnKeyReleased(event -> {
-            if (event.getCode().equals(javafx.scene.input.KeyCode.ENTER)) {
-                handleSearch();
-            }
-        });
+        // Setup search fields in priority order
+        searchFields = SearchService.<MaterialInventory>fieldsBuilder()
+                .addField(MaterialInventory::getTitle)          // Highest priority
+                .addField(MaterialInventory::getAuthor)
+                .addField(m -> m.getYear() != null ? m.getYear().toString() : "")
+                .addField(MaterialInventory::getISBN)           // Third priority
+                .addField(m -> m.getMaterialTypeName())         // Fourth priority
+                .build();
+
+        // Add debounced live search listener (300ms delay)
+        searchField.textProperty().addListener((obs, oldVal, newVal) -> scheduleSearch());
     }
 
     public void loadMaterialData() {
-        materialList.clear();
+        allMaterialList.clear();
+        filteredList.clear();
         try {
             List<MaterialInventory> materialsFromDB = ((MaterialDAOMySQLImpl) MaterialDAOMySQLImpl.getInstance()).selectAllInventory();
-            materialList.addAll(materialsFromDB);
+            allMaterialList.addAll(materialsFromDB);
+            filteredList.addAll(materialsFromDB);
         } catch (DAOException e) {
             Alert alert = new Alert(Alert.AlertType.ERROR);
             alert.setTitle("Database Error");
@@ -96,20 +118,45 @@ public class MaterialManagementController {
         }
     }
 
-    @FXML
-    private void handleSearch() {
-        String query = searchField.getText().trim();
-        materialList.clear();
-        try {
-            List<MaterialInventory> searchResults = ((MaterialDAOMySQLImpl) MaterialDAOMySQLImpl.getInstance()).selectInventoryBySearchTerm(query);
-            materialList.addAll(searchResults);
-        } catch (DAOException e) {
-            Alert alert = new Alert(Alert.AlertType.ERROR);
-            alert.setTitle("Database Error");
-            alert.setHeaderText("Search Failed");
-            alert.setContentText("Could not execute search: " + e.getMessage());
-            alert.showAndWait();
+    /**
+     * Schedule search execution after 300ms delay to prevent connection leaks
+     */
+    private void scheduleSearch() {
+        // Cancel previous search task if still pending
+        if (searchTask != null && !searchTask.isDone()) {
+            searchTask.cancel(false);
         }
+
+        // Schedule new search after 300ms delay
+        searchTask = searchScheduler.schedule(() -> {
+            Platform.runLater(this::performSearch);
+        }, 300, TimeUnit.MILLISECONDS);
+    }
+
+    /**
+     * Perform the actual search using SearchService
+     */
+    private void performSearch() {
+        String query = searchField.getText().trim();
+
+        if (query.isEmpty()) {
+            // Show all materials if search is empty
+            filteredList.setAll(allMaterialList);
+        } else {
+            // Use SearchService for prioritized field search
+            List<MaterialInventory> results = searchService.searchAndSort(
+                    allMaterialList,
+                    query,
+                    searchFields
+            );
+            filteredList.setAll(results);
+        }
+    }
+
+    @FXML
+    private void handleClear() {
+        searchField.clear();
+        filteredList.setAll(allMaterialList);
     }
 
     @FXML
@@ -164,4 +211,14 @@ public class MaterialManagementController {
             mainApp.showAdminLanding();
         }
     }
+
+    /**
+     * Cleanup when controller is destroyed
+     */
+    public void cleanup() {
+        if (searchScheduler != null && !searchScheduler.isShutdown()) {
+            searchScheduler.shutdown();
+        }
+    }
+
 }

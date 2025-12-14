@@ -31,7 +31,6 @@ public class EditMaterialController {
     @FXML private TextField isbnField;
     @FXML private TextField yearField;
     @FXML private ComboBox<MaterialType> materialTypeComboBox;
-    @FXML private ComboBox<String> statusComboBox;
 
     // Genre UI Components
     @FXML private TextField genreSearchField;
@@ -56,7 +55,6 @@ public class EditMaterialController {
         loadMaterialTypes();
         loadGenres();
         setupGenreSearch();
-        setupStatus();
     }
 
     /**
@@ -80,8 +78,6 @@ public class EditMaterialController {
                 }
             }
 
-            // Select status
-            statusComboBox.setValue(material.getMaterial_status());
 
             // Load existing genres for this material
             loadExistingGenres(material.getIdMaterial());
@@ -94,14 +90,6 @@ public class EditMaterialController {
         materialTypeComboBox.setItems(obs);
     }
 
-    private void setupStatus() {
-        statusComboBox.getItems().addAll(
-                "available",
-                "loaned",
-                "on hold",
-                "delayed"
-        );
-    }
 
     private void loadGenres() {
         allGenres = genreDAO.selectAll();
@@ -266,9 +254,6 @@ public class EditMaterialController {
             return;
         }
 
-        //status will never be empty because of setupStatus()
-        String status = statusComboBox.getValue();
-
         // Update material fields
         currentMaterial.setTitle(title);
         currentMaterial.setAuthor(authorField.getText().trim());
@@ -289,7 +274,6 @@ public class EditMaterialController {
         }
 
         currentMaterial.setIdMaterialType(mt.getIdMaterialType());
-        currentMaterial.setMaterial_status(status);
 
         try {
             // Update material

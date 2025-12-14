@@ -14,6 +14,7 @@ import it.unicas.project.template.address.model.dao.mysql.MaterialGenreDAOMySQLI
 import it.unicas.project.template.address.model.dao.mysql.MaterialTypeDAOMySQLImpl;
 
 import it.unicas.project.template.address.service.MaterialCatalogService;
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -33,11 +34,15 @@ import javafx.stage.Stage;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
  * Controller for Material Catalog - ADMIN VIEW ONLY
  * Allows full CRUD operations on materials
+ * FIXED: Added debouncing to prevent connection leaks
  */
 public class MaterialCatalogController {
 
@@ -91,6 +96,9 @@ public class MaterialCatalogController {
 
     private final MaterialCatalogService catalogService = new MaterialCatalogService();
 
+    // FIXED: Debounce mechanism for search
+    private ScheduledExecutorService searchScheduler = Executors.newSingleThreadScheduledExecutor();
+    private java.util.concurrent.Future<?> filterTask;
 
     /**
      * Initialize the controller
@@ -117,10 +125,25 @@ public class MaterialCatalogController {
         // Initialize filter buttons
         setupFilterButtons();
 
-        // Add listeners for real-time search
-        searchField.textProperty().addListener((obs, oldVal, newVal) -> handleFilter());
-        yearFromField.textProperty().addListener((obs, oldVal, newVal) -> handleFilter());
-        yearToField.textProperty().addListener((obs, oldVal, newVal) -> handleFilter());
+        // FIXED: Add debounced listeners for real-time search (300ms delay)
+        searchField.textProperty().addListener((obs, oldVal, newVal) -> scheduleFilter());
+        yearFromField.textProperty().addListener((obs, oldVal, newVal) -> scheduleFilter());
+        yearToField.textProperty().addListener((obs, oldVal, newVal) -> scheduleFilter());
+    }
+
+    /**
+     * FIXED: Schedule filter execution after 300ms delay
+     */
+    private void scheduleFilter() {
+        // Cancel previous filter task if still pending
+        if (filterTask != null && !filterTask.isDone()) {
+            filterTask.cancel(false);
+        }
+
+        // Schedule new filter after 300ms delay
+        filterTask = searchScheduler.schedule(() -> {
+            Platform.runLater(this::handleFilter);
+        }, 300, TimeUnit.MILLISECONDS);
     }
 
     /**
@@ -249,7 +272,8 @@ public class MaterialCatalogController {
                 }
                 selectAllCheckBox.setSelected(selectedOptions.size() == allOptions.size());
                 updateFilterButtonText(sourceButton, selectedOptions.size(), allOptions.size(), label);
-                handleFilter();
+                // FIXED: Use scheduled filter instead of immediate
+                scheduleFilter();
             });
 
             checkBoxMap.put(option, cb);
@@ -268,7 +292,8 @@ public class MaterialCatalogController {
                 checkBoxMap.values().forEach(cb -> cb.setSelected(false));
             }
             updateFilterButtonText(sourceButton, selectedOptions.size(), allOptions.size(), label);
-            handleFilter();
+            // FIXED: Use scheduled filter instead of immediate
+            scheduleFilter();
         });
 
         // ScrollPane for checkboxes
@@ -503,24 +528,30 @@ public class MaterialCatalogController {
 
     /**
      * Enhanced filter with improved search algorithm and genre support
+     * FIXED: Now works with cached data (materialList) instead of hitting DB
      */
     @FXML
     private void handleFilter() {
-        List<Material> result = catalogService.filterMaterials(
-                materialList,
-                materialGenreMap,
-                materialTypeMap,
-                genreMap,
-                selectedMaterialTypes,
-                selectedStatuses,
-                selectedGenres,
-                yearFromField.getText().trim(),
-                yearToField.getText().trim(),
-                searchField.getText().trim()
-        );
+        try {
+            List<Material> result = catalogService.filterMaterials(
+                    materialList,  // Uses cached data
+                    materialGenreMap,
+                    materialTypeMap,
+                    genreMap,
+                    selectedMaterialTypes,
+                    selectedStatuses,
+                    selectedGenres,
+                    yearFromField.getText().trim(),
+                    yearToField.getText().trim(),
+                    searchField.getText().trim()
+            );
 
-        filteredList.setAll(result);
-        updateResultCount();
+            filteredList.setAll(result);
+            updateResultCount();
+        } catch (Exception e) {
+            showError("Filter Error", "Failed to filter materials: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 
     @FXML
@@ -667,5 +698,14 @@ public class MaterialCatalogController {
 
     public void setMainApp(MainApp mainApp) {
         this.mainApp = mainApp;
+    }
+
+    /**
+     * Cleanup when controller is destroyed
+     */
+    public void cleanup() {
+        if (searchScheduler != null && !searchScheduler.isShutdown()) {
+            searchScheduler.shutdown();
+        }
     }
 }
