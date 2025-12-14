@@ -56,7 +56,7 @@ public class AddLoanController {
                 } else {
                     Material material = getTableView().getItems().get(getIndex());
                     setText(item);
-                    if ("hold".equalsIgnoreCase(material.getMaterial_status())) {
+                    if ("holded".equalsIgnoreCase(material.getMaterial_status())) {
                         setTextFill(Color.ORANGE);
                     } else {
                         setTextFill(Color.BLACK);
@@ -87,7 +87,7 @@ public class AddLoanController {
                 for (Material m : results) {
                     // Only include materials that are available or on hold
                     if ("available".equalsIgnoreCase(m.getMaterial_status()) ||
-                            "hold".equalsIgnoreCase(m.getMaterial_status())) {
+                            "holded".equalsIgnoreCase(m.getMaterial_status())) {
                         materialList.add(m);
                     }
                 }
@@ -147,7 +147,7 @@ public class AddLoanController {
             if (results != null) {
                 for (Material m : results) {
                     if (!"available".equalsIgnoreCase(m.getMaterial_status()) &&
-                            !"hold".equalsIgnoreCase(m.getMaterial_status())) continue;
+                            !"holded".equalsIgnoreCase(m.getMaterial_status())) continue;
 
                     boolean matches = searchText.isEmpty();
 
@@ -206,7 +206,7 @@ public class AddLoanController {
             Material materialToUpdate = materials.get(0);
 
             // 3 Handle material on hold
-            if ("hold".equalsIgnoreCase(materialToUpdate.getMaterial_status())) {
+            if ("holded".equalsIgnoreCase(materialToUpdate.getMaterial_status())) {
                 Hold holdFilter = new Hold();
                 holdFilter.setIdMaterial(materialToUpdate.getIdMaterial());
                 var holds = HoldDAOMySQLImpl.getInstance().select(holdFilter);
