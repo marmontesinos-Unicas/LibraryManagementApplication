@@ -566,7 +566,7 @@ public class AdminMaterialCatalogController {
     }
 
     @FXML
-    private void handleAdd() {
+    private void handleAddMaterial() {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/it/unicas/project/template/address/view/AddMaterial.fxml"));
             Parent root = loader.load();

@@ -324,37 +324,41 @@ public class AddMaterialController {
 
     @FXML
     private void handleCancel(ActionEvent event) {
-        // Check if any field has data
-        boolean hasUnsavedData = false;
 
-        if (!titleField.getText().trim().isEmpty() ||
-                !authorField.getText().trim().isEmpty() ||
-                !isbnField.getText().trim().isEmpty() ||
-                !yearField.getText().trim().isEmpty() ||
-                materialTypeComboBox.getValue() != null ||
-                !selectedGenres.isEmpty()) {
-            hasUnsavedData = true;
+        boolean hasUnsavedData =
+                !titleField.getText().trim().isEmpty() ||
+                        !authorField.getText().trim().isEmpty() ||
+                        !isbnField.getText().trim().isEmpty() ||
+                        !yearField.getText().trim().isEmpty() ||
+                        materialTypeComboBox.getValue() != null ||
+                        !selectedGenres.isEmpty();
+
+        if (!hasUnsavedData) {
+            closeDialog();
+            return;
         }
 
-        if (hasUnsavedData) {
-            // Show confirmation dialog
-            Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-            alert.setTitle("Cancel Confirmation");
-            alert.setHeaderText(null);
-            alert.setContentText("You have unsaved changes. Are you sure you want to cancel?");
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle("Cancel Confirmation");
+        alert.setHeaderText(null);
+        alert.setContentText("You have unsaved changes. Are you sure you want to cancel?");
 
-            ButtonType yes = new ButtonType("Yes");
-            ButtonType no = new ButtonType("No");
-            alert.getButtonTypes().setAll(yes, no);
+        ButtonType yes = new ButtonType("Yes", ButtonBar.ButtonData.YES);
+        ButtonType no  = new ButtonType("No",  ButtonBar.ButtonData.NO);
+        alert.getButtonTypes().setAll(yes, no);
 
-            Optional<ButtonType> result = alert.showAndWait();
-            if (result.isPresent() && result.get() == yes) {
-                closeDialog();
-            }
-        } else {
+        // IMPORTANT: make it modal to the add-material dialog
+        if (dialogStage != null) {
+            alert.initOwner(dialogStage);
+        }
+
+        Optional<ButtonType> result = alert.showAndWait();
+
+        if (result.isPresent() && result.get().getButtonData() == ButtonBar.ButtonData.YES) {
             closeDialog();
         }
     }
+
 
     private void closeDialog() {
         if (dialogStage != null) {

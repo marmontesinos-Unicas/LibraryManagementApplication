@@ -106,7 +106,7 @@
 
         <Button fx:id="addButton"
                 text="Add New Material"
-                onAction="#handleAdd"
+                onAction="#handleAddMaterial"
                 styleClass="primary-button"/>
         <Button fx:id="editButton"
                 text="Edit Selected"
