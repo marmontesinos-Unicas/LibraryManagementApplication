@@ -30,7 +30,6 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 
 import java.io.IOException;
-import java.util.List;
 
 public class MaterialManagementController {
 
@@ -177,7 +176,7 @@ public class MaterialManagementController {
         }
 
         try {
-            FXMLLoader loader = new FXMLLoader(MainApp.class.getResource("view/MaterialEditDialog.fxml"));
+            FXMLLoader loader = new FXMLLoader(MainApp.class.getResource("view/MultiMaterialEdit.fxml"));
             AnchorPane page = loader.load();
 
             Stage dialogStage = new Stage();
@@ -188,7 +187,7 @@ public class MaterialManagementController {
             Scene scene = new Scene(page);
             dialogStage.setScene(scene);
 
-            MaterialEditDialogController controller = loader.getController();
+            MultiMaterialEditController controller = loader.getController();
             controller.setDialogStage(dialogStage);
             controller.setMaterialManagementController(this);
             controller.setSelectedMaterialInventory(selectedMaterial);
@@ -200,7 +199,7 @@ public class MaterialManagementController {
             Alert alert = new Alert(Alert.AlertType.ERROR);
             alert.setTitle("Error");
             alert.setHeaderText("Could not open edit dialog");
-            alert.setContentText("Check if 'MaterialEditDialog.fxml' is correctly located and accessible.\nError: " + e.getMessage());
+            alert.setContentText("Check if 'MultiMaterialEdit.fxml' is correctly located and accessible.\nError: " + e.getMessage());
             alert.showAndWait();
         }
     }

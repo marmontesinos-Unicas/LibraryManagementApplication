@@ -4,7 +4,7 @@ import it.unicas.project.template.address.model.Loan;
 import it.unicas.project.template.address.model.Material;
 import it.unicas.project.template.address.model.User;
 import it.unicas.project.template.address.model.dao.DAOException;
-import it.unicas.project.template.address.view.LoadReturnController.LoanRow;
+import it.unicas.project.template.address.view.LoanReturnController.LoanRow;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
