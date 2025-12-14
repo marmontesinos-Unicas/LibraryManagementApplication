@@ -237,8 +237,6 @@ public class LoadReturnController {
                     materialMap,
                     userMap,
                     statusFilter,
-                    null,
-                    null,
                     searchTerm
             );
 
