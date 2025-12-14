@@ -250,7 +250,7 @@ public class MainApp extends Application {
             dialogStage.showAndWait(); // Wait for dialog to close
 
         } catch (IOException e) {
-            // ... error handling ...
+            e.printStackTrace();
         }
     }
     public void showCatalogView() {
