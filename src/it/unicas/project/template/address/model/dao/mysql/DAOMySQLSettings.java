@@ -12,7 +12,7 @@ public class DAOMySQLSettings {
     public final static String USERNAME = "mar";   //mar
     public final static String PWD = "ProjectSE1234";  // ProjectSE1234
     public final static String SCHEMA = "dls_schema";
-    public final static String PARAMETERS = "?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC";
+    public final static String PARAMETERS = "?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Europe/Madrid";
 
     private String host = "localhost";
     private String userName = "mar";  // mar

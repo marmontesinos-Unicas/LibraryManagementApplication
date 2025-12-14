@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.logging.Logger;
 import it.unicas.project.template.address.model.OverdueLoan;
 import java.time.LocalDate;
+import java.time.ZoneId;
 
 public class LoanDAOMySQLImpl implements DAO<Loan> {
 
@@ -28,11 +29,11 @@ public class LoanDAOMySQLImpl implements DAO<Loan> {
                     "FROM " +
                     "loans l " +
                     "JOIN " +
-                    "materials m ON l.idMaterial = m.idMaterial " +
+                    "materials m ON l.idMaterial = m.idMaterial " + // Joining to get material details
                     "WHERE " +
-                    "l.idUser = ? " +
-                    "AND l.due_date < NOW() " +
-                    "AND l.return_date IS NULL";
+                    "l.idUser = ? " +              // Filter by current user
+                    "AND l.due_date < NOW() " +    // Checks if the due date is before the current time
+                    "AND l.return_date IS NULL";   // Ensures the loan is still active
 
     protected LoanDAOMySQLImpl() {}
 
@@ -48,6 +49,7 @@ public class LoanDAOMySQLImpl implements DAO<Loan> {
     public List<Loan> select(Loan l) throws DAOException {
         List<Loan> list = new ArrayList<>();
         if (l == null) l = new Loan(null, null, null, null, null, null);
+
 
         String sql = "SELECT * FROM loans WHERE 1=1";
         if (l.getIdLoan() != -1) sql += " AND idLoan=?";
@@ -101,10 +103,10 @@ public class LoanDAOMySQLImpl implements DAO<Loan> {
 
             ps.setInt(1, l.getIdUser());
             ps.setInt(2, l.getIdMaterial());
-            ps.setString(3, l.getStart_date().format(FORMATTER));
-            ps.setString(4, l.getDue_date().format(FORMATTER));
+            ps.setTimestamp(3, Timestamp.valueOf(l.getStart_date()));  // Changed
+            ps.setTimestamp(4, Timestamp.valueOf(l.getDue_date()));    // Changed
             if (l.getReturn_date() != null) {
-                ps.setString(5, l.getReturn_date().format(FORMATTER));
+                ps.setTimestamp(5, Timestamp.valueOf(l.getReturn_date())); // Changed
             } else {
                 ps.setNull(5, Types.TIMESTAMP);
             }
@@ -132,10 +134,10 @@ public class LoanDAOMySQLImpl implements DAO<Loan> {
 
             ps.setInt(1, l.getIdUser());
             ps.setInt(2, l.getIdMaterial());
-            ps.setString(3, l.getStart_date().format(FORMATTER));
-            ps.setString(4, l.getDue_date().format(FORMATTER));
+            ps.setTimestamp(3, Timestamp.valueOf(l.getStart_date()));  // Changed
+            ps.setTimestamp(4, Timestamp.valueOf(l.getDue_date()));    // Changed
             if (l.getReturn_date() != null) {
-                ps.setString(5, l.getReturn_date().format(FORMATTER));
+                ps.setTimestamp(5, Timestamp.valueOf(l.getReturn_date())); // Changed
             } else {
                 ps.setNull(5, Types.TIMESTAMP);
             }
@@ -180,7 +182,7 @@ public class LoanDAOMySQLImpl implements DAO<Loan> {
         }
     }
 
-    /**
+      /**
      * Counts the number of loans associated with a user that have not yet been returned.
      * An active loan is defined as one where the return_date is NULL.
      * @param userId The ID of the user.
@@ -196,6 +198,7 @@ public class LoanDAOMySQLImpl implements DAO<Loan> {
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setInt(1, userId);
+
             logger.info("SQL: " + ps);
 
             try (ResultSet rs = ps.executeQuery()) {
@@ -223,18 +226,22 @@ public class LoanDAOMySQLImpl implements DAO<Loan> {
              PreparedStatement ps = conn.prepareStatement(SQL_SELECT_OVERDUE_FOR_USER)) {
 
             ps.setInt(1, userId);
+
             logger.info("SQL: " + ps);
 
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
+                    // Map the ResultSet fields to the OverdueLoan model
                     int loanId = rs.getInt("idLoan");
                     String title = rs.getString("title");
                     String author = rs.getString("author");
+
+                    // Convert java.sql.Timestamp to java.time.LocalDate for clean display
                     LocalDate dueDate = rs.getTimestamp("due_date")
                             .toLocalDateTime()
                             .toLocalDate();
 
-                    OverdueLoan item = new OverdueLoan(loanId, title, author, dueDate);
+                    OverdueLoan item = new OverdueLoan(loanId, title, author, dueDate); // <-- Object creation changed
                     overdueItems.add(item);
                 }
             }
@@ -245,3 +252,4 @@ public class LoanDAOMySQLImpl implements DAO<Loan> {
         return overdueItems;
     }
 }
+

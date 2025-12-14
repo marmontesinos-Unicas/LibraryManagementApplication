@@ -17,6 +17,8 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+
+
 import javafx.scene.control.*;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
@@ -33,18 +35,19 @@ import java.util.concurrent.TimeUnit;
  */
 public class LoadReturnController {
 
-    @FXML private TextField searchField;
-    @FXML private Button searchButton;
+    @FXML private TextField searchField;                 // Field for searching loans
+    @FXML private Button searchButton;                   // Button to clear search
     @FXML private Button returnLoanButton;
+    @FXML private Button editLoanButton;
 
-    @FXML private TableView<LoanRow> loansTable;
+    @FXML private TableView<LoanRow> loansTable;        // Table to display loans
     @FXML private TableColumn<LoanRow, String> materialTypeColumn;
     @FXML private TableColumn<LoanRow, String> titleColumn;
     @FXML private TableColumn<LoanRow, String> userColumn;
     @FXML private TableColumn<LoanRow, String> dueDateColumn;
     @FXML private TableColumn<LoanRow, String> delayedColumn;
 
-    private Stage dialogStage;
+    private Stage dialogStage;                           // Reference to the dialog stage
     private ObservableList<LoanRow> loanRows = FXCollections.observableArrayList();
     private MainApp mainApp;
     private LoanCatalogService loanCatalogService = new LoanCatalogService();
@@ -60,6 +63,7 @@ public class LoadReturnController {
 
     /**
      * Sets the dialog stage for this controller.
+     * @param dialogStage The stage object.
      */
     public void setDialogStage(Stage dialogStage) {
         this.dialogStage = dialogStage;
@@ -67,6 +71,7 @@ public class LoadReturnController {
 
     /**
      * Sets a reference back to the main application.
+     * @param mainApp The main application object.
      */
     public void setMainApp(MainApp mainApp) {
         this.mainApp = mainApp;
@@ -74,6 +79,7 @@ public class LoadReturnController {
 
     /**
      * Initializes the controller.
+     * Sets up table columns, colors for delayed loans, search functionality, and button actions.
      */
     @FXML
     private void initialize() {
@@ -222,11 +228,13 @@ public class LoadReturnController {
     }
 
     /**
-     * Handles searching loans using CACHED data (no DB calls).
+     * Handles searching loans based on user input.
+     * Supports searching by user name, surname, material title, or delayed loans keywords.
      */
     @FXML
     private void handleSearch() {
         String text = searchField.getText().trim();
+
         loanRows.clear();
 
         try {
@@ -294,6 +302,7 @@ public class LoadReturnController {
 
     /**
      * Handles returning the selected loan.
+     * Updates the loan return date and sets the material status to "available".
      */
     @FXML
     private void handleReturnLoan() {
@@ -352,6 +361,55 @@ public class LoadReturnController {
     }
 
     /**
+     * Handles editing the selected loan.
+     * Opens the Modify Loan dialog and refreshes the table after closing.
+     */
+    @FXML
+    private void handleEditLoan() {
+        LoanRow selected = loansTable.getSelectionModel().getSelectedItem();
+        if (selected == null) {
+            Alert alert = new Alert(Alert.AlertType.WARNING, "Please select a loan first.");
+            alert.showAndWait();
+            return;
+        }
+
+        try {
+            // Obtener Loan real desde la BD
+            Loan filtro = new Loan();
+            filtro.setIdLoan(selected.getIdLoan());
+            List<Loan> loans = LoanDAOMySQLImpl.getInstance().select(filtro);
+            if (loans.isEmpty()) {
+                Alert error = new Alert(Alert.AlertType.ERROR, "Loan not found in database.");
+                error.showAndWait();
+                return;
+            }
+
+            Loan loanToEdit = loans.get(0);
+
+            // Cargar ModifyLoanDialog
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("ModifyLoanDialog.fxml"));
+            Parent page = loader.load();
+
+            Stage dialog = new Stage();
+            dialog.setTitle("Modify Loan");
+            dialog.initOwner(dialogStage);
+
+            ModifyLoanController controller = loader.getController();
+            controller.setDialogStage(dialog);
+            controller.setLoan(loanToEdit);
+
+            Scene scene = new Scene(page);
+            dialog.setScene(scene);
+            dialog.showAndWait();
+
+            loadAllLoans(); // refrescar tabla después de modificar
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
      * Shows an error alert dialog.
      */
     private void showError(String title, String message) {
@@ -401,6 +459,10 @@ public class LoadReturnController {
         public String getTitle() { return title.get(); }
         public String getUser() { return user.get(); }
 
+        /**
+         * Converts due date string to LocalDateTime.
+         * @return LocalDateTime of due date or MAX if invalid
+         */
         public LocalDateTime getDueDateAsLocalDate() {
             if (dueDate.get() == null || dueDate.get().equals("—")) return LocalDateTime.MAX;
             return LocalDateTime.parse(dueDate.get() + "T00:00:00");
