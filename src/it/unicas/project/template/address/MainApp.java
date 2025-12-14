@@ -21,6 +21,7 @@ import javafx.stage.Stage;
 import javafx.scene.control.*;
 
 import java.io.IOException;
+import java.util.List;
 
 public class MainApp extends Application {
 
@@ -59,11 +60,18 @@ public class MainApp extends Application {
         }
     }
 
-    private boolean showLoginDialog() {
+    public boolean showLoginDialog() {
         try {
             FXMLLoader loader = new FXMLLoader();
             loader.setLocation(MainApp.class.getResource("view/LoginDialog.fxml"));
             AnchorPane page = loader.load();
+
+            // This prevents the previous dashboard (Admin or User) from remaining visible
+            // behind the modal login window when logging out.
+            if (primaryStage.isShowing()) {
+                primaryStage.hide();
+                primaryStage.setScene(null); // Explicitly remove the old scene content to ensure a clean slate
+            }
 
             Stage dialogStage = new Stage();
             dialogStage.setTitle("Login");
@@ -75,19 +83,33 @@ public class MainApp extends Application {
 
             LoginDialogController controller = loader.getController();
             controller.setDialogStage(dialogStage);
+            controller.setMainApp(this); // Pass MainApp reference for re-login flow management
 
             dialogStage.showAndWait();
 
+            // The controller handles setting loggedUser/loans/reservations only if login was successful
             if (controller.isLoginSuccessful()) {
                 String username = controller.getUsername();
+
+                // 1. Fetch user data and initialize lists
                 loggedUser = UserDAOMySQLImpl.getInstance().getByUsername(username);
 
-                // Inicializamos listas de préstamos y reservas del usuario
-                loadUserLoans();
-                loadUserReservations();
+                // Depending on the role, set the correct scene on the primaryStage (which is still hidden)
+                if (loggedUser.getIdRole() == 1) {
+                    showAdminLanding();
+                } else {
+                    showUserLandingView();
+                }
+
+                // Show the primaryStage with the newly loaded Admin/User scene
+                primaryStage.show();
 
                 return true;
             } else {
+                // Login failed or was cancelled.
+                // If the primaryStage was hidden (i.e., this was a logout event),
+                // returning false allows the application to remain closed if the attempt was at startup,
+                // or simply end the login attempt if it was a logout.
                 return false;
             }
         } catch (IOException | DAOException e) {
@@ -96,35 +118,21 @@ public class MainApp extends Application {
         }
     }
 
-    private void loadUserLoans() {
-        // Ejemplo de datos de prueba
-        userLoans.clear();
-        userLoans.addAll("Préstamo 1", "Préstamo 2", "Préstamo 3");
-        // Aquí puedes reemplazar por datos reales desde la BD
-    }
-
-    private void loadUserReservations() {
-        // Ejemplo de datos de prueba
-        userReservations.clear();
-        userReservations.addAll("Reserva A", "Reserva B");
-        // Aquí puedes reemplazar por datos reales desde la BD
-    }
-
-    // //needed to make it public to be seen in class UserCatalogController
     public void showUserLandingView() {
         try {
             FXMLLoader loader = new FXMLLoader();
             loader.setLocation(MainApp.class.getResource("view/UserLandingView.fxml"));
-            BorderPane userPane = loader.load();
+            AnchorPane userPane = loader.load();
 
             Scene scene = new Scene(userPane);
             primaryStage.setScene(scene);
             primaryStage.setTitle("User Dashboard");
-            primaryStage.setMinWidth(800);
-            primaryStage.setMinHeight(520);
+            //primaryStage.setMinWidth(800);
+            //primaryStage.setMinHeight(520);
 
             UserLandingController controller = loader.getController();
-            controller.setMainApp(this);
+            controller.setMainApp(this);        // Pass reference to MainApp
+            controller.setCurrentUser(loggedUser); // Pass the logged User
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -140,8 +148,8 @@ public class MainApp extends Application {
             Scene scene = new Scene(adminPane);
             primaryStage.setScene(scene);
             primaryStage.setTitle("Admin Dashboard"); // Set title back
-            primaryStage.setMinWidth(800);
-            primaryStage.setMinHeight(520);
+            //primaryStage.setMinWidth(800);
+            //primaryStage.setMinHeight(520);
 
             // Pass the MainApp reference to the AdminLandingController
             it.unicas.project.template.address.view.AdminLandingController controller = loader.getController();
@@ -165,8 +173,8 @@ public class MainApp extends Application {
             Scene scene = new Scene(userManagementPane);
             primaryStage.setScene(scene);
             primaryStage.setTitle("User Management");
-            primaryStage.setMinWidth(800);
-            primaryStage.setMinHeight(520);
+            //primaryStage.setMinWidth(800);
+            //primaryStage.setMinHeight(520);
 
             // Get the controller and initialize if needed (already done in initialize method)
             UserManagementController controller = loader.getController();
@@ -269,12 +277,12 @@ public class MainApp extends Application {
             Scene scene = new Scene(loadReturnPane);
             primaryStage.setScene(scene);
             primaryStage.setTitle("Loan and Return Management");
-            primaryStage.setMinWidth(800);
-            primaryStage.setMinHeight(520);
+            //primaryStage.setMinWidth(800);
+            //primaryStage.setMinHeight(520);
 
             // Get the controller and pass the MainApp reference
             it.unicas.project.template.address.view.LoadReturnController controller = loader.getController();
-            controller.setMainApp(this); // THIS LINE IS CRUCIAL for the Back button functionality
+            controller.setMainApp(this); // This line ensures that we can go back to the landing page.
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -287,6 +295,45 @@ public class MainApp extends Application {
             alert.showAndWait();
         }
     }
+
+    /**
+     * Displays the user's overdue notifications in a dialog.
+     * @param notifications A list of formatted String messages to display.
+     */
+    public void showNotificationsView(List<String> notifications) {
+        try {
+            FXMLLoader loader = new FXMLLoader();
+            // Assuming the FXML is located at: address/view/NotificationsView.fxml
+            loader.setLocation(MainApp.class.getResource("view/NotificationsView.fxml"));
+            AnchorPane page = loader.load();
+
+            // Create the dialog Stage
+            Stage dialogStage = new Stage();
+            dialogStage.setTitle("Overdue Notifications");
+            // Set modality to BLOCKING, typical for alerts/modals
+            dialogStage.initModality(Modality.WINDOW_MODAL);
+            dialogStage.initOwner(primaryStage);
+
+            Scene scene = new Scene(page);
+            dialogStage.setScene(scene);
+
+            // Get the controller and pass the data and stage
+            NotificationsController controller = loader.getController();
+            controller.setDialogStage(dialogStage);
+            controller.setNotifications(notifications); // Pass the list of messages
+
+            dialogStage.showAndWait();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Error");
+            alert.setHeaderText("View Loading Failed");
+            alert.setContentText("Could not load NotificationsView.fxml.");
+            alert.showAndWait();
+        }
+    }
+
     public void showUserCatalog() {
         try {
             FXMLLoader loader = new FXMLLoader();
@@ -312,8 +359,6 @@ public class MainApp extends Application {
             alert.showAndWait();
         }
     }
-
-
 
     public User getLoggedUser() {
         return loggedUser;

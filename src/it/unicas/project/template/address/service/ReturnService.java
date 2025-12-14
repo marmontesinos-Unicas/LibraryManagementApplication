@@ -11,25 +11,57 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * Service layer responsible for managing loan returns, filtering active or delayed loans,
+ * and converting internal data models into {@link LoanRow} objects for UI display.
+ * <p>
+ * This class simulates data access using in-memory lists, and is primarily
+ * intended for testing or for controller logic that does not interact directly with DAOs.
+ * </p>
+ */
 public class ReturnService {
 
+    /** In-memory list of users involved in loan operations */
     private final List<User> users;
+
+    /** In-memory list of materials that may be loaned or returned */
     private final List<Material> materials;
+
+    /** In-memory list of loan records */
     private final List<Loan> loans;
 
+    /**
+     * Creates an empty ReturnService with internal lists initialized.
+     * Typically used in production where real DAOs populate data.
+     */
     public ReturnService() {
         this.users = new ArrayList<>();
         this.materials = new ArrayList<>();
         this.loans = new ArrayList<>();
     }
 
-    // Constructor para tests
+    /**
+     * Creates a ReturnService instance using predefined lists.
+     * Used primarily for unit testing.
+     *
+     * @param users     list of users
+     * @param materials list of materials
+     * @param loans     list of loans
+     */
     public ReturnService(List<User> users, List<Material> materials, List<Loan> loans) {
         this.users = users;
         this.materials = materials;
         this.loans = loans;
     }
 
+    /**
+     * Retrieves all loans that have not been returned.
+     * <p>
+     * A loan is considered active if {@code return_date} is {@code null}.
+     * </p>
+     *
+     * @return list of active loans represented as {@link LoanRow}
+     */
     public List<LoanRow> getActiveLoans() {
         List<LoanRow> result = new ArrayList<>();
         for (Loan l : loans) {
@@ -42,6 +74,14 @@ public class ReturnService {
         return result;
     }
 
+    /**
+     * Retrieves all loans that are overdue.
+     * <p>
+     * A loan is considered delayed if its due date is before the current time.
+     * </p>
+     *
+     * @return list of overdue active loans
+     */
     public List<LoanRow> getDelayedLoans() {
         LocalDateTime now = LocalDateTime.now();
         return getActiveLoans().stream()
@@ -49,6 +89,15 @@ public class ReturnService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Searches active loans by user name or material title.
+     * <p>
+     * The search is case-insensitive.
+     * </p>
+     *
+     * @param text search string to match against user names or material titles
+     * @return filtered list of matching loan rows
+     */
     public List<LoanRow> searchLoans(String text) {
         String lowerText = text.toLowerCase();
         return getActiveLoans().stream()
@@ -57,6 +106,16 @@ public class ReturnService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Marks a loan as returned and updates the corresponding material status.
+     * <p>
+     * The method locates the real loan by matching user, material title,
+     * and due date information contained in the provided {@link LoanRow}.
+     * </p>
+     *
+     * @param row the loan row representing the loan to be returned
+     * @throws DAOException if the loan cannot be located
+     */
     public void returnLoan(LoanRow row) throws DAOException {
         final Loan loanReal = loans.stream()
                 .filter(l -> l.getReturn_date() == null)
@@ -90,10 +149,10 @@ public class ReturnService {
             throw new DAOException("Loan not found");
         }
 
-        // Marcar préstamo como devuelto
+        // Mark loan as returned
         loanReal.setReturn_date(LocalDateTime.now());
 
-        // Marcar material como disponible
+        // Mark material as available
         Material matToUpdate = materials.stream()
                 .filter(mat -> mat.getIdMaterial() == loanReal.getIdMaterial())
                 .findFirst()
@@ -104,6 +163,15 @@ public class ReturnService {
         }
     }
 
+    /**
+     * Converts a {@link Loan} object into a {@link LoanRow} for UI usage.
+     * <p>
+     * If the associated user or material cannot be found, the method returns {@code null}.
+     * </p>
+     *
+     * @param loan the loan to convert
+     * @return a LoanRow containing formatted loan information, or {@code null} if data is incomplete
+     */
     private LoanRow buildLoanRow(Loan loan) {
         Material m = materials.stream()
                 .filter(mat -> mat.getIdMaterial() == loan.getIdMaterial())
