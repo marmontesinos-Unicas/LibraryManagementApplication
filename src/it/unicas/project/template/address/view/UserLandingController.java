@@ -15,6 +15,7 @@ import it.unicas.project.template.address.model.dao.DAOException;
 import it.unicas.project.template.address.service.NotificationsService;
 import it.unicas.project.template.address.model.User;
 import java.util.List;
+import java.util.Optional;
 
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -40,7 +41,7 @@ import java.util.stream.Collectors;
  * Controller for the User Landing page.
  * This class manages the UI for loans, holds, notifications, and user interactions.
  */
-public class UserLandingController {
+public class    UserLandingController {
 
     private MainApp mainApp; // Reference to MainApp so we can navigate between scenes
 
@@ -373,16 +374,45 @@ public class UserLandingController {
 
     /**
      * Handles logout logic.
-     * Opens the login dialog and closes the current window.
+     * Shows a confirmation dialog. If confirmed, opens the login dialog and closes the current window.
+     *
+     * @param event The action event.
      */
     @FXML
     protected void handleLogout(ActionEvent event) {
-        if (mainApp != null) {
-            System.out.println("Action: Logging out.");
+        if (mainApp == null) {
+            System.err.println("Error: MainApp reference is null. Cannot log out.");
+            return;
+        }
+
+        // --- NEW LOGIC: Show Confirmation Dialog ---
+        Alert alert = new Alert(AlertType.CONFIRMATION);
+        alert.setTitle("Confirm Logout");
+        alert.setHeaderText("You are about to log out.");
+        alert.setContentText("Are you sure you want to log out and return to the login screen?");
+
+        // Show the dialog and wait for the user's response
+        Optional<ButtonType> result = alert.showAndWait();
+
+        // Check if the user clicked OK (which is the default button type for confirmation)
+        if (result.isPresent() && result.get() == ButtonType.OK) {
+            System.out.println("Action: Logging out confirmed.");
+
+            // 1. Show the Login Dialog
             mainApp.showLoginDialog(); // Show login window again
 
+            // 2. Explicitly close the current Admin Landing window/stage.
+            try {
+                // Find the stage from the event source
+                Stage currentStage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+                currentStage.hide(); // Hide the window
+            } catch (Exception e) {
+                System.err.println("Error closing User Landing stage: " + e.getMessage());
+            }
+
         } else {
-            System.err.println("Error: MainApp reference is null. Cannot log out.");
+            // User cancelled or closed the dialog. Do nothing.
+            System.out.println("Logout cancelled by the user.");
         }
     }
 }

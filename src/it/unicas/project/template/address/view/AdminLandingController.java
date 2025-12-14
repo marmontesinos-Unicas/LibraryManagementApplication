@@ -10,8 +10,12 @@
     import javafx.scene.layout.AnchorPane;
     import javafx.stage.Modality;
     import javafx.stage.Stage;
+    import javafx.scene.control.Alert; // NEW IMPORT
+    import javafx.scene.control.Alert.AlertType; // NEW IMPORT
+    import javafx.scene.control.ButtonType; // NEW IMPORT
 
     import java.io.IOException;
+    import java.util.Optional; // NEW IMPORT
 
     /**
      * Controller for the FXML interface of the administrator landing screen.
@@ -103,14 +107,30 @@
 
         /**
          * Handles the action for the "Logout" button.
-         * Logic: Shows the Login dialog, then closes the current Admin Landing window.
+         * Logic: Shows a confirmation dialog. If confirmed, shows the Login dialog,
+         * then closes the current Admin Landing window.
          *
          * @param event The action event.
          */
         @FXML
         protected void handleLogout(ActionEvent event) {
-            if (mainApp != null) {
-                System.out.println("Action: Logging out.");
+            if (mainApp == null) {
+                System.err.println("Error: MainApp reference is null. Cannot log out.");
+                return;
+            }
+
+            // Create a confirmation alert dialog
+            Alert alert = new Alert(AlertType.CONFIRMATION);
+            alert.setTitle("Confirm Logout");
+            alert.setHeaderText("You are about to log out.");
+            alert.setContentText("Are you sure you want to log out and return to the login screen?");
+
+            // Show the dialog and wait for the user's response
+            Optional<ButtonType> result = alert.showAndWait();
+
+            // Check if the user clicked OK (which is the default button type for confirmation)
+            if (result.isPresent() && result.get() == ButtonType.OK) {
+                System.out.println("Action: Logging out confirmed.");
 
                 // 1. Show the Login Dialog
                 mainApp.showLoginDialog();
@@ -131,7 +151,8 @@
                 }
 
             } else {
-                System.err.println("Error: MainApp reference is null. Cannot log out.");
+                // User cancelled or closed the dialog. Do nothing.
+                System.out.println("Logout cancelled by the user.");
             }
         }
     }
