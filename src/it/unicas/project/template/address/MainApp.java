@@ -55,6 +55,11 @@ public class MainApp extends Application {
         this.primaryStage.setTitle("Library Management App");
         this.primaryStage.getIcons().add(new Image("file:resources/images/address_book_32.png"));
 
+        this.primaryStage.setMinWidth(800);
+        this.primaryStage.setMinHeight(520);
+        this.primaryStage.setWidth(800);
+        this.primaryStage.setHeight(520);
+
         // Limpiar holds caducados antes de mostrar cualquier vista
         try {
             cleanupExpiredHolds();
@@ -182,15 +187,24 @@ public class MainApp extends Application {
 
     public void showUserLandingView() {
         try {
+            double currentWidth = primaryStage.getWidth();
+            double currentHeight = primaryStage.getHeight();
+            boolean wasMaximized = primaryStage.isMaximized();
+
             FXMLLoader loader = new FXMLLoader();
             loader.setLocation(MainApp.class.getResource("view/UserLandingView.fxml"));
-            AnchorPane userPane = loader.load();
+            BorderPane userPane = loader.load();
 
             Scene scene = new Scene(userPane);
             primaryStage.setScene(scene);
             primaryStage.setTitle("User Dashboard");
-            //primaryStage.setMinWidth(800);
-            //primaryStage.setMinHeight(520);
+            // Restore dimensions
+            if (wasMaximized) {
+                primaryStage.setMaximized(true);
+            } else {
+                primaryStage.setWidth(currentWidth);
+                primaryStage.setHeight(currentHeight);
+            }
 
             UserLandingController controller = loader.getController();
             controller.setMainApp(this);        // Pass reference to MainApp
@@ -203,6 +217,11 @@ public class MainApp extends Application {
 
     public void showAdminLanding() {
         try {
+            // Store current dimensions
+            double currentWidth = primaryStage.getWidth();
+            double currentHeight = primaryStage.getHeight();
+            boolean wasMaximized = primaryStage.isMaximized();
+
             FXMLLoader loader = new FXMLLoader();
             loader.setLocation(MainApp.class.getResource("view/AdminLandingView.fxml"));
             BorderPane adminPane = loader.load();
@@ -210,8 +229,14 @@ public class MainApp extends Application {
             Scene scene = new Scene(adminPane);
             primaryStage.setScene(scene);
             primaryStage.setTitle("Admin Dashboard"); // Set title back
-            //primaryStage.setMinWidth(800);
-            //primaryStage.setMinHeight(520);
+            // Restore dimensions
+            if (wasMaximized) {
+                primaryStage.setMaximized(true);
+            } else {
+                primaryStage.setWidth(currentWidth);
+                primaryStage.setHeight(currentHeight);
+            }
+
 
             // Pass the MainApp reference to the AdminLandingController
             it.unicas.project.template.address.view.AdminLandingController controller = loader.getController();
@@ -227,6 +252,10 @@ public class MainApp extends Application {
      */
     public void showUserManagement() {
         try {
+            // Store current dimensions
+            double currentWidth = primaryStage.getWidth();
+            double currentHeight = primaryStage.getHeight();
+            boolean wasMaximized = primaryStage.isMaximized();
             FXMLLoader loader = new FXMLLoader();
             loader.setLocation(MainApp.class.getResource("view/UserManagement.fxml"));
             BorderPane userManagementPane = loader.load();
@@ -235,8 +264,14 @@ public class MainApp extends Application {
             Scene scene = new Scene(userManagementPane);
             primaryStage.setScene(scene);
             primaryStage.setTitle("User Management");
-            //primaryStage.setMinWidth(800);
-            //primaryStage.setMinHeight(520);
+            // Restore dimensions
+            if (wasMaximized) {
+                primaryStage.setMaximized(true);
+            } else {
+                primaryStage.setWidth(currentWidth);
+                primaryStage.setHeight(currentHeight);
+            }
+
 
             // Get the controller and initialize if needed (already done in initialize method)
             UserManagementController controller = loader.getController();
@@ -259,6 +294,11 @@ public class MainApp extends Application {
      */
     public void showMaterialManagement() {
         try {
+            // Store current dimensions
+            double currentWidth = primaryStage.getWidth();
+            double currentHeight = primaryStage.getHeight();
+            boolean wasMaximized = primaryStage.isMaximized();
+
             FXMLLoader loader = new FXMLLoader();
             // Load the new FXML file
             loader.setLocation(MainApp.class.getResource("view/MaterialManagement.fxml"));
@@ -269,6 +309,13 @@ public class MainApp extends Application {
             primaryStage.setScene(scene);
             primaryStage.setTitle("Material Management (Inventory)");
 
+            // Restore dimensions
+            if (wasMaximized) {
+                primaryStage.setMaximized(true);
+            } else {
+                primaryStage.setWidth(currentWidth);
+                primaryStage.setHeight(currentHeight);
+            }
             // Get the controller and initialize
             MaterialManagementController controller = loader.getController();
             controller.setMainApp(this);
@@ -310,12 +357,26 @@ public class MainApp extends Application {
     }
     public void showCatalogView() {
         try {
+            // Store current dimensions
+            double currentWidth = primaryStage.getWidth();
+            double currentHeight = primaryStage.getHeight();
+            boolean wasMaximized = primaryStage.isMaximized();
+
             FXMLLoader loader = new FXMLLoader();
             loader.setLocation(MainApp.class.getResource("view/MaterialCatalog.fxml"));
             AnchorPane page = loader.load();
 
             Scene scene = new Scene(page);
             primaryStage.setScene(scene);
+
+            // Restore dimensions
+            if (wasMaximized) {
+                primaryStage.setMaximized(true);
+            } else {
+                primaryStage.setWidth(currentWidth);
+                primaryStage.setHeight(currentHeight);
+            }
+
 
             MaterialCatalogController controller = loader.getController();
             controller.setMainApp(this);
@@ -371,6 +432,11 @@ public class MainApp extends Application {
      */
     public void showLoadReturn() {
         try {
+            // Store current dimensions
+            double currentWidth = primaryStage.getWidth();
+            double currentHeight = primaryStage.getHeight();
+            boolean wasMaximized = primaryStage.isMaximized();
+
             FXMLLoader loader = new FXMLLoader();
             loader.setLocation(MainApp.class.getResource("/it/unicas/project/template/address/view/LoadReturn.fxml"));
             AnchorPane loadReturnPane = loader.load();
@@ -378,8 +444,15 @@ public class MainApp extends Application {
             Scene scene = new Scene(loadReturnPane);
             primaryStage.setScene(scene);
             primaryStage.setTitle("Loan and Return Management");
-            //primaryStage.setMinWidth(800);
-            //primaryStage.setMinHeight(520);
+
+            // Restore dimensions
+            if (wasMaximized) {
+                primaryStage.setMaximized(true);
+            } else {
+                primaryStage.setWidth(currentWidth);
+                primaryStage.setHeight(currentHeight);
+            }
+
 
             // Get the controller and pass the MainApp reference
             it.unicas.project.template.address.view.LoadReturnController controller = loader.getController();
@@ -437,6 +510,11 @@ public class MainApp extends Application {
 
     public void showUserCatalog() {
         try {
+            // Store current dimensions
+            double currentWidth = primaryStage.getWidth();
+            double currentHeight = primaryStage.getHeight();
+            boolean wasMaximized = primaryStage.isMaximized();
+
             FXMLLoader loader = new FXMLLoader();
             loader.setLocation(MainApp.class.getResource("view/UserCatalog.fxml"));
             AnchorPane page = loader.load();
@@ -448,8 +526,13 @@ public class MainApp extends Application {
             Scene scene = new Scene(page);
             primaryStage.setScene(scene);
             primaryStage.setTitle("Material Catalog");
-            primaryStage.setMinWidth(800);
-            primaryStage.setMinHeight(520);
+            // Restore dimensions
+            if (wasMaximized) {
+                primaryStage.setMaximized(true);
+            } else {
+                primaryStage.setWidth(currentWidth);
+                primaryStage.setHeight(currentHeight);
+            }
 
         } catch (IOException e) {
             e.printStackTrace();
