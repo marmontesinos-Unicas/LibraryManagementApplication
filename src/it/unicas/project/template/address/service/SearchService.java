@@ -36,7 +36,7 @@ public class SearchService<T> {
             for (int i = 0; i < fieldExtractors.size(); i++) {
                 String fieldValue = fieldExtractors.get(i).apply(item);
 
-                if (containsWordStartingWith(fieldValue, term)) {
+                if (matchesSearch(fieldValue, term)) {
                     buckets.get(i).add(item);
                     break; // Item goes in highest priority match only
                 }
@@ -53,16 +53,49 @@ public class SearchService<T> {
     }
 
     /**
+     * Checks if text matches the search term (supports multi-word searches)
+     */
+    private boolean matchesSearch(String text, String searchTerm) {
+        if (text == null || searchTerm == null) {
+            return false;
+        }
+
+        String normalizedText = text.toLowerCase();
+        String[] searchWords = searchTerm.split("\\s+");
+
+        // All search words must have a matching word in the text
+        for (String searchWord : searchWords) {
+            if (!containsWordStartingWith(normalizedText, searchWord)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
      * Checks if text contains a word starting with the search term
+     * Handles authors like "J.K. Rowling" by treating periods as part of words
      */
     private boolean containsWordStartingWith(String text, String searchTerm) {
         if (text == null || searchTerm == null) {
             return false;
         }
 
-        String[] words = text.toLowerCase().split("[\\s,.-]+");
+        // Split only on whitespace and commas, preserve periods and hyphens as part of words
+        String[] words = text.split("[\\s,]+");
         for (String word : words) {
-            if (word.startsWith(searchTerm)) {
+            // Remove leading/trailing punctuation but keep internal ones (for J.K., e-books, etc.)
+            String cleanWord = word.replaceAll("^[.\\-]+|[.\\-]+$", "");
+
+            if (cleanWord.startsWith(searchTerm)) {
+                return true;
+            }
+
+            // Also check if the search term matches with periods removed (so "jk" finds "J.K.")
+            String wordNoPeriods = cleanWord.replace(".", "");
+            String searchNoPeriods = searchTerm.replace(".", "");
+            if (wordNoPeriods.startsWith(searchNoPeriods)) {
                 return true;
             }
         }

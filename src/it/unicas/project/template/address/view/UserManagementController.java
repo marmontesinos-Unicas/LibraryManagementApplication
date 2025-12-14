@@ -6,12 +6,13 @@ import it.unicas.project.template.address.model.dao.DAOException;
 import it.unicas.project.template.address.model.dao.mysql.UserDAOMySQLImpl;
 import it.unicas.project.template.address.service.UserCatalogService;
 import java.util.Collections;
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.SortedList;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader; // Import for loading FXML
-import javafx.scene.Scene; // Import for setting the scene
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -19,15 +20,20 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.control.cell.PropertyValueFactory;
-import javafx.scene.layout.AnchorPane; // Import for the dialog's root layout
-import javafx.stage.Modality; // Import for modal behavior
-import javafx.stage.Stage; // Import for the new window
+import javafx.scene.layout.AnchorPane;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
 
 import java.io.IOException;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
+/**
+ * Controller for User Management view.
+ * FIXED: Added debouncing to prevent connection leaks on search
+ */
 public class UserManagementController {
 
     private MainApp mainApp;
@@ -42,19 +48,25 @@ public class UserManagementController {
     @FXML private Button registerButton;
     @FXML private Button backButton;
 
+    // Data structure
+    private ObservableList<User> userList = FXCollections.observableArrayList();
+
+    // Cached list of all users to avoid repeated DB calls
+    private List<User> cachedAllUsers = null;
+
+    // Service for user catalog operations
+    private UserCatalogService userCatalogService = new UserCatalogService();
+
+    // FIXED: Debounce mechanism for search
+    private ScheduledExecutorService searchScheduler = Executors.newSingleThreadScheduledExecutor();
+    private java.util.concurrent.Future<?> searchTask;
+
     /**
      * Sets the reference to the main application.
-     * Called by MainApp when loading the scene.
      */
     public void setMainApp(MainApp mainApp) {
         this.mainApp = mainApp;
     }
-
-    // Data structure
-    private ObservableList<User> userList = FXCollections.observableArrayList();
-    // Service for user catalog operations
-    private UserCatalogService userCatalogService = new UserCatalogService();
-
 
     @FXML
     public void initialize() {
@@ -68,33 +80,48 @@ public class UserManagementController {
         loadInitialUserData();
 
         // 3. Wrap the ObservableList in a SortedList
-        // The SortedList listens to the ObservableList and the TableView's sort properties.
-
-        // --- IMPORTANT CHANGE FOR SORTING ---
         SortedList<User> sortedData = new SortedList<>(userList);
 
-        // 4. Bind the SortedList comparator to the TableView comparator.
-        // This makes the sorting happen when the column headers are clicked.
+        // 4. Bind the SortedList comparator to the TableView comparator
         sortedData.comparatorProperty().bind(userTable.comparatorProperty());
 
-        // 5. Set the sorted and filtered data to the table.
-        userTable.setItems(sortedData); // Bind the SortedList instead of userList
+        // 5. Set the sorted data to the table
+        userTable.setItems(sortedData);
 
         userTable.setPlaceholder(new Label("No users registered in the database."));
 
+        // FIXED: Add debounced listener for search (300ms delay)
         searchField.textProperty().addListener((observable, oldValue, newValue) -> {
-            handleSearch();
+            scheduleSearch();
         });
     }
 
     /**
-     * Loads initial data from the database using UserDAOMySQLImpl.
+     * FIXED: Schedule search execution after 300ms delay
      */
-    public void loadInitialUserData() { // Changed to public so it can be called externally after registration
+    private void scheduleSearch() {
+        // Cancel previous search task if still pending
+        if (searchTask != null && !searchTask.isDone()) {
+            searchTask.cancel(false);
+        }
+
+        // Schedule new search after 300ms delay
+        searchTask = searchScheduler.schedule(() -> {
+            Platform.runLater(this::handleSearch);
+        }, 300, TimeUnit.MILLISECONDS);
+    }
+
+    /**
+     * Loads initial data from the database and caches it.
+     * Changed to public so it can be called externally after registration.
+     */
+    public void loadInitialUserData() {
         userList.clear();
+        cachedAllUsers = null; // Clear cache
 
         try {
             List<User> usersFromDB = UserDAOMySQLImpl.getInstance().select(null);
+            cachedAllUsers = usersFromDB; // Cache the results
             userList.addAll(usersFromDB);
             System.out.println("Successfully loaded " + userList.size() + " users from the database.");
 
@@ -108,35 +135,30 @@ public class UserManagementController {
         }
     }
 
-
-    // --- Event Handlers ---
     /**
-     * Handles the 'Search' button click event.
-     * Filters the user list by Name, Surname, National ID, and Email using the DAO's select method.
-     */
-    /**
-     * Handles the 'Search' button click event.
-     * Filters the user list using UserCatalogService with priority-based search.
+     * Handles search using cached data.
+     * FIXED: Now uses cached data instead of hitting DB on every keystroke.
      */
     @FXML
     private void handleSearch() {
         String query = searchField.getText().trim();
-        userList.clear(); // Clear the current list
+        userList.clear();
 
         try {
-            // Load all users from database
-            List<User> allUsers = UserDAOMySQLImpl.getInstance().select(null);
+            // If cache is empty, load from database
+            if (cachedAllUsers == null) {
+                cachedAllUsers = UserDAOMySQLImpl.getInstance().select(null);
+            }
 
             if (query.isEmpty()) {
-                // If search is empty, show all users
-                userList.addAll(allUsers);
+                // If search is empty, show all users from cache
+                userList.addAll(cachedAllUsers);
             } else {
-                // Use UserCatalogService to search with priority-based matching
-                // Pass empty role filter (since we're not filtering by roles in this view)
+                // Use UserCatalogService to search cached data
                 List<User> searchResults = userCatalogService.filterUsers(
-                        allUsers,
-                        Collections.emptyMap(),  // No role map needed
-                        Collections.emptySet(),  // No role filter
+                        cachedAllUsers,           // Use cached data
+                        Collections.emptyMap(),   // No role map needed
+                        Collections.emptySet(),   // No role filter
                         query
                 );
                 userList.addAll(searchResults);
@@ -149,45 +171,37 @@ public class UserManagementController {
             Alert alert = new Alert(Alert.AlertType.ERROR);
             alert.setTitle("Database Error");
             alert.setHeaderText("Search Failed");
-            alert.setContentText("An error occurred while searching the database.\nDetails: " + e.getMessage());
+            alert.setContentText("An error occurred while searching.\nDetails: " + e.getMessage());
             alert.showAndWait();
         }
     }
 
     /**
      * Handles the 'Register New User' button click event.
-     * Opens the User Registration Dialog in a new modal window.
      */
     @FXML
     private void handleRegisterNewUser() {
         try {
-            // Load the FXML file for the dialog
             FXMLLoader loader = new FXMLLoader();
-            // Assuming UserRegistrationDialog.fxml is in the same package as the controller or a relative path
             loader.setLocation(getClass().getResource("UserRegistrationDialog.fxml"));
             AnchorPane page = loader.load();
 
-            // Create the Dialog Stage (the new window)
             Stage dialogStage = new Stage();
             dialogStage.setTitle("Register New User");
-            // Set modality to WINDOW_MODAL so the main window is blocked until the dialog is closed
             dialogStage.initModality(Modality.WINDOW_MODAL);
 
-            // Set the owner/parent stage (optional, but good for blocking)
             Stage parentStage = (Stage) userTable.getScene().getWindow();
             dialogStage.initOwner(parentStage);
 
             Scene scene = new Scene(page);
             dialogStage.setScene(scene);
 
-            // Get the Controller for the dialog and give it a reference back to this controller
             UserRegistrationController controller = loader.getController();
-            controller.setUserManagementController(this); // Pass a reference to this controller
+            controller.setUserManagementController(this);
 
-            // Show the dialog and wait until the user closes it
             dialogStage.showAndWait();
 
-            // When the dialog closes, refresh the user list to show the new user
+            // Refresh data after dialog closes
             loadInitialUserData();
 
         } catch (IOException e) {
@@ -201,7 +215,7 @@ public class UserManagementController {
     }
 
     /**
-     * Handles the 'Go Back' button click, switching the scene back to the Admin Landing.
+     * Handles the 'Go Back' button click.
      */
     @FXML
     private void handleGoBack() {
@@ -212,6 +226,9 @@ public class UserManagementController {
         }
     }
 
+    /**
+     * Handles the 'View/Edit User' button click.
+     */
     @FXML
     private void handleViewEditUser() {
         User selectedUser = userTable.getSelectionModel().getSelectedItem();
@@ -226,30 +243,24 @@ public class UserManagementController {
         }
 
         try {
-            // Load the FXML file for the dialog
             FXMLLoader loader = new FXMLLoader();
-            loader.setLocation(getClass().getResource("UserEditDialog.fxml")); // Load the new FXML
+            loader.setLocation(getClass().getResource("UserEditDialog.fxml"));
             AnchorPane page = loader.load();
 
-            // Create the Dialog Stage
             Stage dialogStage = new Stage();
-            dialogStage.setTitle("Edit User: " + selectedUser.getName()+" " + selectedUser.getSurname());
+            dialogStage.setTitle("Edit User: " + selectedUser.getName() + " " + selectedUser.getSurname());
             dialogStage.initModality(Modality.WINDOW_MODAL);
             Stage parentStage = (Stage) userTable.getScene().getWindow();
             dialogStage.initOwner(parentStage);
             Scene scene = new Scene(page);
             dialogStage.setScene(scene);
 
-            // Get the Controller and set the data
             UserEditController controller = loader.getController();
             controller.setDialogStage(dialogStage);
-            controller.setUserManagementController(this); // Pass reference back for refreshing
-            controller.setSelectedUser(selectedUser);    // Pass the user object
+            controller.setUserManagementController(this);
+            controller.setSelectedUser(selectedUser);
 
-            // Show the dialog and wait until the user closes it
             dialogStage.showAndWait();
-
-            // Note: Data refresh is handled within UserEditController after successful save/delete.
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -258,6 +269,15 @@ public class UserManagementController {
             alert.setHeaderText("Could not open edit dialog");
             alert.setContentText("Check if 'UserEditDialog.fxml' is correctly located and accessible.");
             alert.showAndWait();
+        }
+    }
+
+    /**
+     * Cleanup when controller is destroyed.
+     */
+    public void cleanup() {
+        if (searchScheduler != null && !searchScheduler.isShutdown()) {
+            searchScheduler.shutdown();
         }
     }
 }

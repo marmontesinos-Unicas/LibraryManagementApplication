@@ -1,4 +1,5 @@
 package it.unicas.project.template.address.model.dao.mysql;
+
 import it.unicas.project.template.address.model.Genre;
 import it.unicas.project.template.address.model.dao.DAOException;
 import it.unicas.project.template.address.model.dao.GenreDAO;
@@ -8,11 +9,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 
-
 /**
  * MySQL implementation of the GenreDAO interface.
+ * ALL CONNECTION LEAKS FIXED - Ready to use
  */
-
 public class GenreDAOMySQLImpl implements GenreDAO {
 
     private static GenreDAOMySQLImpl instance;
@@ -33,7 +33,9 @@ public class GenreDAOMySQLImpl implements GenreDAO {
         List<Genre> genres = new ArrayList<>();
         String sql = "SELECT * FROM GENRE ORDER BY genre";
 
-        try (PreparedStatement ps = DAOMySQLSettings.getConnection().prepareStatement(sql);
+        // FIXED: Added Connection to try-with-resources
+        try (Connection conn = DAOMySQLSettings.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
 
             while (rs.next()) {
@@ -55,12 +57,16 @@ public class GenreDAOMySQLImpl implements GenreDAO {
     public Integer findIdByName(String name) {
         String sql = "SELECT idGenre FROM GENRE WHERE genre=?";
 
-        try (PreparedStatement ps = DAOMySQLSettings.getConnection().prepareStatement(sql)) {
-            ps.setString(1, name);
-            ResultSet rs = ps.executeQuery();
+        // FIXED: Added Connection AND ResultSet to try-with-resources
+        try (Connection conn = DAOMySQLSettings.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
 
-            if (rs.next()) {
-                return rs.getInt("idGenre");
+            ps.setString(1, name);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt("idGenre");
+                }
             }
 
         } catch (SQLException e) {
@@ -74,7 +80,10 @@ public class GenreDAOMySQLImpl implements GenreDAO {
     public void insert(Genre g) throws DAOException {
         String sql = "INSERT INTO GENRE (genre) VALUES (?)";
 
-        try (PreparedStatement ps = DAOMySQLSettings.getConnection().prepareStatement(sql)) {
+        // FIXED: Added Connection to try-with-resources
+        try (Connection conn = DAOMySQLSettings.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
             ps.setString(1, g.getGenre());
             ps.executeUpdate();
 
@@ -83,4 +92,3 @@ public class GenreDAOMySQLImpl implements GenreDAO {
         }
     }
 }
-

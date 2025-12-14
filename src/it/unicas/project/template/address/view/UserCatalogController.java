@@ -7,6 +7,9 @@ import it.unicas.project.template.address.model.dao.DAOException;
 import it.unicas.project.template.address.model.dao.GenreDAO;
 import it.unicas.project.template.address.model.dao.mysql.*;
 import it.unicas.project.template.address.service.MaterialHoldService;
+import it.unicas.project.template.address.service.SearchService;
+import java.util.function.Function;
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -19,29 +22,22 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Popup;
 
 import java.util.*;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
  * Controller for Material Catalog - USER VIEW.
- * <p>
- * This JavaFX controller is responsible for displaying a grouped list of materials
- * (books, DVDs, etc.) to a logged-in {@link User}. It supports searching, filtering
- * by material type and genre, year range filtering and placing/releases of holds
- * on materials through {@link MaterialHoldService}.
- * </p>
+ * FIXED: Added debouncing to prevent connection leaks on text input
  */
 public class UserCatalogController {
 
-    /** Text field used to enter search queries (title/author/ISBN...). */
     @FXML private TextField searchField;
-    /** ComboBox serving as a visual trigger for material type filter popup. */
     @FXML private ComboBox<String> materialTypeFilterButton;
-    /** ComboBox serving as a visual trigger for genre filter popup. */
     @FXML private ComboBox<String> genreFilterButton;
-    /** Text fields for lower and upper bound of year range filter. */
     @FXML private TextField yearFromField;
     @FXML private TextField yearToField;
-    /** TableView displaying grouped materials (one row per title/author group). */
     @FXML private TableView<GroupedMaterial> materialTable;
     @FXML private TableColumn<GroupedMaterial, String> titleColumn;
     @FXML private TableColumn<GroupedMaterial, String> authorColumn;
@@ -50,12 +46,9 @@ public class UserCatalogController {
     @FXML private TableColumn<GroupedMaterial, String> typeColumn;
     @FXML private TableColumn<GroupedMaterial, String> genreColumn;
     @FXML private TableColumn<GroupedMaterial, Void> actionColumn;
-    /** Label showing the number of results currently displayed. */
     @FXML private Label resultCountLabel;
 
-    /** Reference to the main application instance for navigation. */
     private MainApp mainApp;
-    /** Currently logged-in user. */
     private User currentUser;
 
     // DAO dependencies
@@ -83,16 +76,16 @@ public class UserCatalogController {
     private Popup materialTypePopup;
     private Popup genrePopup;
 
-    /** Service that encapsulates hold/release logic. */
     private final MaterialHoldService holdService = new MaterialHoldService();
+    // Search service for prioritized field searching
+    private final SearchService<GroupedMaterial> searchService = new SearchService<>();
+    private List<Function<GroupedMaterial, String>> searchFields;
+    // FIXED: Debounce mechanism for search
+    private ScheduledExecutorService searchScheduler = Executors.newSingleThreadScheduledExecutor();
+    private java.util.concurrent.Future<?> filterTask;
 
     /**
      * Inner class to represent grouped materials.
-     * <p>
-     * A {@code GroupedMaterial} groups one or more {@link Material} instances that
-     * correspond to the same title/author/year/ISBN combination. It contains
-     * derived attributes used for display (e.g. combined genres, availability).
-     * </p>
      */
     public static class GroupedMaterial {
         private String title;
@@ -105,17 +98,6 @@ public class UserCatalogController {
         private boolean hasAvailable;
         private boolean hasHolded;
 
-        /**
-         * Construct a grouped material object.
-         *
-         * @param title display title
-         * @param author display author
-         * @param year publication year
-         * @param ISBN ISBN string (may be null/empty)
-         * @param type material type name (e.g. Book, DVD)
-         * @param genres comma separated genres string
-         * @param materials list of material copies included in this group
-         */
         public GroupedMaterial(String title, String author, Integer year, String ISBN,
                                String type, String genres, List<Material> materials) {
             this.title = title;
@@ -128,12 +110,6 @@ public class UserCatalogController {
             updateAvailability();
         }
 
-        /**
-         * Update availability flags based on the current {@code materials} list.
-         * <p>
-         * Sets {@link #hasAvailable} to true if at least one copy is "available".
-         * </p>
-         */
         public void updateAvailability() {
             hasAvailable = materials.stream()
                     .anyMatch(m -> "available".equalsIgnoreCase(m.getMaterial_status()));
@@ -152,11 +128,6 @@ public class UserCatalogController {
 
     /**
      * Initialize the controller.
-     * <p>
-     * This method is invoked by the JavaFX framework after the FXML fields are
-     * injected. It initializes DAOs, collections and UI column bindings, loads
-     * lookup data (types/genres) and configures listeners used for live search.
-     * </p>
      */
     @FXML
     public void initialize() {
@@ -180,18 +151,37 @@ public class UserCatalogController {
 
         setupFilterButtons();
 
-        // Add listeners for real-time search
-        searchField.textProperty().addListener((obs, oldVal, newVal) -> handleFilter());
-        yearFromField.textProperty().addListener((obs, oldVal, newVal) -> handleFilter());
-        yearToField.textProperty().addListener((obs, oldVal, newVal) -> handleFilter());
+        // FIXED: Add debounced listeners for real-time search (300ms delay)
+        searchField.textProperty().addListener((obs, oldVal, newVal) -> scheduleFilter());
+        yearFromField.textProperty().addListener((obs, oldVal, newVal) -> scheduleFilter());
+        yearToField.textProperty().addListener((obs, oldVal, newVal) -> scheduleFilter());
+        // Setup search fields in priority order
+        searchFields = SearchService.<GroupedMaterial>fieldsBuilder()
+                .addField(GroupedMaterial::getTitle)     // Highest priority
+                .addField(GroupedMaterial::getAuthor)    // Second priority
+                .addField(GroupedMaterial::getISBN)      // Third priority
+                .addField(GroupedMaterial::getType)      // Fourth priority
+                .addField(GroupedMaterial::getGenres)    // Fifth priority
+                .build();
+    }
+
+    /**
+     * FIXED: Schedule filter execution after 300ms delay
+     */
+    private void scheduleFilter() {
+        // Cancel previous filter task if still pending
+        if (filterTask != null && !filterTask.isDone()) {
+            filterTask.cancel(false);
+        }
+
+        // Schedule new filter after 300ms delay
+        filterTask = searchScheduler.schedule(() -> {
+            Platform.runLater(this::handleFilter);
+        }, 300, TimeUnit.MILLISECONDS);
     }
 
     /**
      * Configure basic behavior for filter trigger controls.
-     * <p>
-     * Sets the default displayed value and attaches mouse click handlers which
-     * toggle the corresponding filter popups.
-     * </p>
      */
     private void setupFilterButtons() {
         if (materialTypeFilterButton != null) {
@@ -207,11 +197,6 @@ public class UserCatalogController {
 
     /**
      * Toggle Material Type filter popup visibility.
-     * <p>
-     * If the popup is already visible it will be hidden, otherwise a new popup
-     * will be created showing all available material types detected in the
-     * grouped material list.
-     * </p>
      */
     private void toggleMaterialTypeFilter() {
         if (materialTypePopup != null && materialTypePopup.isShowing()) {
@@ -229,10 +214,6 @@ public class UserCatalogController {
 
     /**
      * Toggle Genre filter popup visibility.
-     * <p>
-     * If the popup is already visible it will be hidden, otherwise a new popup
-     * will be created showing all genres parsed from grouped material entries.
-     * </p>
      */
     private void toggleGenreFilter() {
         if (genrePopup != null && genrePopup.isShowing()) {
@@ -252,12 +233,6 @@ public class UserCatalogController {
 
     /**
      * Create a popup containing a list of checkboxes for filtering.
-     *
-     * @param sourceButton the ComboBox that triggered the popup (used for positioning)
-     * @param label a human-readable label used by the popup and button text
-     * @param allOptions full set of options to display
-     * @param selectedOptions set that will be updated when checkboxes change
-     * @return a configured {@link Popup} instance that is already shown on screen
      */
     private Popup createFilterPopup(ComboBox<String> sourceButton, String label,
                                     Set<String> allOptions, Set<String> selectedOptions) {
@@ -298,7 +273,8 @@ public class UserCatalogController {
                 }
                 selectAllCheckBox.setSelected(selectedOptions.size() == allOptions.size());
                 updateFilterButtonText(sourceButton, selectedOptions.size(), allOptions.size(), label);
-                handleFilter();
+                // FIXED: Use scheduled filter instead of immediate
+                scheduleFilter();
             });
 
             checkBoxMap.put(option, cb);
@@ -316,7 +292,8 @@ public class UserCatalogController {
                 checkBoxMap.values().forEach(cb -> cb.setSelected(false));
             }
             updateFilterButtonText(sourceButton, selectedOptions.size(), allOptions.size(), label);
-            handleFilter();
+            // FIXED: Use scheduled filter instead of immediate
+            scheduleFilter();
         });
 
         ScrollPane scrollPane = new ScrollPane(checkboxContainer);
@@ -338,11 +315,6 @@ public class UserCatalogController {
 
     /**
      * Update the text and style of a filter trigger button according to selection.
-     *
-     * @param button the ComboBox serving as the visual filter trigger
-     * @param selected number of selected items
-     * @param total total number of available items
-     * @param label human-readable label used to compose the button text
      */
     private void updateFilterButtonText(ComboBox<String> button, int selected, int total, String label) {
         if (selected == 0) {
@@ -358,10 +330,7 @@ public class UserCatalogController {
     }
 
     /**
-     * Load material types from the database into {@link #materialTypeMap}.
-     * <p>
-     * The map keys are database IDs and values are human-readable type names.
-     * </p>
+     * Load material types from the database into materialTypeMap.
      */
     private void loadMaterialTypes() {
         List<MaterialType> types = materialTypeDAO.selectAll();
@@ -372,7 +341,7 @@ public class UserCatalogController {
     }
 
     /**
-     * Load genres from the database into {@link #genreMap}.
+     * Load genres from the database into genreMap.
      */
     private void loadGenres() {
         List<Genre> genres = genreDAO.selectAll();
@@ -383,10 +352,7 @@ public class UserCatalogController {
     }
 
     /**
-     * Load material-genre relationship table into {@link #materialGenreMap}.
-     * <p>
-     * The result maps a material id to a set of genre ids.
-     * </p>
+     * Load material-genre relationship table into materialGenreMap.
      */
     private void loadMaterialGenreRelationships() {
         try {
@@ -404,11 +370,6 @@ public class UserCatalogController {
 
     /**
      * Setup table column bindings and the action column cell factory.
-     * <p>
-     * The action column contains a button that lets the current user place or
-     * release a hold on a grouped material. The displayed button text and style
-     * depends on availability and whether the current user already holds a copy.
-     * </p>
      */
     private void setupTableColumns() {
         titleColumn.setCellValueFactory(new PropertyValueFactory<>("title"));
@@ -470,13 +431,11 @@ public class UserCatalogController {
                             "-fx-font-weight: bold; -fx-cursor: hand;");
                     holdButton.setDisable(false);
                 } else if (material.hasAvailable()) {
-                    // Available copies exist
                     holdButton.setText("Hold");
                     holdButton.setStyle("-fx-background-color: #4CAF50; -fx-text-fill: white; " +
                             "-fx-font-weight: bold; -fx-cursor: hand;");
                     holdButton.setDisable(false);
                 } else {
-                    // No copies available
                     holdButton.setText("Unavailable");
                     holdButton.setStyle("-fx-background-color: #BDBDBD; -fx-text-fill: #757575; " +
                             "-fx-font-weight: bold; -fx-cursor: not-allowed;");
@@ -490,13 +449,6 @@ public class UserCatalogController {
 
     /**
      * Handle toggle of a hold for the provided grouped material.
-     * <p>
-     * If the current user already has a hold on one of the group's copies this
-     * method will release it. Otherwise, if there is an available copy it will
-     * attempt to place a new hold for the current user.
-     * </p>
-     *
-     * @param groupedMaterial grouped material selected by the user
      */
     private void handleHoldToggle(GroupedMaterial groupedMaterial) {
         if (currentUser == null) {
@@ -525,7 +477,6 @@ public class UserCatalogController {
             }
 
             if (userHasHold) {
-                // User already has a hold - release it
                 try {
                     holdService.releaseHold(userHold, heldMaterial);
                     refresh();
@@ -534,7 +485,6 @@ public class UserCatalogController {
                     e.printStackTrace();
                 }
             } else if (groupedMaterial.hasAvailable()) {
-                // No hold by current user - try to place one
                 Material availableMaterial = groupedMaterial.getMaterials().stream()
                         .filter(m -> "available".equalsIgnoreCase(m.getMaterial_status()))
                         .findFirst()
@@ -558,10 +508,9 @@ public class UserCatalogController {
         }
     }
 
-
     /**
      * Load all materials from the database, group them and populate the
-     * {@link #groupedMaterialList} used by the table view.
+     * groupedMaterialList used by the table view.
      */
     private void loadAllMaterials() {
         try {
@@ -617,13 +566,6 @@ public class UserCatalogController {
 
     /**
      * Generate a grouping key for a material.
-     * <p>
-     * Materials are grouped by title, author, year and ISBN. If ISBN is missing
-     * a sentinel value {@code "NO_ISBN"} is used to avoid nulls.
-     * </p>
-     *
-     * @param material the material used to create the group key
-     * @return a string key uniquely identifying the group for identical metadata
      */
     private String generateGroupKey(Material material) {
         String isbn = (material.getISBN() != null && !material.getISBN().trim().isEmpty())
@@ -637,11 +579,7 @@ public class UserCatalogController {
     }
 
     /**
-     * Build a comma-separated genre string for a material using the loaded
-     * {@link #materialGenreMap} and {@link #genreMap} lookups.
-     *
-     * @param materialId id of the material
-     * @return a sorted, comma-separated list of genre names or a dash ("—") when none
+     * Build a comma-separated genre string for a material.
      */
     private String getGenresForMaterial(Integer materialId) {
         Set<Integer> genreIds = materialGenreMap.get(materialId);
@@ -655,10 +593,7 @@ public class UserCatalogController {
     }
 
     /**
-     * Clear all filters and reset the view to show every grouped material.
-     * <p>
-     * This method is bound to the Clear button in the UI via FXML.
-     * </p>
+     * Clear all filters and reset the view.
      */
     @FXML
     private void handleClear() {
@@ -693,71 +628,70 @@ public class UserCatalogController {
     }
 
     /**
-     * Apply the combined search and filter criteria to update the displayed list.
-     * <p>
-     * This method reads search text, year range and the selected filters and
-     * updates {@link #filteredList} which backs the TableView.
-     * </p>
+     * Apply the combined search and filter criteria.
+     * FIXED: Now uses SearchService for prioritized field searching
      */
     @FXML
     private void handleFilter() {
-        String searchText = searchField.getText().trim().toLowerCase();
-        String yearFrom = yearFromField.getText().trim();
-        String yearTo = yearToField.getText().trim();
+        try {
+            String searchText = searchField.getText().trim();
+            String yearFrom = yearFromField.getText().trim();
+            String yearTo = yearToField.getText().trim();
 
-        List<GroupedMaterial> result = groupedMaterialList.stream()
-                .filter(gm -> {
-                    // Type filter
-                    if (!selectedMaterialTypes.contains(gm.getType())) return false;
+            // Start with all materials
+            List<GroupedMaterial> candidates = new ArrayList<>(groupedMaterialList);
 
-                    // Genre filter
-                    if (gm.getGenres() != null && !gm.getGenres().equals("—")) {
-                        boolean matchesGenre = false;
+            // Apply type filter
+            candidates = candidates.stream()
+                    .filter(gm -> selectedMaterialTypes.contains(gm.getType()))
+                    .collect(Collectors.toList());
+
+            // Apply genre filter
+            candidates = candidates.stream()
+                    .filter(gm -> {
+                        if (gm.getGenres() == null || gm.getGenres().equals("—")) {
+                            return true; // Include materials with no genres
+                        }
                         for (String genre : gm.getGenres().split(", ")) {
                             if (selectedGenres.contains(genre)) {
-                                matchesGenre = true;
-                                break;
+                                return true;
                             }
                         }
-                        if (!matchesGenre) return false;
-                    }
+                        return false;
+                    })
+                    .collect(Collectors.toList());
 
-                    // Year range filter
-                    if (!yearFrom.isEmpty() || !yearTo.isEmpty()) {
-                        try {
-                            int year = gm.getYear();
-                            if (!yearFrom.isEmpty() && year < Integer.parseInt(yearFrom)) return false;
-                            if (!yearTo.isEmpty() && year > Integer.parseInt(yearTo)) return false;
-                        } catch (NumberFormatException e) {
-                            return false;
-                        }
-                    }
+            // Apply year range filter
+            if (!yearFrom.isEmpty() || !yearTo.isEmpty()) {
+                candidates = candidates.stream()
+                        .filter(gm -> {
+                            try {
+                                int year = gm.getYear();
+                                if (!yearFrom.isEmpty() && year < Integer.parseInt(yearFrom)) return false;
+                                if (!yearTo.isEmpty() && year > Integer.parseInt(yearTo)) return false;
+                                return true;
+                            } catch (NumberFormatException e) {
+                                return false;
+                            }
+                        })
+                        .collect(Collectors.toList());
+            }
 
-                    // Search text filter
-                    if (!searchText.isEmpty()) {
-                        String title = gm.getTitle() != null ? gm.getTitle().toLowerCase() : "";
-                        String author = gm.getAuthor() != null ? gm.getAuthor().toLowerCase() : "";
-                        String isbn = gm.getISBN() != null ? gm.getISBN().toLowerCase() : "";
+            // Apply search text filter using SearchService for prioritized results
+            if (!searchText.isEmpty()) {
+                candidates = searchService.searchAndSort(candidates, searchText, searchFields);
+            }
 
-                        return title.contains(searchText) ||
-                                author.contains(searchText) ||
-                                isbn.contains(searchText);
-                    }
-
-                    return true;
-                })
-                .collect(Collectors.toList());
-
-        filteredList.setAll(result);
-        updateResultCount();
+            filteredList.setAll(candidates);
+            updateResultCount();
+        } catch (Exception e) {
+            showError("Filter Error", "Failed to filter materials: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 
     /**
      * Navigate back to the user landing view.
-     * <p>
-     * Bound to the Back button in the UI. If the {@link #mainApp} reference
-     * is missing an error dialog will be shown.
-     * </p>
      */
     @FXML
     private void handleBack() {
@@ -777,9 +711,6 @@ public class UserCatalogController {
 
     /**
      * Lookup human-friendly material type name by id.
-     *
-     * @param typeId id from the material table
-     * @return name of the material type or "Unknown" when missing
      */
     private String getMaterialTypeName(Integer typeId) {
         if (typeId == null) return "Unknown";
@@ -788,9 +719,6 @@ public class UserCatalogController {
 
     /**
      * Show an error dialog to the user.
-     *
-     * @param title dialog title
-     * @param content detailed message to display
      */
     private void showError(String title, String content) {
         Alert alert = new Alert(Alert.AlertType.ERROR);
@@ -802,9 +730,6 @@ public class UserCatalogController {
 
     /**
      * Show an informational dialog to the user.
-     *
-     * @param title dialog title
-     * @param content detailed message to display
      */
     private void showInfo(String title, String content) {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
@@ -825,8 +750,6 @@ public class UserCatalogController {
 
     /**
      * Set the main application reference used for navigation.
-     *
-     * @param mainApp main application instance
      */
     public void setMainApp(MainApp mainApp) {
         this.mainApp = mainApp;
@@ -834,18 +757,20 @@ public class UserCatalogController {
 
     /**
      * Set the current logged-in user.
-     * <p>
-     * When the user is set the controller will lazily load the material list if
-     * it has not already been loaded.
-     * </p>
-     *
-     * @param user user that will be associated with this controller
      */
     public void setCurrentUser(User user) {
         this.currentUser = user;
-        // Load data after establishing the user
         if (allMaterials.isEmpty()) {
             loadAllMaterials();
+        }
+    }
+
+    /**
+     * Cleanup when controller is destroyed.
+     */
+    public void cleanup() {
+        if (searchScheduler != null && !searchScheduler.isShutdown()) {
+            searchScheduler.shutdown();
         }
     }
 }

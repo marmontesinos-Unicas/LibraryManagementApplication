@@ -9,6 +9,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 
+/**
+ * ALL CONNECTION LEAKS FIXED - Ready to use
+ */
 public class MaterialGenreDAOMySQLImpl implements DAO<MaterialGenre> {
 
     private static DAO<MaterialGenre> dao = null;
@@ -34,7 +37,10 @@ public class MaterialGenreDAOMySQLImpl implements DAO<MaterialGenre> {
             if (mg.getIdGenre() != -1) sql += " AND idGenre=?";
         }
 
-        try (PreparedStatement ps = DAOMySQLSettings.getConnection().prepareStatement(sql)) {
+        // FIXED: Added Connection AND ResultSet to try-with-resources
+        try (Connection conn = DAOMySQLSettings.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
             int index = 1;
             if (mg != null) {
                 if (mg.getIdMaterial() != -1) ps.setInt(index++, mg.getIdMaterial());
@@ -42,12 +48,14 @@ public class MaterialGenreDAOMySQLImpl implements DAO<MaterialGenre> {
             }
 
             logger.info("SQL: " + ps);
-            ResultSet rs = ps.executeQuery();
-            while (rs.next()) {
-                list.add(new MaterialGenre(
-                        rs.getInt("idMaterial"),
-                        rs.getInt("idGenre")
-                ));
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(new MaterialGenre(
+                            rs.getInt("idMaterial"),
+                            rs.getInt("idGenre")
+                    ));
+                }
             }
         } catch (SQLException e) {
             throw new DAOException("In select(): " + e.getMessage());
@@ -61,7 +69,10 @@ public class MaterialGenreDAOMySQLImpl implements DAO<MaterialGenre> {
         verifyObject(mg);
         String sql = "INSERT INTO materials_genres (idMaterial, idGenre) VALUES (?, ?)";
 
-        try (PreparedStatement ps = DAOMySQLSettings.getConnection().prepareStatement(sql)) {
+        // FIXED: Added Connection to try-with-resources
+        try (Connection conn = DAOMySQLSettings.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
             ps.setInt(1, mg.getIdMaterial());
             ps.setInt(2, mg.getIdGenre());
 
@@ -85,7 +96,11 @@ public class MaterialGenreDAOMySQLImpl implements DAO<MaterialGenre> {
         }
 
         String sql = "DELETE FROM materials_genres WHERE idMaterial=? AND idGenre=?";
-        try (PreparedStatement ps = DAOMySQLSettings.getConnection().prepareStatement(sql)) {
+
+        // FIXED: Added Connection to try-with-resources
+        try (Connection conn = DAOMySQLSettings.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
             ps.setInt(1, mg.getIdMaterial());
             ps.setInt(2, mg.getIdGenre());
 
@@ -108,7 +123,11 @@ public class MaterialGenreDAOMySQLImpl implements DAO<MaterialGenre> {
         }
 
         String sql = "DELETE FROM materials_genres WHERE idMaterial=?";
-        try (PreparedStatement ps = DAOMySQLSettings.getConnection().prepareStatement(sql)) {
+
+        // FIXED: Added Connection to try-with-resources
+        try (Connection conn = DAOMySQLSettings.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
             ps.setInt(1, materialId);
             logger.info("SQL (Delete Genres): " + ps);
             ps.executeUpdate();

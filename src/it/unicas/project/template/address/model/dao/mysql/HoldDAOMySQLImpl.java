@@ -39,7 +39,10 @@ public class HoldDAOMySQLImpl implements DAO<Hold> {
         if (h.getIdMaterial() != -1) sql.append(" AND idMaterial = ?");
         if (h.getHold_date() != null) sql.append(" AND hold_date = ?");
 
-        try (PreparedStatement ps = DAOMySQLSettings.getConnection().prepareStatement(sql.toString())) {
+        // FIXED: Added Connection AND ResultSet to try-with-resources
+        try (Connection conn = DAOMySQLSettings.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+
             int index = 1;
             if (h.getIdHold() != -1) ps.setInt(index++, h.getIdHold());
             if (h.getIdUser() != -1) ps.setInt(index++, h.getIdUser());
@@ -47,15 +50,17 @@ public class HoldDAOMySQLImpl implements DAO<Hold> {
             if (h.getHold_date() != null) ps.setTimestamp(index++, java.sql.Timestamp.valueOf(h.getHold_date()));
 
             logger.info("SQL: " + ps);
-            ResultSet rs = ps.executeQuery();
-            while (rs.next()) {
-                Hold hold = new Hold(
-                        rs.getInt("idHold"),
-                        rs.getInt("idUser"),
-                        rs.getInt("idMaterial"),
-                        rs.getTimestamp("hold_date") != null ? rs.getTimestamp("hold_date").toLocalDateTime() : null
-                );
-                list.add(hold);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Hold hold = new Hold(
+                            rs.getInt("idHold"),
+                            rs.getInt("idUser"),
+                            rs.getInt("idMaterial"),
+                            rs.getTimestamp("hold_date") != null ? rs.getTimestamp("hold_date").toLocalDateTime() : null
+                    );
+                    list.add(hold);
+                }
             }
         } catch (SQLException e) {
             throw new DAOException("In select(): " + e.getMessage());
@@ -67,12 +72,17 @@ public class HoldDAOMySQLImpl implements DAO<Hold> {
     public void insert(Hold h) throws DAOException {
         verifyObject(h);
         String sql = "INSERT INTO holds (idUser, idMaterial, hold_date) VALUES (?, ?, ?)";
-        try (PreparedStatement ps = DAOMySQLSettings.getConnection().prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+
+        // FIXED: Added Connection to try-with-resources
+        try (Connection conn = DAOMySQLSettings.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+
             ps.setInt(1, h.getIdUser());
             ps.setInt(2, h.getIdMaterial());
             ps.setTimestamp(3, java.sql.Timestamp.valueOf(h.getHold_date()));
             logger.info("SQL: " + ps);
             ps.executeUpdate();
+
             try (ResultSet rs = ps.getGeneratedKeys()) {
                 if (rs.next()) h.setIdHold(rs.getInt(1));
             }
@@ -86,7 +96,10 @@ public class HoldDAOMySQLImpl implements DAO<Hold> {
         verifyObject(h);
         String sql = "UPDATE holds SET idUser=?, idMaterial=?, hold_date=? WHERE idHold=?";
 
-        try (PreparedStatement ps = DAOMySQLSettings.getConnection().prepareStatement(sql)) {
+        // FIXED: Added Connection to try-with-resources
+        try (Connection conn = DAOMySQLSettings.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
             ps.setInt(1, h.getIdUser());
             ps.setInt(2, h.getIdMaterial());
             ps.setString(3, h.getHold_date().format(FORMATTER));
@@ -106,7 +119,11 @@ public class HoldDAOMySQLImpl implements DAO<Hold> {
         }
 
         String sql = "DELETE FROM holds WHERE idHold=?";
-        try (PreparedStatement ps = DAOMySQLSettings.getConnection().prepareStatement(sql)) {
+
+        // FIXED: Added Connection to try-with-resources
+        try (Connection conn = DAOMySQLSettings.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
             ps.setInt(1, h.getIdHold());
             logger.info("SQL: " + ps);
             ps.executeUpdate();
