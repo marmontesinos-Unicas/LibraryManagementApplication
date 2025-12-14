@@ -36,7 +36,7 @@ public class SearchService<T> {
             for (int i = 0; i < fieldExtractors.size(); i++) {
                 String fieldValue = fieldExtractors.get(i).apply(item);
 
-                if (containsWordStartingWith(fieldValue, term)) {
+                if (matchesSearch(fieldValue, term)) {
                     buckets.get(i).add(item);
                     break; // Item goes in highest priority match only
                 }
@@ -53,6 +53,27 @@ public class SearchService<T> {
     }
 
     /**
+     * Checks if text matches the search term (supports multi-word searches)
+     */
+    private boolean matchesSearch(String text, String searchTerm) {
+        if (text == null || searchTerm == null) {
+            return false;
+        }
+
+        String normalizedText = text.toLowerCase();
+        String[] searchWords = searchTerm.split("\\s+");
+
+        // All search words must have a matching word in the text
+        for (String searchWord : searchWords) {
+            if (!containsWordStartingWith(normalizedText, searchWord)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
      * Checks if text contains a word starting with the search term
      */
     private boolean containsWordStartingWith(String text, String searchTerm) {
@@ -60,7 +81,7 @@ public class SearchService<T> {
             return false;
         }
 
-        String[] words = text.toLowerCase().split("[\\s,.-]+");
+        String[] words = text.split("[\\s,.-]+");
         for (String word : words) {
             if (word.startsWith(searchTerm)) {
                 return true;

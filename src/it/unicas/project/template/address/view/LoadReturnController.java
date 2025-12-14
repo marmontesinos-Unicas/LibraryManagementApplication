@@ -9,6 +9,7 @@ import it.unicas.project.template.address.model.dao.mysql.LoanDAOMySQLImpl;
 import it.unicas.project.template.address.model.dao.mysql.MaterialDAOMySQLImpl;
 import it.unicas.project.template.address.model.dao.mysql.UserDAOMySQLImpl;
 import it.unicas.project.template.address.service.LoanCatalogService;
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.ObservableList;
@@ -16,14 +17,15 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-
-
 import javafx.scene.control.*;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Controller class for loading, searching, and returning loans.
@@ -31,26 +33,33 @@ import java.util.*;
  */
 public class LoadReturnController {
 
-    @FXML private TextField searchField;                 // Field for searching loans
-    @FXML private Button searchButton;                   // Button to clear search
-    @FXML private Button returnLoanButton;               // Button to return selected loan
+    @FXML private TextField searchField;
+    @FXML private Button searchButton;
+    @FXML private Button returnLoanButton;
 
-    @FXML private TableView<LoanRow> loansTable;        // Table to display loans
+    @FXML private TableView<LoanRow> loansTable;
     @FXML private TableColumn<LoanRow, String> materialTypeColumn;
     @FXML private TableColumn<LoanRow, String> titleColumn;
     @FXML private TableColumn<LoanRow, String> userColumn;
     @FXML private TableColumn<LoanRow, String> dueDateColumn;
     @FXML private TableColumn<LoanRow, String> delayedColumn;
 
-    private Stage dialogStage;                           // Reference to the dialog stage
+    private Stage dialogStage;
     private ObservableList<LoanRow> loanRows = FXCollections.observableArrayList();
     private MainApp mainApp;
     private LoanCatalogService loanCatalogService = new LoanCatalogService();
 
+    // Cache for loaded data to avoid repeated DB calls
+    private List<Loan> cachedLoans = new ArrayList<>();
+    private Map<Integer, Material> cachedMaterials = new HashMap<>();
+    private Map<Integer, User> cachedUsers = new HashMap<>();
+
+    // Debounce mechanism for search
+    private ScheduledExecutorService searchScheduler = Executors.newSingleThreadScheduledExecutor();
+    private java.util.concurrent.Future<?> searchTask;
 
     /**
      * Sets the dialog stage for this controller.
-     * @param dialogStage The stage object.
      */
     public void setDialogStage(Stage dialogStage) {
         this.dialogStage = dialogStage;
@@ -58,7 +67,6 @@ public class LoadReturnController {
 
     /**
      * Sets a reference back to the main application.
-     * @param mainApp The main application object.
      */
     public void setMainApp(MainApp mainApp) {
         this.mainApp = mainApp;
@@ -66,7 +74,6 @@ public class LoadReturnController {
 
     /**
      * Initializes the controller.
-     * Sets up table columns, colors for delayed loans, search functionality, and button actions.
      */
     @FXML
     private void initialize() {
@@ -100,8 +107,18 @@ public class LoadReturnController {
         // Return loan button
         returnLoanButton.setOnAction(e -> handleReturnLoan());
 
-        // Real-time search listener
-        searchField.textProperty().addListener((obs, oldText, newText) -> handleSearch());
+        // FIXED: Debounced search listener (waits 300ms after typing stops)
+        searchField.textProperty().addListener((obs, oldText, newText) -> {
+            // Cancel previous search task if still pending
+            if (searchTask != null && !searchTask.isDone()) {
+                searchTask.cancel(false);
+            }
+
+            // Schedule new search after 300ms delay
+            searchTask = searchScheduler.schedule(() -> {
+                Platform.runLater(this::handleSearch);
+            }, 300, TimeUnit.MILLISECONDS);
+        });
 
         // Configure search button as Clear
         searchButton.setText("Clear");
@@ -113,8 +130,10 @@ public class LoadReturnController {
      */
     private void handleClear() {
         searchField.clear();
+        // Force reload from database
         loadAllLoans();
     }
+
     /**
      * Handles navigation back to the admin landing page.
      */
@@ -126,36 +145,63 @@ public class LoadReturnController {
     }
 
     /**
-     * Loads all active loans into the table.
+     * Loads all active loans into the table and caches data.
      */
     private void loadAllLoans() {
         loanRows.clear();
+        cachedLoans.clear();
+        cachedMaterials.clear();
+        cachedUsers.clear();
+
         try {
-            List<Loan> loans = LoanDAOMySQLImpl.getInstance().select(null);
-            for (Loan loan : loans) {
+            // Load all loans once
+            List<Loan> allLoans = LoanDAOMySQLImpl.getInstance().select(null);
+
+            for (Loan loan : allLoans) {
                 if (loan.getReturn_date() == null) {
-                    LoanRow row = buildLoanRow(loan);
+                    cachedLoans.add(loan);
+
+                    // Cache material if not already cached
+                    if (!cachedMaterials.containsKey(loan.getIdMaterial())) {
+                        Material m = new Material();
+                        m.setIdMaterial(loan.getIdMaterial());
+                        Material found = MaterialDAOMySQLImpl.getInstance().select(m)
+                                .stream().findFirst().orElse(null);
+                        if (found != null) {
+                            cachedMaterials.put(loan.getIdMaterial(), found);
+                        }
+                    }
+
+                    // Cache user if not already cached
+                    if (!cachedUsers.containsKey(loan.getIdUser())) {
+                        User u = new User();
+                        u.setIdUser(loan.getIdUser());
+                        User found = UserDAOMySQLImpl.getInstance().select(u)
+                                .stream().findFirst().orElse(null);
+                        if (found != null) {
+                            cachedUsers.put(loan.getIdUser(), found);
+                        }
+                    }
+
+                    LoanRow row = buildLoanRowFromCache(loan);
                     if (row != null) loanRows.add(row);
                 }
             }
+
             loanRows.sort(Comparator.comparing(LoanRow::getDueDateAsLocalDate));
+
         } catch (DAOException e) {
             e.printStackTrace();
+            showError("Database Error", "Failed to load loans: " + e.getMessage());
         }
     }
 
     /**
-     * Builds a LoanRow object for table display.
-     * @param loan Loan entity from the database
-     * @return LoanRow object for TableView, or null if material/user not found
-     * @throws DAOException if database access fails
+     * Builds a LoanRow using cached data.
      */
-    private LoanRow buildLoanRow(Loan loan) throws DAOException {
-        Material m = new Material(); m.setIdMaterial(loan.getIdMaterial());
-        m = MaterialDAOMySQLImpl.getInstance().select(m).stream().findFirst().orElse(null);
-
-        User u = new User(); u.setIdUser(loan.getIdUser());
-        u = UserDAOMySQLImpl.getInstance().select(u).stream().findFirst().orElse(null);
+    private LoanRow buildLoanRowFromCache(Loan loan) {
+        Material m = cachedMaterials.get(loan.getIdMaterial());
+        User u = cachedUsers.get(loan.getIdUser());
 
         if (m == null || u == null) return null;
 
@@ -176,97 +222,45 @@ public class LoadReturnController {
     }
 
     /**
-     * Handles searching loans based on user input.
-     * Supports searching by user name, surname, material title, or delayed loans keywords.
+     * Handles searching loans using CACHED data (no DB calls).
      */
     @FXML
     private void handleSearch() {
         String text = searchField.getText().trim();
-
         loanRows.clear();
 
         try {
-            // Get all active (not returned) loans
-            List<Loan> loans = LoanDAOMySQLImpl.getInstance().select(null);
-            loans = loans.stream()
-                    .filter(loan -> loan.getReturn_date() == null)
-                    .toList();
-
-            // Build material and user maps for the service
-            Map<Integer, Material> materialMap = new HashMap<>();
-            Map<Integer, User> userMap = new HashMap<>();
-
-            for (Loan loan : loans) {
-                // Get material if not already in map
-                if (!materialMap.containsKey(loan.getIdMaterial())) {
-                    Material m = new Material();
-                    m.setIdMaterial(loan.getIdMaterial());
-                    Material found = MaterialDAOMySQLImpl.getInstance().select(m)
-                            .stream().findFirst().orElse(null);
-                    if (found != null) {
-                        materialMap.put(loan.getIdMaterial(), found);
-                    }
-                }
-
-                // Get user if not already in map
-                if (!userMap.containsKey(loan.getIdUser())) {
-                    User u = new User();
-                    u.setIdUser(loan.getIdUser());
-                    User found = UserDAOMySQLImpl.getInstance().select(u)
-                            .stream().findFirst().orElse(null);
-                    if (found != null) {
-                        userMap.put(loan.getIdUser(), found);
-                    }
-                }
-            }
-
-            // Determine status filter based on search text
+            // Determine status filter
             Set<String> statusFilter = new HashSet<>();
-            if (text.equals("delayed") || text.equals("delay") || text.equals("delays")
-                    || text.equals("late") || text.equals("overdue")) {
+            if (text.equalsIgnoreCase("delayed") || text.equalsIgnoreCase("delay") ||
+                    text.equalsIgnoreCase("delays") || text.equalsIgnoreCase("late") ||
+                    text.equalsIgnoreCase("overdue")) {
                 statusFilter.add("overdue");
-            } else {
-                // Empty set means no status filtering (show all active loans)
-                statusFilter = new HashSet<>();
             }
 
-            // Use the service to filter and search
+            // Use cached data for filtering
             String searchTerm = statusFilter.contains("overdue") ? "" : text;
             List<Loan> filteredLoans = loanCatalogService.filterLoans(
-                    loans,
-                    materialMap,
-                    userMap,
+                    cachedLoans,
+                    cachedMaterials,
+                    cachedUsers,
                     statusFilter,
                     searchTerm
             );
 
             // Build rows from filtered loans
             for (Loan loan : filteredLoans) {
-                Material m = materialMap.get(loan.getIdMaterial());
-                User u = userMap.get(loan.getIdUser());
-
-                if (m != null && u != null) {
-                    String materialType = switch (m.getIdMaterialType() != null ? m.getIdMaterialType() : 0) {
-                        case 1 -> "Book";
-                        case 2 -> "CD";
-                        case 3 -> "Movie";
-                        case 4 -> "Magazine";
-                        default -> "Unknown";
-                    };
-
-                    String title = m.getTitle() != null ? m.getTitle() : "—";
-                    String userName = (u.getName() != null ? u.getName() : "") + " " + (u.getSurname() != null ? u.getSurname() : "");
-                    String due = loan.getDue_date() != null ? loan.getDue_date().toLocalDate().toString() : "—";
-                    boolean delayed = loan.getDue_date() != null && loan.getDue_date().isBefore(LocalDateTime.now());
-
-                    loanRows.add(new LoanRow(loan.getIdLoan(), materialType, title, userName, due, delayed ? "Yes" : "No"));
+                LoanRow row = buildLoanRowFromCache(loan);
+                if (row != null) {
+                    loanRows.add(row);
                 }
             }
 
             loanRows.sort(Comparator.comparing(LoanRow::getDueDateAsLocalDate));
 
-        } catch (DAOException e) {
+        } catch (Exception e) {
             e.printStackTrace();
+            showError("Search Error", "Failed to search loans: " + e.getMessage());
         }
     }
 
@@ -290,16 +284,16 @@ public class LoadReturnController {
             dialog.setScene(scene);
             dialog.showAndWait();
 
-            loadAllLoans(); // Refresh table
+            loadAllLoans(); // Refresh table and cache
 
         } catch (Exception e) {
             e.printStackTrace();
+            showError("Dialog Error", "Failed to open Add Loan dialog: " + e.getMessage());
         }
     }
 
     /**
      * Handles returning the selected loan.
-     * Updates the loan return date and sets the material status to "available".
      */
     @FXML
     private void handleReturnLoan() {
@@ -329,8 +323,7 @@ public class LoadReturnController {
                 List<Loan> loans = LoanDAOMySQLImpl.getInstance().select(filtro);
 
                 if (loans.isEmpty()) {
-                    Alert error = new Alert(Alert.AlertType.ERROR, "Error: loan not found in database.");
-                    error.showAndWait();
+                    showError("Error", "Loan not found in database.");
                     return;
                 }
 
@@ -348,12 +341,33 @@ public class LoadReturnController {
                 material.setMaterial_status("available");
                 MaterialDAOMySQLImpl.getInstance().update(material);
 
-                // Refresh table
+                // Refresh table and cache
                 loadAllLoans();
 
             } catch (DAOException e) {
                 e.printStackTrace();
+                showError("Database Error", "Failed to return loan: " + e.getMessage());
             }
+        }
+    }
+
+    /**
+     * Shows an error alert dialog.
+     */
+    private void showError(String title, String message) {
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+        alert.showAndWait();
+    }
+
+    /**
+     * Cleanup when controller is destroyed.
+     */
+    public void cleanup() {
+        if (searchScheduler != null && !searchScheduler.isShutdown()) {
+            searchScheduler.shutdown();
         }
     }
 
@@ -387,10 +401,6 @@ public class LoadReturnController {
         public String getTitle() { return title.get(); }
         public String getUser() { return user.get(); }
 
-        /**
-         * Converts due date string to LocalDateTime.
-         * @return LocalDateTime of due date or MAX if invalid
-         */
         public LocalDateTime getDueDateAsLocalDate() {
             if (dueDate.get() == null || dueDate.get().equals("—")) return LocalDateTime.MAX;
             return LocalDateTime.parse(dueDate.get() + "T00:00:00");
