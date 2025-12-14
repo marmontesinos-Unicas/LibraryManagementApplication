@@ -16,7 +16,6 @@
             <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
             <RowConstraints minHeight="10.0" prefHeight="45.0" vgrow="SOMETIMES" />
             <RowConstraints minHeight="10.0" prefHeight="45.0" vgrow="SOMETIMES" />
-            <RowConstraints minHeight="10.0" prefHeight="45.0" vgrow="SOMETIMES" />
             <RowConstraints minHeight="10.0" prefHeight="150.0" vgrow="SOMETIMES" />
         </rowConstraints>
         <padding>
@@ -66,12 +65,12 @@
 
 
         <!-- Row 5: Genres -->
-        <Label text="Genres:" GridPane.columnIndex="0" GridPane.rowIndex="6" GridPane.valignment="TOP">
+        <Label text="Genres:" GridPane.columnIndex="0" GridPane.rowIndex="5" GridPane.valignment="TOP">
             <GridPane.margin>
                 <Insets top="10.0" />
             </GridPane.margin>
         </Label>
-        <VBox spacing="8.0" GridPane.columnIndex="1" GridPane.rowIndex="6">
+        <VBox spacing="8.0" GridPane.columnIndex="1" GridPane.rowIndex="5">
             <!-- Search TextField with Dropdown -->
             <VBox fx:id="genreSearchContainer" spacing="0">
                 <TextField fx:id="genreSearchField" promptText="Search genres..." />
