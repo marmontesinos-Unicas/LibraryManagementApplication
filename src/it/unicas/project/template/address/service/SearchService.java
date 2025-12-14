@@ -75,15 +75,27 @@ public class SearchService<T> {
 
     /**
      * Checks if text contains a word starting with the search term
+     * Handles authors like "J.K. Rowling" by treating periods as part of words
      */
     private boolean containsWordStartingWith(String text, String searchTerm) {
         if (text == null || searchTerm == null) {
             return false;
         }
 
-        String[] words = text.split("[\\s,.-]+");
+        // Split only on whitespace and commas, preserve periods and hyphens as part of words
+        String[] words = text.split("[\\s,]+");
         for (String word : words) {
-            if (word.startsWith(searchTerm)) {
+            // Remove leading/trailing punctuation but keep internal ones (for J.K., e-books, etc.)
+            String cleanWord = word.replaceAll("^[.\\-]+|[.\\-]+$", "");
+
+            if (cleanWord.startsWith(searchTerm)) {
+                return true;
+            }
+
+            // Also check if the search term matches with periods removed (so "jk" finds "J.K.")
+            String wordNoPeriods = cleanWord.replace(".", "");
+            String searchNoPeriods = searchTerm.replace(".", "");
+            if (wordNoPeriods.startsWith(searchNoPeriods)) {
                 return true;
             }
         }
