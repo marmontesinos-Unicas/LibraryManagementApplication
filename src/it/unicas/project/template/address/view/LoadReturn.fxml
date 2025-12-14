@@ -36,6 +36,7 @@
         <HBox alignment="CENTER" spacing="20">
             <Button fx:id="addLoanButton" onAction="#handleAddLoan" prefWidth="150" text="Add Loan" />
             <Button fx:id="returnLoanButton" onAction="#handleReturnLoan" prefWidth="150" text="Return" />
+            <Button fx:id="editLoanButton" onAction="#handleEditLoan" prefWidth="150" text="Edit Loan" />
         </HBox>
 
     </VBox>

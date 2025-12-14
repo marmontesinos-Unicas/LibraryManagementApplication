@@ -96,10 +96,10 @@ public class LoanDAOMySQLImpl implements DAO<Loan> {
 
             ps.setInt(1, l.getIdUser());
             ps.setInt(2, l.getIdMaterial());
-            ps.setString(3, l.getStart_date().format(FORMATTER));
-            ps.setString(4, l.getDue_date().format(FORMATTER));
+            ps.setTimestamp(3, Timestamp.valueOf(l.getStart_date()));  // Changed
+            ps.setTimestamp(4, Timestamp.valueOf(l.getDue_date()));    // Changed
             if (l.getReturn_date() != null) {
-                ps.setString(5, l.getReturn_date().format(FORMATTER));
+                ps.setTimestamp(5, Timestamp.valueOf(l.getReturn_date())); // Changed
             } else {
                 ps.setNull(5, Types.TIMESTAMP);
             }
@@ -107,7 +107,6 @@ public class LoanDAOMySQLImpl implements DAO<Loan> {
             logger.info("SQL: " + ps);
             ps.executeUpdate();
 
-            // Obtener idLoan generado automáticamente
             ResultSet rs = ps.getGeneratedKeys();
             if (rs.next()) l.setIdLoan(rs.getInt(1));
         } catch (SQLException e) {
@@ -123,10 +122,10 @@ public class LoanDAOMySQLImpl implements DAO<Loan> {
         try (PreparedStatement ps = DAOMySQLSettings.getConnection().prepareStatement(sql)) {
             ps.setInt(1, l.getIdUser());
             ps.setInt(2, l.getIdMaterial());
-            ps.setString(3, l.getStart_date().format(FORMATTER));
-            ps.setString(4, l.getDue_date().format(FORMATTER));
+            ps.setTimestamp(3, Timestamp.valueOf(l.getStart_date()));  // Changed
+            ps.setTimestamp(4, Timestamp.valueOf(l.getDue_date()));    // Changed
             if (l.getReturn_date() != null) {
-                ps.setString(5, l.getReturn_date().format(FORMATTER));
+                ps.setTimestamp(5, Timestamp.valueOf(l.getReturn_date())); // Changed
             } else {
                 ps.setNull(5, Types.TIMESTAMP);
             }

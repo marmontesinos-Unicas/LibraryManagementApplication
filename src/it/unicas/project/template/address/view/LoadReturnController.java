@@ -33,7 +33,8 @@ public class LoadReturnController {
 
     @FXML private TextField searchField;                 // Field for searching loans
     @FXML private Button searchButton;                   // Button to clear search
-    @FXML private Button returnLoanButton;               // Button to return selected loan
+    @FXML private Button returnLoanButton;
+    @FXML private Button editLoanButton;
 
     @FXML private TableView<LoanRow> loansTable;        // Table to display loans
     @FXML private TableColumn<LoanRow, String> materialTypeColumn;
@@ -356,6 +357,56 @@ public class LoadReturnController {
             }
         }
     }
+
+    /**
+     * Handles editing the selected loan.
+     * Opens the Modify Loan dialog and refreshes the table after closing.
+     */
+    @FXML
+    private void handleEditLoan() {
+        LoanRow selected = loansTable.getSelectionModel().getSelectedItem();
+        if (selected == null) {
+            Alert alert = new Alert(Alert.AlertType.WARNING, "Please select a loan first.");
+            alert.showAndWait();
+            return;
+        }
+
+        try {
+            // Obtener Loan real desde la BD
+            Loan filtro = new Loan();
+            filtro.setIdLoan(selected.getIdLoan());
+            List<Loan> loans = LoanDAOMySQLImpl.getInstance().select(filtro);
+            if (loans.isEmpty()) {
+                Alert error = new Alert(Alert.AlertType.ERROR, "Loan not found in database.");
+                error.showAndWait();
+                return;
+            }
+
+            Loan loanToEdit = loans.get(0);
+
+            // Cargar ModifyLoanDialog
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("ModifyLoanDialog.fxml"));
+            Parent page = loader.load();
+
+            Stage dialog = new Stage();
+            dialog.setTitle("Modify Loan");
+            dialog.initOwner(dialogStage);
+
+            ModifyLoanController controller = loader.getController();
+            controller.setDialogStage(dialog);
+            controller.setLoan(loanToEdit);
+
+            Scene scene = new Scene(page);
+            dialog.setScene(scene);
+            dialog.showAndWait();
+
+            loadAllLoans(); // refrescar tabla después de modificar
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
 
     /**
      * Inner class representing a row in the loans TableView.
