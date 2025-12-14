@@ -94,7 +94,7 @@ public class UserLandingService {
 
         return holds.stream().map(hold -> {
             Material mat = null;
-            if (hold.getIdMaterial() != null) {
+            if (hold.getIdMaterial() != -1) {
                 mat = new Material();
                 mat.setIdMaterial(hold.getIdMaterial());
                 try {

@@ -253,7 +253,7 @@ public class UserLandingController {
             for (Hold hold : userHolds) {
                 Material mat = null;
 
-                if (hold.getIdMaterial() != null) {
+                if (hold.getIdMaterial() != -1) {
                     mat = new Material();
                     mat.setIdMaterial(hold.getIdMaterial());
                     mat = MaterialDAOMySQLImpl.getInstance().select(mat).stream().findFirst().orElse(null);
