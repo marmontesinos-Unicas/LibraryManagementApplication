@@ -26,13 +26,15 @@ public class UserService {
      * Registers a new user in the system.
      */
     public void registerUser(User newUser) throws UserServiceException, DAOException {
-        // ... (Existing registerUser validation and insertion code) ...
 
         if (newUser.getName() == null || newUser.getName().trim().isEmpty()) {
             throw new UserServiceException("Error: Name is mandatory.");
         }
         if (newUser.getSurname() == null || newUser.getSurname().trim().isEmpty()) {
             throw new UserServiceException("Error: Surname is mandatory.");
+        }
+        if (newUser.getBirthdate() == null ) {
+            throw new UserServiceException("Error: Birthdate is mandatory.");
         }
         if (newUser.getNationalID() == null || newUser.getNationalID().trim().isEmpty()) {
             throw new UserServiceException("Error: National ID is mandatory.");
