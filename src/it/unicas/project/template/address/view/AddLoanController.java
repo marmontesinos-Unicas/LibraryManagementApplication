@@ -214,11 +214,12 @@ public class AddLoanController {
                 // Check if hold belongs to current user
                 Hold userHold = null;
                 for (Hold h : holds) {
-                    if (h.getIdUser().equals(users.get(0).getIdUser())) {
+                    if (h.getIdUser() == users.get(0).getIdUser()) {
                         userHold = h;
                         break;
                     }
                 }
+
 
                 if (userHold == null) {
                     showAlert(Alert.AlertType.WARNING, "Hold Notice",
