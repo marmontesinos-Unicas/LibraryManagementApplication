@@ -8,12 +8,6 @@ import it.unicas.project.template.address.model.dao.mysql.HoldDAOMySQLImpl;
 import it.unicas.project.template.address.model.dao.mysql.MaterialDAOMySQLImpl;
 import it.unicas.project.template.address.model.dao.mysql.UserDAOMySQLImpl;
 import it.unicas.project.template.address.view.*;
-import it.unicas.project.template.address.view.AdminLandingController;
-import it.unicas.project.template.address.view.LoginDialogController;
-import it.unicas.project.template.address.view.MaterialCatalogController;
-import it.unicas.project.template.address.view.UserLandingController;
-import it.unicas.project.template.address.view.UserManagementController;
-import it.unicas.project.template.address.view.UserEditController;
 
 import javafx.application.Application;
 import javafx.collections.FXCollections;
@@ -259,17 +253,56 @@ public class MainApp extends Application {
         }
     }
 
+    /**
+     * Displays the Material Management interface (Inventory list).
+     * This is the new method called by the AdminLandingController.
+     */
+    public void showMaterialManagement() {
+        try {
+            FXMLLoader loader = new FXMLLoader();
+            // Load the new FXML file
+            loader.setLocation(MainApp.class.getResource("view/MaterialManagement.fxml"));
+            BorderPane materialManagementPane = loader.load();
+
+            // Set the new scene on the primary stage
+            Scene scene = new Scene(materialManagementPane);
+            primaryStage.setScene(scene);
+            primaryStage.setTitle("Material Management (Inventory)");
+
+            // Get the controller and initialize
+            MaterialManagementController controller = loader.getController();
+            controller.setMainApp(this);
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            // Show an alert if the FXML file can't be loaded
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Error");
+            alert.setHeaderText("View Loading Failed");
+            alert.setContentText("Could not load MaterialManagement.fxml.");
+            alert.showAndWait();
+        }
+    }
+
     public void showAddMaterialView() {
         try {
             FXMLLoader loader = new FXMLLoader();
             loader.setLocation(MainApp.class.getResource("view/AddMaterial.fxml"));
-            AnchorPane page = loader.load(); // same as your working code
+            AnchorPane page = loader.load();
+
+            Stage dialogStage = new Stage();
+            dialogStage.setTitle("Add New Material");
+            dialogStage.initModality(Modality.WINDOW_MODAL);
+            dialogStage.initOwner(primaryStage); // Since primaryStage is the main window
 
             Scene scene = new Scene(page);
-            primaryStage.setScene(scene);
+            dialogStage.setScene(scene);
 
             AddMaterialController controller = loader.getController();
-            controller.setMainApp(this);
+            controller.setDialogStage(dialogStage); // CRITICAL: Setting the new stage
+            // controller.setMainApp(this); // REMOVED (if it existed)
+
+            dialogStage.showAndWait(); // Wait for dialog to close
 
         } catch (IOException e) {
             e.printStackTrace();

@@ -32,7 +32,7 @@
 
         // References to the buttons
         @FXML
-        private Button addMaterialButton;
+        private Button MaterialManagementButton;
         @FXML
         private Button manageUsersButton;
         @FXML
@@ -42,9 +42,11 @@
 
 
         @FXML
-        protected void handleAddMaterial(ActionEvent event) {
+        protected void handleMaterialManagement(ActionEvent event) {
+            // MODIFIED: Open the Material Management view instead of the Add Material dialog
             if (mainApp != null) {
-                mainApp.showAddMaterialView();
+                System.out.println("Action: Managing Material. Switching to Material Management view.");
+                mainApp.showMaterialManagement(); // CALL TO THE NEW METHOD IN MainApp
             } else {
                 System.err.println("mainApp is null - call setMainApp(...) when loading the admin view.");
             }
@@ -59,8 +61,8 @@
         @FXML
         protected void handleManageUsers(ActionEvent event) {
             if (mainApp != null) {
-                System.out.println("Acción: Gestionar usuarios. Cambiando a la vista User Management.");
-                mainApp.showUserManagement(); // CALL TO THE NEW METHOD
+                System.out.println("Action: Changing to User Management view.");
+                mainApp.showUserManagement();
             } else {
                 System.err.println("Error: MainApp reference is null. Cannot show User Management.");
             }
