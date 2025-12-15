@@ -54,9 +54,9 @@ CREATE TABLE `holds` (
   PRIMARY KEY (`idHold`),
   KEY `idUser_idx` (`idUser`),
   KEY `idMaterial_idx` (`idMaterial`),
-  CONSTRAINT `idMaterial_FK` FOREIGN KEY (`idMaterial`) REFERENCES `materials` (`idMaterial`),
+  CONSTRAINT `idMaterial_FK` FOREIGN KEY (`idMaterial`) REFERENCES `materials` (`idMaterial`) ON DELETE CASCADE,
   CONSTRAINT `idUser_FK` FOREIGN KEY (`idUser`) REFERENCES `users` (`idUser`)
-) ENGINE=InnoDB AUTO_INCREMENT=18 DEFAULT CHARSET=utf8mb3;
+) ENGINE=InnoDB AUTO_INCREMENT=19 DEFAULT CHARSET=utf8mb3;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -85,9 +85,9 @@ CREATE TABLE `loans` (
   PRIMARY KEY (`idLoan`),
   KEY `idUser_idx` (`idUser`),
   KEY `idMaterial_idx` (`idMaterial`),
-  CONSTRAINT `idMaterial_FK2` FOREIGN KEY (`idMaterial`) REFERENCES `materials` (`idMaterial`),
+  CONSTRAINT `idMaterial_FK2` FOREIGN KEY (`idMaterial`) REFERENCES `materials` (`idMaterial`) ON DELETE CASCADE,
   CONSTRAINT `idUser_FK2` FOREIGN KEY (`idUser`) REFERENCES `users` (`idUser`)
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb3;
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb3;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -142,7 +142,7 @@ CREATE TABLE `materials` (
   PRIMARY KEY (`idMaterial`),
   KEY `idMaterialType_idx` (`idMaterialType`),
   CONSTRAINT `idMaterialType_FK` FOREIGN KEY (`idMaterialType`) REFERENCES `material_type` (`idMaterialType`)
-) ENGINE=InnoDB AUTO_INCREMENT=38 DEFAULT CHARSET=utf8mb3;
+) ENGINE=InnoDB AUTO_INCREMENT=40 DEFAULT CHARSET=utf8mb3;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -248,4 +248,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2025-12-14 13:14:58
+-- Dump completed on 2025-12-15  1:01:27

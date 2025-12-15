@@ -64,10 +64,10 @@ public class UserRegistrationController {
         // Simple mapping: 1 for Admin, 2 for User. Adjust this based on your database roles.
         Integer idRole = roleText != null && roleText.equals("Admin") ? 1 : 2;
 
-        if (birthdate == null) {
-            showAlert("Validation Error", "Missing Birthdate", "Birthdate is required.", AlertType.ERROR);
-            return;
-        }
+//        if (birthdate == null) {
+//            showAlert("Validation Error", "Missing Birthdate", "Birthdate is required.", AlertType.ERROR);
+//            return;
+//        }
 
         User newUser = new User(null, name, surname, username, nationalID, birthdate, password, email, idRole);
 
@@ -90,7 +90,7 @@ public class UserRegistrationController {
             // ... (rest of error mapping and alert logic remains the same) ...
             String msg = e.getMessage() != null ? e.getMessage() : "";
 
-            if (msg.contains("Name is mandatory") || msg.toLowerCase().contains("name") && msg.toLowerCase().contains("mandatory")) {
+            if (msg.contains("Name is mandatory")) { // || msg.toLowerCase().contains("name") && msg.toLowerCase().contains("mandatory")) {
                 showAlert("Validation Error", "Missing Name", "Please enter the user's name.", AlertType.ERROR);
             } else if (msg.contains("Surname is mandatory") || msg.toLowerCase().contains("surname")) {
                 showAlert("Validation Error", "Missing Surname", "Please enter the user's surname.", AlertType.ERROR);
