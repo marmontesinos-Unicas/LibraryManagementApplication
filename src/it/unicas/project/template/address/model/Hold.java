@@ -1,24 +1,46 @@
 package it.unicas.project.template.address.model;
 
-import javafx.beans.property.IntegerProperty;
-import javafx.beans.property.SimpleIntegerProperty;
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.*;
 import java.time.LocalDateTime;
 import java.util.Objects;
 
+/**
+ * Represents a hold placed by a user on a material in the library system.
+ * <p>
+ * This class is used as a domain entity and can be persisted via the DAO layer.
+ * It also provides JavaFX properties for TableView bindings in the UI.
+ * </p>
+ */
 public class Hold {
 
+    /** Unique identifier of the hold */
     private final IntegerProperty idHold = new SimpleIntegerProperty(-1);
+
+    /** ID of the user who placed the hold */
     private final IntegerProperty idUser = new SimpleIntegerProperty(-1);
+
+    /** ID of the material being held */
     private final IntegerProperty idMaterial = new SimpleIntegerProperty(-1);
+
+    /** Date and time when the hold was placed */
     private final ObjectProperty<LocalDateTime> hold_date = new SimpleObjectProperty<>(null);
 
-    // In order to avoid errors in the TableView when no-arg constructor is needed
+    /**
+     * No-argument constructor.
+     * Initializes all fields with default values.
+     */
     public Hold() {
-        // defaults already set (-1, -1, -1, null)
+        // Defaults already set (-1, -1, -1, null)
     }
-    // Constructor completo
+
+    /**
+     * Constructs a Hold instance with all fields specified.
+     *
+     * @param idHold unique hold ID (can be null)
+     * @param idUser user ID placing the hold (can be null)
+     * @param idMaterial material ID being held (can be null)
+     * @param hold_date date and time the hold was placed
+     */
     public Hold(Integer idHold, Integer idUser, Integer idMaterial, LocalDateTime hold_date) {
         this.idHold.set(idHold != null ? idHold : -1);
         this.idUser.set(idUser != null ? idUser : -1);
@@ -26,12 +48,19 @@ public class Hold {
         this.hold_date.set(hold_date);
     }
 
-    // Constructor sin idHold
+    /**
+     * Constructs a Hold instance without specifying an ID.
+     *
+     * @param idUser user ID placing the hold
+     * @param idMaterial material ID being held
+     * @param hold_date date and time the hold was placed
+     */
     public Hold(Integer idUser, Integer idMaterial, LocalDateTime hold_date) {
         this(null, idUser, idMaterial, hold_date);
     }
 
-    /* getters and setters (return -1 when not set) */
+    /** Getters and setters with JavaFX properties for UI binding */
+
     public int getIdHold() { return idHold.get(); }
     public void setIdHold(int idHold) { this.idHold.set(idHold); }
     public IntegerProperty idHoldProperty() { return idHold; }
@@ -48,6 +77,11 @@ public class Hold {
     public void setHold_date(LocalDateTime hold_date) { this.hold_date.set(hold_date); }
     public ObjectProperty<LocalDateTime> holdDateProperty() { return hold_date; }
 
+    /**
+     * Returns a string representation of the hold.
+     *
+     * @return string with hold ID, user ID, material ID, and hold date
+     */
     @Override
     public String toString() {
         return "Hold{" +
@@ -58,6 +92,12 @@ public class Hold {
                 '}';
     }
 
+    /**
+     * Two holds are considered equal if they have the same ID.
+     *
+     * @param o object to compare
+     * @return true if IDs match
+     */
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -66,6 +106,11 @@ public class Hold {
         return getIdHold() == hold.getIdHold();
     }
 
+    /**
+     * Hash code based on hold ID.
+     *
+     * @return hash code
+     */
     @Override
     public int hashCode() {
         return Objects.hash(getIdHold());

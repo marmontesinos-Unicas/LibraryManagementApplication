@@ -3,21 +3,32 @@ package it.unicas.project.template.address.model;
 import java.time.LocalDate;
 
 /**
- * A simple model to hold the essential details for an overdue notification,
- * combining data from the 'loans' and 'materials' tables.
+ * Represents an overdue loan notification, combining data from 'loans' and 'materials'.
+ * <p>
+ * Used to display essential details of loans that are past their due date.
+ * </p>
  */
 public class OverdueLoan {
+
+    /** Unique ID of the loan */
     private final int loanId;
+
+    /** Title of the overdue material */
     private final String materialTitle;
+
+    /** Author of the overdue material */
     private final String materialAuthor;
-    private final LocalDate dueDate; // LocalDate is sufficient for display
+
+    /** Due date of the loan */
+    private final LocalDate dueDate;
 
     /**
-     * Constructor for an OverdueLoan.
-     * @param loanId The ID of the overdue loan.
-     * @param materialTitle The title of the overdue material.
-     * @param materialAuthor The author of the overdue material.
-     * @param dueDate The date the material was supposed to be returned.
+     * Constructs an OverdueLoan instance.
+     *
+     * @param loanId ID of the overdue loan
+     * @param materialTitle title of the material
+     * @param materialAuthor author of the material
+     * @param dueDate the date the material was supposed to be returned
      */
     public OverdueLoan(int loanId, String materialTitle, String materialAuthor, LocalDate dueDate) {
         this.loanId = loanId;
@@ -26,7 +37,7 @@ public class OverdueLoan {
         this.dueDate = dueDate;
     }
 
-    // Getters
+    /** Getters for UI binding and data access */
     public int getLoanId() { return loanId; }
     public String getMaterialTitle() { return materialTitle; }
     public String getMaterialAuthor() { return materialAuthor; }

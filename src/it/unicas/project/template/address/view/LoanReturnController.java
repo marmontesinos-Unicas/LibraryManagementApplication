@@ -1,7 +1,6 @@
 package it.unicas.project.template.address.view;
 
 import it.unicas.project.template.address.MainApp;
-import it.unicas.project.template.address.view.LoanRow;
 import it.unicas.project.template.address.model.Loan;
 import it.unicas.project.template.address.model.Material;
 import it.unicas.project.template.address.model.User;

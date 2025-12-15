@@ -1,49 +1,44 @@
 package it.unicas.project.template.address.model;
 
-import javafx.beans.property.IntegerProperty;
-import javafx.beans.property.SimpleIntegerProperty;
-import javafx.beans.property.SimpleStringProperty; // NEW IMPORT
-import javafx.beans.property.StringProperty; // NEW IMPORT
+import javafx.beans.property.*;
 
 /**
  * Model class for the Material Inventory View.
- * It extends Material to reuse existing properties (title, author, ISBN)
- * and adds the calculated 'quantity' property and status breakdowns required for the TableView.
+ * <p>
+ * Extends {@link Material} to reuse existing properties (title, author, ISBN)
+ * and adds calculated fields and status breakdowns required for TableView display.
+ * </p>
  */
 public class MaterialInventory extends Material {
 
     private final IntegerProperty quantity;
-
     private final StringProperty materialTypeName;
     private final IntegerProperty availableCount;
     private final IntegerProperty onHoldCount;
     private final IntegerProperty loanedCount;
 
     /**
-     * Constructor used by the MaterialDAOMySQLImpl after fetching grouped data.
+     * Constructs a {@code MaterialInventory} instance from a base {@link Material} object
+     * and a total quantity.
+     *
+     * @param material the base material
+     * @param quantity total quantity of this material
      */
     public MaterialInventory(Material material, Integer quantity) {
-        // Call the superclass constructor to initialize all base Material fields
         super(material.getIdMaterial(), material.getTitle(), material.getAuthor(), material.getYear(),
                 material.getISBN(), material.getIdMaterialType(), material.getMaterial_status());
 
-        // Initialize the new quantity property
         this.quantity = new SimpleIntegerProperty(quantity != null ? quantity : 0);
-
-        // Initialize new properties with defaults. They will be set by the DAO via setters.
         this.materialTypeName = new SimpleStringProperty("");
         this.availableCount = new SimpleIntegerProperty(0);
         this.onHoldCount = new SimpleIntegerProperty(0);
         this.loanedCount = new SimpleIntegerProperty(0);
     }
 
-    // --- GETTERS, SETTERS, and PROPERTY METHODS for Quantity ---
-    // (Existing methods for quantity remain here)
+    /** Getters, setters, and JavaFX properties for UI binding */
     public Integer getQuantity() { return quantity.get(); }
     public void setQuantity(Integer quantity) { this.quantity.set(quantity); }
     public IntegerProperty quantityProperty() { return quantity; }
-
-    // --- GETTERS, SETTERS, and PROPERTY METHODS for NEW FIELDS ---
 
     public String getMaterialTypeName() { return materialTypeName.get(); }
     public void setMaterialTypeName(String materialTypeName) { this.materialTypeName.set(materialTypeName); }
