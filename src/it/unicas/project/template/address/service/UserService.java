@@ -8,22 +8,52 @@ import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import java.util.List;
 
+/**
+ * Service layer for User management.
+ * This class handles business logic, input validation, and uniqueness checks
+ * before interacting with the Data Access Object (DAO) layer for persistence.
+ *
+ * Access Keyword Explanation: {@code public} - This class is part of the service
+ * layer and must be accessible by the JavaFX controllers (view layer) to execute
+ * business operations.
+ */
 public class UserService {
 
-    // Instance of the DAO (assuming Singleton pattern from your template)
+    // Instance of the DAO for User operations:
     private UserDAOMySQLImpl userDAO = (UserDAOMySQLImpl) UserDAOMySQLImpl.getInstance();
     private LoanDAOMySQLImpl loanDAO = (LoanDAOMySQLImpl) LoanDAOMySQLImpl.getInstance();
+    // Access Keyword Explanation: {@code private} - DAOs are internal dependencies
+    // of the service layer and should not be directly accessed from outside the service.
 
+    /**
+     * Default constructor for the UserService.
+     */
     public UserService() {
         // userDAO is already initialized by the field initializer above.
     }
 
+    /**
+     * Constructor used primarily for testing, allowing dependency injection of a mock DAO.
+     *
+     * Access Keyword Explanation: {@code public} - This constructor is public to allow
+     * external test classes to inject specific DAO implementations (like mocks).
+     *
+     * @param dao The specific UserDAOMySQLImpl instance to use.
+     */
     public UserService(it.unicas.project.template.address.model.dao.mysql.UserDAOMySQLImpl dao) {
         this.userDAO = dao;
     }
 
     /**
      * Registers a new user in the system.
+     * Performs comprehensive validation checks before persisting the user data.
+     *
+     * Access Keyword Explanation: {@code public} - This is a core business method
+     * that must be called by the controller layer (e.g., UserEditController).
+     *
+     * @param newUser The user object to be registered.
+     * @throws UserServiceException if any validation rule is violated.
+     * @throws DAOException if a database error occurs during persistence or checks.
      */
     public void registerUser(User newUser) throws UserServiceException, DAOException {
 
@@ -81,21 +111,28 @@ public class UserService {
             throw new UserServiceException("Error: A user with the same National ID and Role is already registered in the system.");
         }
 
-        // --- Persistence ---
-        userDAO.insert(newUser);
+        // Persistence
+        userDAO.insert(newUser); // Delegate insertion to the DAO
     }
 
     // ----------------------------------------------------------------------
-    // --- NEW METHODS FOR EDIT/DELETE FUNCTIONALITY ---
+    // --- METHODS FOR EDIT/DELETE USER FUNCTIONALITY ---
     // ----------------------------------------------------------------------
 
     /**
      * Updates an existing user in the system.
      * Reuses validation logic for mandatory fields, but handles password and uniqueness checks differently.
+     *
+     * Access Keyword Explanation: {@code public} - This is a core business method
+     * that must be called by the controller layer (e.g., UserEditController).
+     *
+     * @param userToUpdate The user object containing the updated data.
+     * @throws UserServiceException if any validation rule is violated.
+     * @throws DAOException if a database error occurs during persistence or checks.
      */
     public void updateUser(User userToUpdate) throws UserServiceException, DAOException {
 
-        // --- 1. Basic Validation (Mandatory fields) ---
+        // Basic Validation (Mandatory fields)
         if (userToUpdate.getIdUser() == null || userToUpdate.getIdUser() <= 0) {
             throw new UserServiceException("Error: Cannot update user; ID is missing.");
         }
@@ -118,21 +155,21 @@ public class UserService {
             throw new UserServiceException("Error: Role is mandatory.");
         }
 
-        // --- 2. Uniqueness Check (National ID + Role) ---
-        // Check if the National ID is already taken by a different user
+        // Uniqueness Check (National ID + Role) --> Check if the National ID is already taken by a different user.
         User filterById = new User(null, "", "", "", userToUpdate.getNationalID(), null, "", "", userToUpdate.getIdRole());
-        List<User> existingUsers = userDAO.select(filterById);
+        List<User> existingUsers = userDAO.select(filterById); // Find users with the same combination of NationalID AND Role
 
         if (!existingUsers.isEmpty()) {
-            // If the combination is found, ensure it belongs to the user being updated
+            // If the combination is found, ensure it belongs *only* to the user being updated
             for(User existing : existingUsers) {
                 if (!existing.getIdUser().equals(userToUpdate.getIdUser())) {
+                    // Case were was found a different user with the same unique combination
                     throw new UserServiceException("Error: The National ID and Role combination is already used by another user.");
                 }
             }
         }
 
-        // --- 3. Password Check (Optional but must be valid if provided) ---
+        // Password Check (Optional but must be valid if provided)
         String password = userToUpdate.getPassword();
         if (password != null && !password.trim().isEmpty()) {
             // Password must meet complexity requirements IF it is being updated
@@ -141,39 +178,51 @@ public class UserService {
             }
         }
 
-        // --- 4. Persistence ---
-        userDAO.update(userToUpdate); // Assuming your DAO has an update method.
+        // Persistence
+        userDAO.update(userToUpdate); // Delegate update to the DAO
     }
 
-    /**
-     * Deletes a user from the system by their ID.
-     */
-    public void deleteUser(User userToDelete) throws DAOException, UserServiceException {
-        if (userToDelete.getIdUser() == null || userToDelete.getIdUser() <= 0) {
-            throw new UserServiceException("Error: Cannot delete user; ID is missing.");
-        }
-
-        // --- Persistence ---
-        userDAO.delete(userToDelete); // Assuming your DAO has a delete method.
-    }
-
-    // *** NEW METHOD: Checks for outstanding loans ***
     /**
      * Checks if the given user currently has any outstanding (unreturned) loans.
      * This method is used to enforce the business rule that a user cannot be deleted
      * if they have material yet to be returned.
+     *
+     * Access Keyword Explanation: {@code public} - This is a utility business method
+     * exposed to the controller to check a precondition before deletion.
+     *
      * @param user The user to check.
      * @return true if the user has active loans, false otherwise.
      * @throws DAOException if a database error occurs during the check.
      */
     public boolean hasOutstandingLoans(User user) throws DAOException {
         if (user == null || user.getIdUser() == null || user.getIdUser() <= 0) {
+            // Cannot check for loans without a valid user ID
             return false;
         }
 
-        // Use the new DAO method to check the database
+        // Use the DAO method to check the database count.
+        // A count > 0 implies an active business constraint violation for deletion.
         int activeLoanCount = loanDAO.countActiveLoansByUserId(user.getIdUser());
 
         return activeLoanCount > 0;
+    }
+
+    /**
+     * Deletes a user from the system by their ID.
+     *
+     * Access Keyword Explanation: {@code public} - This is a core business method
+     * that must be called by the controller layer (e.g., UserEditController).
+     *
+     * @param userToDelete The user object containing the ID to delete.
+     * @throws DAOException if a database error occurs during deletion.
+     * @throws UserServiceException if the user ID is missing.
+     */
+    public void deleteUser(User userToDelete) throws DAOException, UserServiceException {
+        if (userToDelete.getIdUser() == null || userToDelete.getIdUser() <= 0) {
+            throw new UserServiceException("Error: Cannot delete user; ID is missing.");
+        }
+
+        // Persistence
+        userDAO.delete(userToDelete); // Delegate deletion to the DAO
     }
 }

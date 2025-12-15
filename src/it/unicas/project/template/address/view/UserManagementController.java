@@ -57,7 +57,7 @@ public class UserManagementController {
     // Service for user catalog operations
     private UserCatalogService userCatalogService = new UserCatalogService();
 
-    // FIXED: Debounce mechanism for search
+    // Debounce mechanism for search
     private ScheduledExecutorService searchScheduler = Executors.newSingleThreadScheduledExecutor();
     private java.util.concurrent.Future<?> searchTask;
 
