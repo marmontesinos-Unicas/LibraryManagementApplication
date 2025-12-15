@@ -3,18 +3,13 @@
     import it.unicas.project.template.address.MainApp;
     import javafx.event.ActionEvent;
     import javafx.fxml.FXML;
-    import javafx.fxml.FXMLLoader;
     import javafx.scene.Node;
-    import javafx.scene.Scene;
     import javafx.scene.control.Button;
-    import javafx.scene.layout.AnchorPane;
-    import javafx.stage.Modality;
     import javafx.stage.Stage;
     import javafx.scene.control.Alert; // NEW IMPORT
     import javafx.scene.control.Alert.AlertType; // NEW IMPORT
     import javafx.scene.control.ButtonType; // NEW IMPORT
 
-    import java.io.IOException;
     import java.util.Optional; // NEW IMPORT
 
     /**
@@ -82,7 +77,7 @@
         protected void handleLoanReturn(ActionEvent event) {
             if (mainApp != null) {
                 System.out.println("Action: Loans / Returns. Changing to Loan/Return view.");
-                mainApp.showLoadReturn();
+                mainApp.showLoanReturn();
             } else {
                 System.err.println("Error: MainApp reference is null. Cannot show Loan/Return view.");
             }
@@ -99,7 +94,7 @@
             System.out.println("Action: Advanced search of the catalog.");
             // The code to switch to the search screen will go here.
             if (mainApp != null) {
-                mainApp.showCatalogView();
+                mainApp.showCatalog();
             } else {
                 System.err.println("mainApp is null - call setMainApp(...) when loading the admin view.");
             }

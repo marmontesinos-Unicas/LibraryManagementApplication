@@ -696,7 +696,7 @@ public class UserCatalogController {
     @FXML
     private void handleBack() {
         if (mainApp != null) {
-            mainApp.showUserLandingView();
+            mainApp.showUserLanding();
         } else {
             showError("Navigation Error", "Cannot navigate back");
         }

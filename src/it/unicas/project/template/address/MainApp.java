@@ -27,39 +27,85 @@ import java.time.ZoneId;
 
 import java.io.IOException;
 
+/**
+ * Main application class for the Library Management System.
+ * It extends JavaFX's Application and serves as the primary controller for
+ * view navigation and managing the application's state, including the
+ * currently logged-in user.
+ *
+ * Access Keyword Explanation: {@code public} - This class must be public because
+ * it is the main entry point for the JavaFX application runtime.
+ */
 public class MainApp extends Application {
 
-    private Stage primaryStage;
-    private User loggedUser;
+    private Stage primaryStage; // Primary stage for the main application window
+    private User loggedUser; // Stores the currently logged-in user object
 
-    // Listas para el usuario
+    // Access Keyword Explanation: {@code private} - These fields are marked private
+    // to encapsulate the application's core state and ensure they are only modified
+    // internally or via controlled public methods (getters).
+
+    // Lists for the user's loans and reservations that will be used when the User Landing page is called.
     private ObservableList<String> userLoans = FXCollections.observableArrayList();
     private ObservableList<String> userReservations = FXCollections.observableArrayList();
 
+    /**
+     * Gets the ObservableList of the current user's active loans (as String representations).
+     *
+     * Access Keyword Explanation: {@code public} - This method is public so that
+     * FXML controllers (like the User Dashboard) can access the data needed for
+     * displaying lists of loans via data binding.
+     *
+     * @return The list of user loans.
+     */
     public ObservableList<String> getUserLoans() {
         return userLoans;
     }
 
+    /**
+     * Gets the ObservableList of the current user's active reservations (as String representations).
+     *
+     * Access Keyword Explanation: {@code public} - This method is public so that
+     * FXML controllers can access the data needed for displaying lists of reservations.
+     *
+     * @return The list of user reservations.
+     */
     public ObservableList<String> getUserReservations() {
         return userReservations;
     }
 
+    /**
+     * The main entry point for all JavaFX applications.
+     * Initializes the primary stage, sets up the window properties, performs
+     * necessary cleanup (like expired holds), and launches the login dialog.
+     *
+     * Access Keyword Explanation: {@code public} - This method must be public
+     * because it is an abstract method inherited from {@code javafx.application.Application}
+     * and is called by the JavaFX runtime to start the application.
+     *
+     * @param primaryStage The primary stage for this application, onto which
+     * the application scene can be set.
+     */
     @Override
     public void start(Stage primaryStage) {
         this.primaryStage = primaryStage;
         this.primaryStage.setTitle("Library Management App");
+        // Set application icon
         this.primaryStage.getIcons().add(new Image("file:resources/images/address_book_32.png"));
 
+        // Set initial and minimum window size
         this.primaryStage.setMinWidth(800);
         this.primaryStage.setMinHeight(520);
         this.primaryStage.setWidth(800);
         this.primaryStage.setHeight(520);
 
-        // Limpiar holds caducados antes de mostrar cualquier vista
+        // Clean up expired holds before showing login. This way each time the app starts,
+        // expired holds are removed from the database.
         try {
-            cleanupExpiredHolds();
+            cleanupExpiredHolds(); // Essential maintenance step on startup
         } catch (DAOException e) {
             e.printStackTrace();
+            // Show error if cleanup fails (usually database access issue)
             Alert alert = new Alert(Alert.AlertType.ERROR);
             alert.setTitle("Error");
             alert.setHeaderText("Cleanup Failed");
@@ -67,54 +113,62 @@ public class MainApp extends Application {
             alert.showAndWait();
         }
 
+        // Show the login window. Application flow depends on success here.
         boolean loggedIn = showLoginDialog();
         if (loggedIn) {
-            // Dependiendo del rol, abrir la vista correspondiente
+            // Depending on role, show the appropriate landing page.
             if (loggedUser.getIdRole() == 1) {
-                showAdminLanding();
+                showAdminLanding(); // If Role ID is 1, show the Admin Landing page.
             } else {
-                showUserLandingView();
+                showUserLanding(); // Otherwise (Role ID is 2), show the User Landing page.
             }
-            primaryStage.show();
+            primaryStage.show(); // Show the main stage after the appropriate scene is set
         } else {
-            primaryStage.close();
+            primaryStage.close(); // Close the application if login is cancelled or fails at startup
         }
     }
 
     /**
      * Borra los holds caducados (anteriores a ayer) y marca los materiales como available.
+     * A hold is considered expired if it was created more than 24 hours ago.
+     *
+     * Access Keyword Explanation: {@code private} - This is a utility method used only
+     * internally by the {@code start()} method for application maintenance. It does not
+     * need to be exposed to external classes.
+     *
+     * @throws DAOException If there is an issue accessing or updating the database.
      */
     private void cleanupExpiredHolds() throws DAOException {
-        // Hora actual en Europa/Roma
-        LocalDateTime now = LocalDateTime.now(ZoneId.of("Europe/Rome"));
-        // Definimos el cutoff restando 24 horas
-        LocalDateTime cutoffDate = now.minusHours(24);
+        LocalDateTime now = LocalDateTime.now(ZoneId.of("Europe/Rome")); // Current hour in Europe/Rome timezone
+        LocalDateTime cutoffDate = now.minusHours(24); // We define a cut-off date of 24 hours
         System.out.println("CutoffDate for expired holds: " + cutoffDate);
 
-        // Obtener todos los holds
+        // Fetch all current holds from the database:
         List<Hold> allHolds = HoldDAOMySQLImpl.getInstance().select(new Hold());
 
         for (Hold hold : allHolds) {
             if (hold.getHold_date() != null) {
-                // Ajustar la hora del hold si MySQL devuelve en UTC
-                LocalDateTime holdAdjusted = hold.getHold_date().minusHours(1); // Ajusta +2 si Roma está UTC+2
+                // Adjust the hold date to Rome timezone if necessary
+                LocalDateTime holdAdjusted = hold.getHold_date().minusHours(1); // Adjusts to +2 if Rome is UTC+2
                 System.out.println("Checking hold " + hold.getIdHold() + " with date " + holdAdjusted);
 
                 if (holdAdjusted.isBefore(cutoffDate)) {
                     System.out.println("Deleting hold: " + hold.getIdHold() + " with date: " + holdAdjusted);
 
-                    // Actualizar material correspondiente a "available"
+                    // Update material status to "available"
                     Material material = new Material();
-                    material.setIdMaterial(hold.getIdMaterial());
-                    material = MaterialDAOMySQLImpl.getInstance().select(material).stream().findFirst().orElse(null);
+                    material.setIdMaterial(hold.getIdMaterial()); // We set the material ID from the hold data
+                    material = MaterialDAOMySQLImpl.getInstance().select(material).stream().findFirst().orElse(null); // And we fetch the full material record
 
                     if (material != null) {
-                        material.setMaterial_status("available");
-                        MaterialDAOMySQLImpl.getInstance().update(material);
+                        material.setMaterial_status("available"); // Set status to available
+                        MaterialDAOMySQLImpl.getInstance().update(material); // Update in DB
+                        System.out.println("Material '" + material.getTitle() + "' (Author: " + material.getAuthor() + ") set to available after a hold on this material expired.");
                     }
 
-                    // Borrar hold caducado
+                    // Erase expired hold
                     HoldDAOMySQLImpl.getInstance().delete(hold);
+
                 } else {
                     System.out.println("Hold " + hold.getIdHold() + " is not expired yet.");
                 }
@@ -122,30 +176,41 @@ public class MainApp extends Application {
         }
     }
 
+    /**
+     * Shows the login dialog window.
+     * If login is successful, it sets the {@code loggedUser} and loads the appropriate
+     * dashboard (Admin or User) onto the primary stage.
+     *
+     * Access Keyword Explanation: {@code public} - This method is public because it must
+     * be accessible from the {@code LoginController} (typically used when a user clicks
+     * "Logout" and needs to return to the login screen).
+     *
+     * @return true if a user successfully logged in, false otherwise (login failed or cancelled).
+     */
     public boolean showLoginDialog() {
         try {
             FXMLLoader loader = new FXMLLoader();
             loader.setLocation(MainApp.class.getResource("view/Login.fxml"));
             AnchorPane page = loader.load();
 
-            // This prevents the previous dashboard (Admin or User) from remaining visible
-            // behind the modal login window when logging out.
+            // When logging out, ensure the primary stage is hidden and cleared so it does not hide behind the Log in window.
             if (primaryStage.isShowing()) {
                 primaryStage.hide();
-                primaryStage.setScene(null); // Explicitly remove the old scene content to ensure a clean slate
+                primaryStage.setScene(null);
             }
 
+            // Create a new modal dialog stage for the login form
             Stage dialogStage = new Stage();
             dialogStage.setTitle("Login");
-            dialogStage.initModality(Modality.WINDOW_MODAL);
-            dialogStage.initOwner(primaryStage);
+            dialogStage.initModality(Modality.WINDOW_MODAL); // Makes it block interaction with primaryStage
+            dialogStage.initOwner(primaryStage); // Links it to the main window
             Scene scene = new Scene(page);
             dialogStage.setScene(scene);
-            dialogStage.setResizable(false); // Login is kept small and fixed size
+            dialogStage.setResizable(false); // Login is kept fixed size
 
             LoginController controller = loader.getController();
             controller.setDialogStage(dialogStage);
-            controller.setMainApp(this); // Pass MainApp reference for re-login flow management
+            controller.setMainApp(this); // Allows the controller to communicate back to MainApp (e.g., successful re-login)
 
             dialogStage.showAndWait();
 
@@ -153,14 +218,14 @@ public class MainApp extends Application {
             if (controller.isLoginSuccessful()) {
                 String username = controller.getUsername();
 
-                // 1. Fetch user data and initialize lists
+                // Fetch user data and initialize lists
                 loggedUser = UserDAOMySQLImpl.getInstance().getByUsername(username);
 
                 // Depending on the role, set the correct scene on the primaryStage (which is still hidden)
-                if (loggedUser.getIdRole() == 1) {
+                if (loggedUser.getIdRole() == 1) { // Admin Role
                     showAdminLanding();
-                } else {
-                    showUserLandingView();
+                } else {                           // User Role
+                    showUserLanding();
                 }
 
                 // Show the primaryStage with the newly loaded Admin/User scene
@@ -169,9 +234,6 @@ public class MainApp extends Application {
                 return true;
             } else {
                 // Login failed or was cancelled.
-                // If the primaryStage was hidden (i.e., this was a logout event),
-                // returning false allows the application to remain closed if the attempt was at startup,
-                // or simply end the login attempt if it was a logout.
                 return false;
             }
         } catch (IOException | DAOException e) {
@@ -180,8 +242,18 @@ public class MainApp extends Application {
         }
     }
 
-    public void showUserLandingView() {
+    /**
+     * Displays the User Landing (User Dashboard) on the primary stage.
+     * Preserves the stage size and maximization status.
+     *
+     * Access Keyword Explanation: {@code public} - This method is public so that
+     * the {@code LoginController} can display the correct dashboard upon successful
+     * authentication, and other controllers (like the Catalog view) can navigate
+     * back to the dashboard.
+     */
+    public void showUserLanding() {
         try {
+            // Save current window state (width, height, maximized) before loading new scene
             double currentWidth = primaryStage.isShowing() ? primaryStage.getWidth() : 800;
             double currentHeight = primaryStage.isShowing() ? primaryStage.getHeight() : 520;
             boolean wasMaximized = primaryStage.isShowing() && primaryStage.isMaximized();
@@ -193,6 +265,7 @@ public class MainApp extends Application {
             Scene scene = new Scene(userPane);
             primaryStage.setScene(scene);
             primaryStage.setTitle("User Dashboard");
+
             // Restore dimensions
             if (wasMaximized) {
                 primaryStage.setMaximized(true);
@@ -202,17 +275,25 @@ public class MainApp extends Application {
             }
 
             UserLandingController controller = loader.getController();
-            controller.setMainApp(this);        // Pass reference to MainApp
-            controller.setCurrentUser(loggedUser); // Pass the logged User
+            controller.setMainApp(this);        // Provide access to main application methods
+            controller.setCurrentUser(loggedUser); // Pass logged-in user details
 
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
+    /**
+     * Displays the Admin Landing (Admin Dashboard) on the primary stage.
+     * Preserves the stage size and maximization status.
+     *
+     * Access Keyword Explanation: {@code public} - This method is public for the same
+     * reasons as {@code showUserLandingView()}: it is called by the {@code LoginController}
+     * upon successful login and by other admin views to navigate back to the main admin hub.
+     */
     public void showAdminLanding() {
         try {
-            // Store current dimensions
+            // Save current window state (width, height, maximized) before loading new scene
             double currentWidth = primaryStage.isShowing() ? primaryStage.getWidth() : 800;
             double currentHeight = primaryStage.isShowing() ? primaryStage.getHeight() : 520;
             boolean wasMaximized = primaryStage.isShowing() && primaryStage.isMaximized();
@@ -224,6 +305,7 @@ public class MainApp extends Application {
             Scene scene = new Scene(adminPane);
             primaryStage.setScene(scene);
             primaryStage.setTitle("Admin Dashboard"); // Set title back
+
             // Restore dimensions
             if (wasMaximized) {
                 primaryStage.setMaximized(true);
@@ -232,10 +314,9 @@ public class MainApp extends Application {
                 primaryStage.setHeight(currentHeight);
             }
 
-
             // Pass the MainApp reference to the AdminLandingController
             it.unicas.project.template.address.view.AdminLandingController controller = loader.getController();
-            controller.setMainApp(this);
+            controller.setMainApp(this); // Allows controller to navigate back or to other views
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -243,7 +324,11 @@ public class MainApp extends Application {
     }
 
     /**
-     * Displays the User Management interface.
+     * Displays the User Management interface, replacing the current scene on the primary stage.
+     * Preserves the stage size and maximization status.
+     *
+     * Access Keyword Explanation: {@code public} - This method is public as it must
+     * be called from the Admin Dashboard controller to switch views.
      */
     public void showUserManagement() {
         try {
@@ -259,6 +344,7 @@ public class MainApp extends Application {
             Scene scene = new Scene(userManagementPane);
             primaryStage.setScene(scene);
             primaryStage.setTitle("User Management");
+
             // Restore dimensions
             if (wasMaximized) {
                 primaryStage.setMaximized(true);
@@ -266,7 +352,6 @@ public class MainApp extends Application {
                 primaryStage.setWidth(currentWidth);
                 primaryStage.setHeight(currentHeight);
             }
-
 
             // Get the controller and initialize if needed (already done in initialize method)
             UserManagementController controller = loader.getController();
@@ -284,8 +369,11 @@ public class MainApp extends Application {
     }
 
     /**
-     * Displays the Material Management interface (Inventory list).
-     * This is the new method called by the AdminLandingController.
+     * Displays the Material Management interface (Inventory list), replacing the current scene.
+     * Preserves the stage size and maximization status.
+     *
+     * Access Keyword Explanation: {@code public} - This method is public as it must
+     * be called from the Admin Dashboard controller to switch views.
      */
     public void showMaterialManagement() {
         try {
@@ -326,23 +414,29 @@ public class MainApp extends Application {
         }
     }
 
-    public void showAddMaterialView() {
+    /**
+     * Shows a modal dialog for adding a new material.
+     *
+     * Access Keyword Explanation: {@code public} - This method is public as it is
+     * called by the {@code MaterialManagementController} to open the secondary window.
+     */
+    public void showAddMaterial() {
         try {
             FXMLLoader loader = new FXMLLoader();
             loader.setLocation(MainApp.class.getResource("view/AddMaterial.fxml"));
             AnchorPane page = loader.load();
 
+            // Create a new modal DIALOG stage
             Stage dialogStage = new Stage();
             dialogStage.setTitle("Add New Material");
             dialogStage.initModality(Modality.WINDOW_MODAL);
-            dialogStage.initOwner(primaryStage); // Since primaryStage is the main window
+            dialogStage.initOwner(primaryStage); // Set owner to main window
 
             Scene scene = new Scene(page);
             dialogStage.setScene(scene);
 
             AddMaterialController controller = loader.getController();
-            controller.setDialogStage(dialogStage); // CRITICAL: Setting the new stage
-            // controller.setMainApp(this); // REMOVED (if it existed)
+            controller.setDialogStage(dialogStage); // Pass the dialog stage to the controller so it can close itself
 
             dialogStage.showAndWait(); // Wait for dialog to close
 
@@ -350,7 +444,15 @@ public class MainApp extends Application {
             e.printStackTrace();
         }
     }
-    public void showCatalogView() {
+
+    /**
+     * Displays the Admin Material Catalog view on the primary stage.
+     * Preserves the stage size and maximization status.
+     *
+     * Access Keyword Explanation: {@code public} - This method is public as it must
+     * be called from the Admin Dashboard controller to switch views.
+     */
+    public void showCatalog() {
         try {
             // Store current dimensions
             double currentWidth = primaryStage.getWidth();
@@ -372,7 +474,6 @@ public class MainApp extends Application {
                 primaryStage.setHeight(currentHeight);
             }
 
-
             AdminMaterialCatalogController controller = loader.getController();
             controller.setMainApp(this);
 
@@ -382,50 +483,13 @@ public class MainApp extends Application {
     }
 
     /**
-     * Shows the user edit dialog (e.g., for creating or editing a user).
-     * The dialog size is based on the FXML/content, as requested.
-     * @param user the user object to be edited or created.
-     * @param userManagementController the controller to refresh the table after save/delete.
+     * Displays the Loan and Return management interface, replacing the current scene on the primary stage.
+     * Preserves the stage size and maximization status.
+     *
+     * Access Keyword Explanation: {@code public} - This method is public as it must
+     * be called from the Admin Dashboard controller to switch views.
      */
-    public void showUserEditDialog(User user, UserManagementController userManagementController) {
-        try {
-            FXMLLoader loader = new FXMLLoader();
-            loader.setLocation(MainApp.class.getResource("view/UserEdit.fxml"));
-            AnchorPane page = loader.load();
-
-            Stage dialogStage = new Stage();
-            dialogStage.setTitle("Edit User Details");
-            dialogStage.initModality(Modality.WINDOW_MODAL);
-            dialogStage.initOwner(primaryStage);
-
-
-            Scene scene = new Scene(page);
-            dialogStage.setScene(scene);
-
-            UserEditController controller = loader.getController();
-            controller.setDialogStage(dialogStage);
-
-            controller.setSelectedUser(user);
-
-            controller.setUserManagementController(userManagementController);
-
-            dialogStage.showAndWait();
-
-        } catch (IOException e) {
-            e.printStackTrace();
-            // Show an alert if the FXML file can't be loaded
-            javafx.scene.control.Alert alert = new javafx.scene.control.Alert(javafx.scene.control.Alert.AlertType.ERROR);
-            alert.setTitle("Error");
-            alert.setHeaderText("Dialog Loading Failed");
-            alert.setContentText("Could not load UserEdit.fxml.");
-            alert.showAndWait();
-        }
-    }
-
-    /**
-     * Displays the Loan and Return management interface, replacing the current scene.
-     */
-    public void showLoadReturn() {
+    public void showLoanReturn() {
         try {
             // Store current dimensions
             double currentWidth = primaryStage.getWidth();
@@ -433,12 +497,13 @@ public class MainApp extends Application {
             boolean wasMaximized = primaryStage.isMaximized();
 
             FXMLLoader loader = new FXMLLoader();
+            // Note: Uses an absolute path for resource loading here, unlike others.
             loader.setLocation(MainApp.class.getResource("/it/unicas/project/template/address/view/LoanReturn.fxml"));
             AnchorPane loadReturnPane = loader.load();
 
             Scene scene = new Scene(loadReturnPane);
             primaryStage.setScene(scene);
-            primaryStage.setTitle("Loan and Return Management");
+            primaryStage.setTitle("Loans and Return Management");
 
             // Restore dimensions
             if (wasMaximized) {
@@ -448,14 +513,12 @@ public class MainApp extends Application {
                 primaryStage.setHeight(currentHeight);
             }
 
-
             // Get the controller and pass the MainApp reference
             LoanReturnController controller = loader.getController();
             controller.setMainApp(this); // This line ensures that we can go back to the landing page.
 
         } catch (IOException e) {
             e.printStackTrace();
-
             // Error handling using the correctly imported Alert class
             Alert alert = new Alert(Alert.AlertType.ERROR);
             alert.setTitle("Error");
@@ -466,7 +529,11 @@ public class MainApp extends Application {
     }
 
     /**
-     * Displays the user's overdue notifications in a dialog.
+     * Displays a modal dialog with the user's overdue notifications.
+     *
+     * Access Keyword Explanation: {@code public} - This method is public as it is
+     * called by the {@code UserLandingController} to show notifications.
+     *
      * @param notifications A list of formatted String messages to display.
      */
     public void showNotificationsView(List<String> notifications) {
@@ -488,7 +555,7 @@ public class MainApp extends Application {
             // Get the controller and pass the data and stage
             NotificationsController controller = loader.getController();
             controller.setDialogStage(dialogStage);
-            controller.setNotifications(notifications); // Pass the list of messages
+            controller.setNotifications(notifications); // Pass the list of messages to display
 
             dialogStage.showAndWait();
 
@@ -502,6 +569,16 @@ public class MainApp extends Application {
         }
     }
 
+    /**
+     * Displays the User Material Catalog view on the primary stage so that users
+     * can search through the list of materials to start a new reservation or check
+     * the availability of a material.
+     *
+     * Access Keyword Explanation: {@code public} - This method is public as it must
+     * be called from the User Dashboard controller to switch views.
+     *
+     * Preserves the stage size and maximization status.
+     */
     public void showUserCatalog() {
         try {
             // Store current dimensions
@@ -510,12 +587,13 @@ public class MainApp extends Application {
             boolean wasMaximized = primaryStage.isMaximized();
 
             FXMLLoader loader = new FXMLLoader();
-            loader.setLocation(MainApp.class.getResource("view/UserCatalog.fxml"));
+            loader.setLocation(MainApp.class.getResource("view/UserCatalog.fxml")); // The 'usercatalog' refers to the user version of the catalog of materials
             AnchorPane page = loader.load();
 
             UserCatalogController controller = loader.getController();
             controller.setMainApp(this);
-            controller.setCurrentUser(loggedUser); // Esto ahora cargará los materiales
+            // Pass the logged user, which the catalog controller needs to load specific data (like current loans)
+            controller.setCurrentUser(loggedUser);
 
             Scene scene = new Scene(page);
             primaryStage.setScene(scene);
@@ -538,14 +616,92 @@ public class MainApp extends Application {
         }
     }
 
+    // -----------------------------------------------------------------------------------------------
+    // No-Usage methods that we don't erase in case they do something useful that the compiler misses.
+    // -----------------------------------------------------------------------------------------------
+
+    /**
+     * Shows the user edit dialog (e.g., for creating or editing a user) as a modal window.
+     * The dialog size is based on the FXML/content.
+     *
+     * Access Keyword Explanation: {@code public} - This method is public as it is
+     * called by the {@code UserManagementController} to open the secondary window
+     * for creating or editing a user record.
+     *
+     * @param user the user object to be edited or created.
+     * @param userManagementController the controller to refresh the table after save/delete.
+     */
+    public void showEditUser(User user, UserManagementController userManagementController) {
+        try {
+            FXMLLoader loader = new FXMLLoader();
+            loader.setLocation(MainApp.class.getResource("view/UserEdit.fxml"));
+            AnchorPane page = loader.load();
+
+            Stage dialogStage = new Stage();
+            dialogStage.setTitle("Edit User Details");
+            dialogStage.initModality(Modality.WINDOW_MODAL);
+            dialogStage.initOwner(primaryStage);
+
+
+            Scene scene = new Scene(page);
+            dialogStage.setScene(scene);
+
+            UserEditController controller = loader.getController();
+            controller.setDialogStage(dialogStage);
+
+            controller.setSelectedUser(user); // Pass the user data to be edited
+
+            controller.setUserManagementController(userManagementController); // Allows refreshing the parent table view
+
+            dialogStage.showAndWait();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            // Show an alert if the FXML file can't be loaded
+            javafx.scene.control.Alert alert = new javafx.scene.control.Alert(javafx.scene.control.Alert.AlertType.ERROR);
+            alert.setTitle("Error");
+            alert.setHeaderText("Dialog Loading Failed");
+            alert.setContentText("Could not load UserEdit.fxml.");
+            alert.showAndWait();
+        }
+    }
+
+    /**
+     * Returns the currently logged-in user.
+     *
+     * Access Keyword Explanation: {@code public} - This method is public to allow
+     * any view controller (Admin or User dashboard, catalog, etc.) to retrieve
+     * the necessary user information (ID, role) to personalize the view and fetch data.
+     *
+     * @return The User object for the logged-in user.
+     */
     public User getLoggedUser() {
         return loggedUser;
     }
 
+    /**
+     * Returns the primary stage of this application.
+     *
+     * Access Keyword Explanation: {@code public} - This method is public to allow
+     * any view controller to retrieve the main stage reference, typically used
+     * to set it as the owner of a modal dialog.
+     *
+     * @return The primary Stage.
+     */
     public Stage getPrimaryStage() {
         return primaryStage;
     }
 
+    /**
+     * The main method, which is ignored by the IDE (if any), but needed
+     * for running the application outside of an IDE.
+     *
+     * Access Keyword Explanation: {@code public static} - This is the standard
+     * signature for the Java entry point, required by the JVM to launch the program.
+     * The static modifier allows it to be called without an instance of the class.
+     *
+     * @param args The command line arguments.
+     */
     public static void main(String[] args) {
         launch(args);
     }

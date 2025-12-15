@@ -161,7 +161,7 @@ public class MaterialManagementController {
     @FXML
     private void handleAddMaterial() {
         if (mainApp != null) {
-            mainApp.showAddMaterialView();
+            mainApp.showAddMaterial();
             loadMaterialData();
         }
     }
