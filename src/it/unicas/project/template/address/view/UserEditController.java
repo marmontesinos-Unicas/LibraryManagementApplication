@@ -21,7 +21,10 @@ public class UserEditController {
     @FXML private TextField usernameField;
     @FXML private TextField emailField;
     @FXML private ComboBox<String> roleComboBox;
-    @FXML private PasswordField passwordField; // Used for setting a new password
+    @FXML private PasswordField currentPasswordField;
+    @FXML private TextField visiblePasswordField;
+    @FXML private ToggleButton showPasswordToggle;
+    @FXML private PasswordField newPasswordField;
 
     private Stage dialogStage;
     private User selectedUser;
@@ -37,77 +40,106 @@ public class UserEditController {
 
     /**
      * Sets the user to be edited and populates the fields.
+     * Initializes the current password fields.
+     * @param selectedUser The user object to display and edit.
      */
-    public void setSelectedUser(User user) {
-        this.selectedUser = user;
+    public void setSelectedUser(User selectedUser) {
+        this.selectedUser = selectedUser;
 
-        if (user != null) {
-            nameField.setText(user.getName());
-            surnameField.setText(user.getSurname());
-            nationalIDField.setText(user.getNationalID());
-            birthdateField.setValue(user.getBirthdate());
-            usernameField.setText(user.getUsername());
-            emailField.setText(user.getEmail());
+        nameField.setText(selectedUser.getName());
+        surnameField.setText(selectedUser.getSurname());
+        nationalIDField.setText(selectedUser.getNationalID());
+        birthdateField.setValue(selectedUser.getBirthdate());
+        usernameField.setText(selectedUser.getUsername());
+        emailField.setText(selectedUser.getEmail());
 
-            // Set Role based on ID (assuming 1=Admin, 2=User)
-            String role = (user.getIdRole() == 1) ? "Admin" : "User";
-            roleComboBox.getSelectionModel().select(role);
+        // Map idRole back to Role String for ComboBox display
+        String roleText = selectedUser.getIdRole() != null && selectedUser.getIdRole() == 1 ? "Admin" : "User";
+        roleComboBox.getSelectionModel().select(roleText);
+
+        // Populate the Current Password field(s)
+        String currentPassword = selectedUser.getPassword();
+        currentPasswordField.setText(currentPassword);
+        visiblePasswordField.setText(currentPassword);
+    }
+
+    /**
+     * Sets the reference to the main management controller.
+     * @param userManagementController The controller managing the user table.
+     */
+    public void setUserManagementController(UserManagementController userManagementController) {
+        this.userManagementController = userManagementController;
+    }
+
+    /**
+     * Handles the action of the password toggle button.
+     * Toggles visibility between the PasswordField and the TextField.
+     */
+    @FXML
+    private void handlePasswordToggle() {
+        if (showPasswordToggle.isSelected()) {
+            // Show password (use visiblePasswordField)
+            currentPasswordField.setVisible(false);
+            currentPasswordField.setManaged(false);
+            visiblePasswordField.setVisible(true);
+            visiblePasswordField.setManaged(true);
+            showPasswordToggle.setText("Hide");
+        } else {
+            // Hide password (use currentPasswordField)
+            currentPasswordField.setVisible(true);
+            currentPasswordField.setManaged(true);
+            visiblePasswordField.setVisible(false);
+            visiblePasswordField.setManaged(false);
+            showPasswordToggle.setText("Show");
         }
     }
 
     /**
-     * Sets the reference to the main management controller to allow refreshing the table.
-     */
-    public void setUserManagementController(UserManagementController controller) {
-        this.userManagementController = controller;
-    }
-
-    /**
-     * Handles the 'Save Changes' button click.
-     * Updates the user information.
+     * Handles the 'Save Changes' button click event.
+     * Updates the user information based on the form fields.
      */
     @FXML
     private void handleSave() {
-        if (selectedUser == null) return;
+        // Determine the password to save: new password if entered, otherwise keep old one
+        String newPassword = newPasswordField.getText(); // Use the new FXML field name
+        String passwordToSave = newPassword.isEmpty() ? selectedUser.getPassword() : newPassword;
 
-        // 1. Validate Input (Basic check - more detailed validation in UserService)
-        if (birthdateField.getValue() == null) {
-            showAlert("Validation Error", "Missing Birthdate", "Birthdate is required.", AlertType.ERROR);
-            return;
-        }
-
-        // 2. Update the User Model
-        selectedUser.setName(nameField.getText());
-        selectedUser.setSurname(surnameField.getText());
-        selectedUser.setNationalID(nationalIDField.getText());
-        selectedUser.setBirthdate(birthdateField.getValue());
-        selectedUser.setUsername(usernameField.getText());
-        selectedUser.setEmail(emailField.getText());
-
-        // Map Role ComboBox value back to ID
+        // Convert Role String back to Integer ID (assuming 1=Admin, 2=User)
         String roleText = roleComboBox.getSelectionModel().getSelectedItem();
-        Integer idRole = roleText != null && roleText.equals("Admin") ? 1 : 2;
-        selectedUser.setIdRole(idRole);
+        Integer newIdRole = roleText != null && roleText.equals("Admin") ? 1 : 2; // Default to User (2) if null/not Admin
 
-        // Handle Password Update ONLY if the field is not empty
-        String newPassword = passwordField.getText();
-        if (newPassword != null && !newPassword.trim().isEmpty()) {
-            selectedUser.setPassword(newPassword);
-        }
+        // Create the updated User object
+        User updatedUser = new User(
+                selectedUser.getIdUser(),
+                nameField.getText(),
+                surnameField.getText(),
+                usernameField.getText(),
+                nationalIDField.getText(),
+                birthdateField.getValue(),
+                passwordToSave, // Use the determined password
+                emailField.getText(),
+                newIdRole // PASS THE ID ROLE HERE (Fixes NullPointerException)
+        );
 
         try {
-            // 3. Call the Business Logic to update the user
-            userService.updateUser(selectedUser); // Assuming you have an updateUser method in UserService
+            // Check if the user ID has been tampered with (for safety)
+            if (updatedUser.getIdUser() == null || updatedUser.getIdUser() <= 0) {
+                throw new UserServiceException("Error: Cannot save changes; user ID is invalid.");
+            }
 
-            // 4. Success Feedback (Changes saved correctly)
-            showAlert("Success", "Changes Saved", "The user details have been updated correctly.", AlertType.INFORMATION);
+            // Call the service layer to perform the update
+            userService.updateUser(updatedUser);
 
-            // 5. Notify main controller to refresh and close dialog
+            showAlert("Success", "Update Complete", "User details have been successfully updated.", AlertType.INFORMATION);
+
+            // Update the selectedUser object with the new data for immediate display/use
+            this.selectedUser = updatedUser;
+
             userManagementController.loadInitialUserData();
             dialogStage.close();
 
         } catch (UserServiceException e) {
-            showAlert("Validation Error", "Update Failed", e.getMessage(), AlertType.ERROR);
+            showAlert("Validation Error", "Cannot Save Changes", e.getMessage(), AlertType.ERROR);
         } catch (DAOException e) {
             showAlert("System Error", "Database Operation Failed", "An internal error occurred: " + e.getMessage(), AlertType.ERROR);
         }

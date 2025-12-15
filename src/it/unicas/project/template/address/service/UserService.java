@@ -73,10 +73,12 @@ public class UserService {
             }
         }
 
-        // Check if the user already exists by National ID using the DAO's select method.
-        User filter = new User(null, "", "", "", newUser.getNationalID(), null, "", "", null);
+        // Check if the user already exists by National ID AND Role ID.
+        // The uniqueness rule is Role + NationalID.
+        User filter = new User(null, "", "", "", newUser.getNationalID(), null, "", "", newUser.getIdRole());
+        // Use the DAO's select method with the specific filter
         if (!userDAO.select(filter).isEmpty()) {
-            throw new UserServiceException("Error: The National ID is already registered in the system.");
+            throw new UserServiceException("Error: A user with the same National ID and Role is already registered in the system.");
         }
 
         // --- Persistence ---
@@ -116,16 +118,16 @@ public class UserService {
             throw new UserServiceException("Error: Role is mandatory.");
         }
 
-        // --- 2. Uniqueness Check (National ID) ---
-        // Check if the National ID is already taken by a *different* user
-        User filterById = new User(null, "", "", "", userToUpdate.getNationalID(), null, "", "", null);
+        // --- 2. Uniqueness Check (National ID + Role) ---
+        // Check if the National ID is already taken by a different user
+        User filterById = new User(null, "", "", "", userToUpdate.getNationalID(), null, "", "", userToUpdate.getIdRole());
         List<User> existingUsers = userDAO.select(filterById);
 
         if (!existingUsers.isEmpty()) {
-            // If the ID is found, ensure it belongs to the user being updated
+            // If the combination is found, ensure it belongs to the user being updated
             for(User existing : existingUsers) {
                 if (!existing.getIdUser().equals(userToUpdate.getIdUser())) {
-                    throw new UserServiceException("Error: The National ID is already registered by another user.");
+                    throw new UserServiceException("Error: The National ID and Role combination is already used by another user.");
                 }
             }
         }

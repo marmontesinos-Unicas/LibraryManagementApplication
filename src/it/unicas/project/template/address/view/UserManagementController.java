@@ -90,14 +90,14 @@ public class UserManagementController {
 
         userTable.setPlaceholder(new Label("No users registered in the database."));
 
-        // FIXED: Add debounced listener for search (300ms delay)
+        // Add debounced listener for search (300ms delay)
         searchField.textProperty().addListener((observable, oldValue, newValue) -> {
             scheduleSearch();
         });
     }
 
     /**
-     * FIXED: Schedule search execution after 300ms delay
+     * Schedule search execution after 300ms delay
      */
     private void scheduleSearch() {
         // Cancel previous search task if still pending
@@ -137,7 +137,7 @@ public class UserManagementController {
 
     /**
      * Handles search using cached data.
-     * FIXED: Now uses cached data instead of hitting DB on every keystroke.
+     * Uses cached data instead of hitting DB on every keystroke.
      */
     @FXML
     private void handleSearch() {
@@ -189,6 +189,7 @@ public class UserManagementController {
             Stage dialogStage = new Stage();
             dialogStage.setTitle("Register New User");
             dialogStage.initModality(Modality.WINDOW_MODAL);
+            dialogStage.setResizable(false); // Prevent resizing of the dialog window
 
             Stage parentStage = (Stage) userTable.getScene().getWindow();
             dialogStage.initOwner(parentStage);
@@ -250,6 +251,8 @@ public class UserManagementController {
             Stage dialogStage = new Stage();
             dialogStage.setTitle("Edit User: " + selectedUser.getName() + " " + selectedUser.getSurname());
             dialogStage.initModality(Modality.WINDOW_MODAL);
+            dialogStage.setResizable(false); // Prevent resizing of the dialog window
+
             Stage parentStage = (Stage) userTable.getScene().getWindow();
             dialogStage.initOwner(parentStage);
             Scene scene = new Scene(page);

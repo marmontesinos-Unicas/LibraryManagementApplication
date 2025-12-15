@@ -52,7 +52,14 @@ public class UserDAOMySQLImpl {
             throw new DAOException("Error retrieving user by username: " + e.getMessage());
         }
     }
-
+    /**
+     * Selects users based on the non-null/non-default fields in the filter User object.
+     * This method supports filtering by National ID AND Role ID for the uniqueness check.
+     * It is made robust against a null idRole property in the filter object.
+     * @param u The User object containing filter criteria. If null, returns all users.
+     * @return A list of users matching the criteria.
+     * @throws DAOException if a database error occurs.
+     */
     public List<User> select(User u) throws DAOException {
         List<User> list = new ArrayList<>();
         if (u == null) u = new User(null, "", "", "", "", null, "", "", -1);
@@ -64,6 +71,7 @@ public class UserDAOMySQLImpl {
         if (u.getUsername() != null && !u.getUsername().isEmpty()) sql += " AND username LIKE ?";
         if (u.getNationalID() != null && !u.getNationalID().isEmpty()) sql += " AND nationalID = ?";
         if (u.getEmail() != null && !u.getEmail().isEmpty()) sql += " AND email LIKE ?";
+        if (u.getIdRole() != null && u.getIdRole() != -1) sql += " AND idRole = ?";
 
         try (Connection conn = DAOMySQLSettings.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -75,6 +83,7 @@ public class UserDAOMySQLImpl {
             if (u.getUsername() != null && !u.getUsername().isEmpty()) ps.setString(index++, u.getUsername() + "%");
             if (u.getNationalID() != null && !u.getNationalID().isEmpty()) ps.setString(index++, u.getNationalID());
             if (u.getEmail() != null && !u.getEmail().isEmpty()) ps.setString(index++, "%" + u.getEmail() + "%");
+            if (u.getIdRole() != null && u.getIdRole() != -1) ps.setInt(index++, u.getIdRole());
 
             logger.info("SQL: " + ps);
 

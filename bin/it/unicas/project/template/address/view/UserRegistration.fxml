@@ -39,7 +39,7 @@
         <Label text="Role:" GridPane.columnIndex="0" GridPane.rowIndex="7" />
         <TextField fx:id="nameField" promptText="Enter Name" GridPane.columnIndex="1" GridPane.rowIndex="0" />
         <TextField fx:id="surnameField" promptText="Enter Surname" GridPane.columnIndex="1" GridPane.rowIndex="1" />
-        <DatePicker fx:id="birthdateField" promptText="dd/MM/yyyy" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+        <DatePicker fx:id="birthdateField" promptText="MM/dd/yyyy" GridPane.columnIndex="1" GridPane.rowIndex="2" editable="true" />
         <TextField fx:id="nationalIDField" promptText="Enter National ID" GridPane.columnIndex="1" GridPane.rowIndex="3" />
         <TextField fx:id="usernameField" promptText="Enter Username" GridPane.columnIndex="1" GridPane.rowIndex="4" />
         <PasswordField fx:id="passwordField" promptText="Enter Password (min 8, 1 uppercase, 1 number)" GridPane.columnIndex="1" GridPane.rowIndex="5">
