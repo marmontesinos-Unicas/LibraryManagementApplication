@@ -36,17 +36,16 @@
         <Label text="Username:" GridPane.columnIndex="0" GridPane.rowIndex="4" />
         <Label text="Email:" GridPane.columnIndex="0" GridPane.rowIndex="5" />
         <Label text="Role:" GridPane.columnIndex="0" GridPane.rowIndex="6" />
-        <Label text="Password:" GridPane.columnIndex="0" GridPane.rowIndex="7" />
 
         <!-- Input Fields -->
         <TextField fx:id="nameField" promptText="Enter Name" GridPane.columnIndex="1" GridPane.rowIndex="0" />
         <TextField fx:id="surnameField" promptText="Enter Surname" GridPane.columnIndex="1" GridPane.rowIndex="1" />
-        <DatePicker fx:id="birthdateField" promptText="yyyy-MM-dd" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+        <DatePicker fx:id="birthdateField" promptText="MM/dd/yyyy" GridPane.columnIndex="1" GridPane.rowIndex="2" editable="true" />
         <TextField fx:id="nationalIDField" promptText="Enter National ID" GridPane.columnIndex="1" GridPane.rowIndex="3" />
         <TextField fx:id="usernameField" promptText="Enter Username" GridPane.columnIndex="1" GridPane.rowIndex="4" />
         <TextField fx:id="emailField" promptText="Enter Email" GridPane.columnIndex="1" GridPane.rowIndex="5" />
 
-        <!-- Role ComboBox (FIXED) -->
+        <!-- Role ComboBox -->
         <ComboBox fx:id="roleComboBox" promptText="Select Role" GridPane.columnIndex="1" GridPane.rowIndex="6">
             <items>
                 <FXCollections fx:factory="observableArrayList">
@@ -56,7 +55,16 @@
             </items>
         </ComboBox>
 
-        <PasswordField fx:id="passwordField" promptText="Enter NEW Password (optional)" GridPane.columnIndex="1" GridPane.rowIndex="7" />
+        <Label text="Current Password:" GridPane.rowIndex="7" />
+        <HBox alignment="CENTER_LEFT" spacing="5.0" GridPane.columnIndex="1" GridPane.rowIndex="7">
+            <PasswordField fx:id="currentPasswordField" editable="false" promptText="Current Password" HBox.hgrow="ALWAYS" />
+            <TextField fx:id="visiblePasswordField" editable="false" promptText="Current Password" managed="false" visible="false" HBox.hgrow="ALWAYS" />
+            <ToggleButton fx:id="showPasswordToggle" mnemonicParsing="false" text="Show" onAction="#handlePasswordToggle" />
+        </HBox>
+
+        <Label text="New Password (optional):" GridPane.rowIndex="8" />
+        <PasswordField fx:id="newPasswordField" promptText="Enter NEW Password (optional)" GridPane.columnIndex="1" GridPane.rowIndex="8" />
+
     </GridPane>
 
     <!-- Buttons -->

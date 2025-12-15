@@ -1,6 +1,5 @@
 package it.unicas.project.template.address.view;
 
-// ... (rest of imports remain the same) ...
 import it.unicas.project.template.address.model.User;
 import it.unicas.project.template.address.model.dao.DAOException;
 import it.unicas.project.template.address.service.UserServiceException;
@@ -15,7 +14,7 @@ import java.time.LocalDate;
 
 public class UserRegistrationController {
 
-    // NEW FIELD: Reference back to the main UserManagementController
+    // Reference back to the main UserManagementController
     private UserManagementController userManagementController;
 
     // UI Elements (must match fx:id in your FXML file)
@@ -40,19 +39,28 @@ public class UserRegistrationController {
     private UserService userService = new UserService();
 
     /**
-     * NEW METHOD: Sets the reference to the main management controller.
+     * Initializes the controller class. This method is automatically called
+     * after the fxml file has been loaded.
+     */
+    @FXML
+    private void initialize() {
+       // This method is here for future expansion if a custom format is required.
+        // It's good practice to have an initialize method for FXML controllers.
+    }
+
+    /**
+     * Sets the reference to the main management controller.
      */
     public void setUserManagementController(UserManagementController userManagementController) {
         this.userManagementController = userManagementController;
     }
-
 
     /**
      * Handles the 'Register' button click event.
      */
     @FXML
     private void handleRegisterUser() {
-        // ... (rest of data retrieval and validation logic remains the same) ...
+
         String name = nameField.getText();
         String surname = surnameField.getText();
         String nationalID = nationalIDField.getText();
@@ -63,11 +71,6 @@ public class UserRegistrationController {
         String roleText = roleComboBox.getSelectionModel().getSelectedItem();
         // Simple mapping: 1 for Admin, 2 for User. Adjust this based on your database roles.
         Integer idRole = roleText != null && roleText.equals("Admin") ? 1 : 2;
-
-//        if (birthdate == null) {
-//            showAlert("Validation Error", "Missing Birthdate", "Birthdate is required.", AlertType.ERROR);
-//            return;
-//        }
 
         User newUser = new User(null, name, surname, username, nationalID, birthdate, password, email, idRole);
 
@@ -94,8 +97,6 @@ public class UserRegistrationController {
                 showAlert("Validation Error", "Missing Name", "Please enter the user's name.", AlertType.ERROR);
             } else if (msg.contains("Surname is mandatory") || msg.toLowerCase().contains("surname")) {
                 showAlert("Validation Error", "Missing Surname", "Please enter the user's surname.", AlertType.ERROR);
-            } else if (msg.contains("National ID is mandatory") || msg.toLowerCase().contains("national id")) {
-                showAlert("Validation Error", "Missing National ID", "Please enter the user's national ID.", AlertType.ERROR);
             } else if (msg.contains("Username is mandatory") || msg.toLowerCase().contains("username")) {
                 showAlert("Validation Error", "Missing Username", "Please enter a username.", AlertType.ERROR);
             } else if (msg.contains("Password is mandatory") || msg.toLowerCase().contains("password is mandatory")) {
@@ -106,12 +107,13 @@ public class UserRegistrationController {
                 showAlert("Validation Error", "Missing Birthdate", "Please provide the user's birthdate.", AlertType.ERROR);
             } else if (msg.contains("yyyy-MM-dd") || msg.toLowerCase().contains("birth date must be")) {
                 showAlert("Validation Error", "Invalid Birthdate Format", "Birthdate must be in yyyy-MM-dd format.", AlertType.ERROR);
-            } else if (msg.toLowerCase().contains("already registered") || msg.toLowerCase().contains("already")) {
-                showAlert("Duplicate Error", "National ID Already Registered", "The provided national ID is already registered in the system.", AlertType.ERROR);
             } else if (msg.contains("Role is mandatory") || msg.toLowerCase().contains("role") && msg.toLowerCase().contains("mandatory")) {
                 showAlert("Validation Error", "Missing Role", "Please select a role.", AlertType.ERROR);
-            }
-            else {
+            } else if (msg.toLowerCase().contains("already registered") || msg.toLowerCase().contains("already")) {
+                showAlert("Duplicate Error", "User Combination Already Registered", "The provided National ID and Role combination is already registered in the system.", AlertType.ERROR);
+            } else if (msg.contains("National ID is mandatory") || msg.toLowerCase().contains("national id")) {
+                showAlert("Validation Error", "Missing National ID", "Please enter the user's national ID.", AlertType.ERROR);
+            } else {
                 showAlert("Validation Error", "Cannot Register User", msg.isEmpty() ? "Validation failed." : msg, AlertType.ERROR);
             }
 
@@ -130,7 +132,6 @@ public class UserRegistrationController {
         stage.close();
     }
 
-    // ... (rest of showAlert and clearFields helper methods remain the same) ...
     private void showAlert(String title, String header, String content, AlertType type) {
         Alert alert = new Alert(type);
         alert.setTitle(title);
