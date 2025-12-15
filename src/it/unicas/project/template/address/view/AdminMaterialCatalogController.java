@@ -431,7 +431,7 @@ public class AdminMaterialCatalogController {
                     setStyle("");
                 } else {
                     setText(status);
-                    if (status.equalsIgnoreCase("Available")) {
+                    if (status.equalsIgnoreCase("available")) {
                         setStyle("-fx-text-fill: green; -fx-font-weight: bold;");
                     } else if (status.equalsIgnoreCase("On Loan")) {
                         setStyle("-fx-text-fill: orange; -fx-font-weight: bold;");
@@ -577,19 +577,16 @@ public class AdminMaterialCatalogController {
             dialogStage.initOwner(addButton.getScene().getWindow());
             dialogStage.setScene(new Scene(root));
 
-            // IMPORTANT: pass the stage to the controller so its handlers can close it
-            AddMaterialController controller = loader.getController();
-            controller.setDialogStage(dialogStage);
+            dialogStage.showAndWait();  // This waits for dialog to close
 
-            dialogStage.showAndWait();
-            refresh();
+            // FIXED: Refresh data after dialog closes
+            refresh();  // This line was already there!
 
         } catch (IOException e) {
             showError("Error", "Could not load Add Material dialog: " + e.getMessage());
             e.printStackTrace();
         }
     }
-
 
     @FXML
     private void handleEdit() {
@@ -705,4 +702,12 @@ public class AdminMaterialCatalogController {
         this.mainApp = mainApp;
     }
 
+    /**
+     * Cleanup when controller is destroyed
+     */
+    public void cleanup() {
+        if (searchScheduler != null && !searchScheduler.isShutdown()) {
+            searchScheduler.shutdown();
+        }
+    }
 }

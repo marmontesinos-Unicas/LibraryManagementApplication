@@ -45,9 +45,7 @@ public class MaterialCatalogService {
                     boolean matchesGenre = true;
                     if (!selectedGenres.isEmpty()) {
                         Set<Integer> genreIds = materialGenreMap.get(material.getIdMaterial());
-                        if (genreIds == null || genreIds.isEmpty()) {
-                            matchesGenre = false;
-                        } else {
+                        if (genreIds != null && !genreIds.isEmpty()) {
                             matchesGenre = genreIds.stream()
                                     .map(genreMap::get)
                                     .anyMatch(selectedGenres::contains);
