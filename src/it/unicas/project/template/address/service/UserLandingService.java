@@ -76,7 +76,7 @@ public class UserLandingService {
                 status = "Active";
             }
 
-            return new LoanRow(loan.getIdLoan(), "", title, "", returnDate, status);
+            return new LoanRow(loan.getIdLoan(), "", title, "", "", "", returnDate, status);
         }).collect(Collectors.toList());
     }
 

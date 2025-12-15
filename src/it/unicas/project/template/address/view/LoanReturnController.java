@@ -1,6 +1,7 @@
 package it.unicas.project.template.address.view;
 
 import it.unicas.project.template.address.MainApp;
+import it.unicas.project.template.address.view.LoanRow;
 import it.unicas.project.template.address.model.Loan;
 import it.unicas.project.template.address.model.Material;
 import it.unicas.project.template.address.model.User;
@@ -43,6 +44,8 @@ public class LoanReturnController {
     @FXML private TableView<LoanRow> loansTable;        // Table to display loans
     @FXML private TableColumn<LoanRow, String> materialTypeColumn;
     @FXML private TableColumn<LoanRow, String> titleColumn;
+    @FXML private TableColumn<LoanRow, String> authorColumn;
+    @FXML private TableColumn<LoanRow, String> isbnColumn;
     @FXML private TableColumn<LoanRow, String> userColumn;
     @FXML private TableColumn<LoanRow, String> dueDateColumn;
     @FXML private TableColumn<LoanRow, String> delayedColumn;
@@ -88,6 +91,8 @@ public class LoanReturnController {
         // Configure table columns
         materialTypeColumn.setCellValueFactory(data -> data.getValue().materialTypeProperty());
         titleColumn.setCellValueFactory(data -> data.getValue().titleProperty());
+        authorColumn.setCellValueFactory(data -> data.getValue().authorProperty());
+        isbnColumn.setCellValueFactory(data -> data.getValue().isbnProperty());
         userColumn.setCellValueFactory(data -> data.getValue().userProperty());
         dueDateColumn.setCellValueFactory(data -> data.getValue().dueDateProperty());
         delayedColumn.setCellValueFactory(data -> data.getValue().delayedProperty());
@@ -220,11 +225,13 @@ public class LoanReturnController {
         };
 
         String title = m.getTitle() != null ? m.getTitle() : "—";
+        String author = m.getAuthor() != null ? m.getAuthor() : "—";
+        String isbn = m.getISBN() != null ? m.getISBN() : "—";
         String userName = (u.getName() != null ? u.getName() : "") + " " + (u.getSurname() != null ? u.getSurname() : "");
         String due = loan.getDue_date() != null ? loan.getDue_date().toLocalDate().toString() : "—";
         boolean delayed = loan.getDue_date() != null && loan.getDue_date().isBefore(LocalDateTime.now());
 
-        return new LoanRow(loan.getIdLoan(), materialType, title, userName, due, delayed ? "Yes" : "No");
+        return new LoanRow(loan.getIdLoan(), materialType, title, author, isbn, userName, due, delayed ? "Yes" : "No");
     }
 
     /**
@@ -426,46 +433,6 @@ public class LoanReturnController {
     public void cleanup() {
         if (searchScheduler != null && !searchScheduler.isShutdown()) {
             searchScheduler.shutdown();
-        }
-    }
-
-    /**
-     * Inner class representing a row in the loans TableView.
-     */
-    public static class LoanRow {
-        private final int idLoan;
-        private final SimpleStringProperty materialType;
-        private final SimpleStringProperty title;
-        private final SimpleStringProperty user;
-        private final SimpleStringProperty dueDate;
-        private final SimpleStringProperty delayed;
-
-        public LoanRow(int idLoan, String materialType, String title, String user, String dueDate, String delayed) {
-            this.idLoan = idLoan;
-            this.materialType = new SimpleStringProperty(materialType);
-            this.title = new SimpleStringProperty(title);
-            this.user = new SimpleStringProperty(user);
-            this.dueDate = new SimpleStringProperty(dueDate);
-            this.delayed = new SimpleStringProperty(delayed);
-        }
-
-        public int getIdLoan() { return idLoan; }
-        public SimpleStringProperty materialTypeProperty() { return materialType; }
-        public SimpleStringProperty titleProperty() { return title; }
-        public SimpleStringProperty userProperty() { return user; }
-        public SimpleStringProperty dueDateProperty() { return dueDate; }
-        public SimpleStringProperty delayedProperty() { return delayed; }
-
-        public String getTitle() { return title.get(); }
-        public String getUser() { return user.get(); }
-
-        /**
-         * Converts due date string to LocalDateTime.
-         * @return LocalDateTime of due date or MAX if invalid
-         */
-        public LocalDateTime getDueDateAsLocalDate() {
-            if (dueDate.get() == null || dueDate.get().equals("—")) return LocalDateTime.MAX;
-            return LocalDateTime.parse(dueDate.get() + "T00:00:00");
         }
     }
 }

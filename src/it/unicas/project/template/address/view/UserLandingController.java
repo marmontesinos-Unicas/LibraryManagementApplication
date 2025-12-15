@@ -241,7 +241,7 @@ public class    UserLandingController {
                     status = "Active";
                 }
 
-                loanList.add(new LoanRow(loan.getIdLoan(), "", title, "", returnDate, status));
+                loanList.add(new LoanRow(loan.getIdLoan(), "", title, "", "", "", returnDate, status));
             }
 
             // ----- Load Holds -----

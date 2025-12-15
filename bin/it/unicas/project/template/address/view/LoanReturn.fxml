@@ -35,8 +35,10 @@
                    VBox.vgrow="ALWAYS">
 
             <columns>
-                <TableColumn fx:id="materialTypeColumn" text="Material Type"/>
+                <TableColumn fx:id="materialTypeColumn" text="Type"/>
                 <TableColumn fx:id="titleColumn" text="Title"/>
+                <TableColumn fx:id="authorColumn" text="Author"/>
+                <TableColumn fx:id="isbnColumn" text="ISBN"/>
                 <TableColumn fx:id="userColumn" text="User"/>
                 <TableColumn fx:id="dueDateColumn" text="Due Date"/>
                 <TableColumn fx:id="delayedColumn" text="Delayed"/>
