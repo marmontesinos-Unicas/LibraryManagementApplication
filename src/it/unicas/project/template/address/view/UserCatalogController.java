@@ -629,7 +629,7 @@ public class UserCatalogController {
 
     /**
      * Apply the combined search and filter criteria.
-     * FIXED: Now uses SearchService for prioritized field searching
+     * uses SearchService for prioritized field searching
      */
     @FXML
     private void handleFilter() {

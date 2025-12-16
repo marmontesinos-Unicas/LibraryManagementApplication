@@ -34,24 +34,41 @@ public class MaterialCatalogService {
 
         List<Material> filtered = materials.stream()
                 .filter(material -> {
-                    boolean matchesType =
-                            selectedTypes.isEmpty() ||
-                                    selectedTypes.contains(materialTypeMap.get(material.getIdMaterialType()));
+                    // Type filter: if empty, show only materials with no type
+                    boolean matchesType;
+                    if (selectedTypes.isEmpty()) {
+                        matchesType = material.getIdMaterialType() == null ||
+                                materialTypeMap.get(material.getIdMaterialType()) == null;
+                    } else {
+                        matchesType = selectedTypes.contains(materialTypeMap.get(material.getIdMaterialType()));
+                    }
 
-                    boolean matchesStatus =
-                            selectedStatuses.isEmpty() ||
-                                    selectedStatuses.contains(material.getMaterial_status());
+                    // Status filter: if empty, show only materials with no status
+                    boolean matchesStatus;
+                    if (selectedStatuses.isEmpty()) {
+                        matchesStatus = material.getMaterial_status() == null ||
+                                material.getMaterial_status().isEmpty();
+                    } else {
+                        matchesStatus = selectedStatuses.contains(material.getMaterial_status());
+                    }
 
-                    boolean matchesGenre = true;
-                    if (!selectedGenres.isEmpty()) {
+                    // Genre filter: if empty, show only materials with no genre
+                    boolean matchesGenre;
+                    if (selectedGenres.isEmpty()) {
+                        Set<Integer> genreIds = materialGenreMap.get(material.getIdMaterial());
+                        matchesGenre = genreIds == null || genreIds.isEmpty();
+                    } else {
                         Set<Integer> genreIds = materialGenreMap.get(material.getIdMaterial());
                         if (genreIds != null && !genreIds.isEmpty()) {
                             matchesGenre = genreIds.stream()
                                     .map(genreMap::get)
                                     .anyMatch(selectedGenres::contains);
+                        } else {
+                            matchesGenre = false;
                         }
                     }
 
+                    // Year filter
                     boolean matchesYear = true;
                     try {
                         if (!yearFrom.isEmpty()) {
@@ -76,4 +93,3 @@ public class MaterialCatalogService {
         return filtered;
     }
 }
-
