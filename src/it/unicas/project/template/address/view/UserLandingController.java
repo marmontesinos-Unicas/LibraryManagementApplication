@@ -11,9 +11,7 @@ import it.unicas.project.template.address.model.dao.mysql.LoanDAOMySQLImpl;
 import it.unicas.project.template.address.model.dao.mysql.MaterialDAOMySQLImpl;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import it.unicas.project.template.address.model.dao.DAOException;
 import it.unicas.project.template.address.service.NotificationsService;
-import it.unicas.project.template.address.model.User;
 import java.util.List;
 import java.util.Optional;
 
@@ -26,15 +24,11 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.TableCell;
-import javafx.scene.control.TableColumn;
-import javafx.util.Callback;
-import javafx.event.ActionEvent;
 import javafx.scene.Node;
 import javafx.stage.Stage;
 import javafx.scene.control.ListView;
 
 import java.time.format.DateTimeFormatter;
-import java.util.List;
 import java.util.stream.Collectors;
 
 /**
@@ -120,6 +114,7 @@ public class    UserLandingController {
     /**
      * Handle the Notifications button click.
      * Opens the notifications view.
+     * @param event The action event.
      */
     @FXML
     protected void handleNotifications(ActionEvent event) {
@@ -134,12 +129,24 @@ public class    UserLandingController {
     public void initialize() {
 
         // ----- Loan Table Setup -----
+        /**
+         * Binds the loan table column to the title property of the LoanRow.
+         */
         loanTitleColumn.setCellValueFactory(cell -> cell.getValue().titleProperty());
+        /**
+         * Binds the loan table column to the due date property of the LoanRow.
+         */
         loanReturnDateColumn.setCellValueFactory(cell -> cell.getValue().dueDateProperty());
+        /**
+         * Binds the loan table column to the delayed status property of the LoanRow.
+         */
         loanStatusColumn.setCellValueFactory(cell -> cell.getValue().delayedProperty());
         myLoansTable.setItems(loanList);
 
         // Color the loan status column depending on the value
+        /**
+         * Customizes the appearance of the loan status column based on whether the loan is "Delayed" (red) or "Active" (green).
+         */
         loanStatusColumn.setCellFactory(column -> new TableCell<LoanRow, String>() {
             @Override
             protected void updateItem(String item, boolean empty) {
@@ -159,11 +166,21 @@ public class    UserLandingController {
         });
 
         // ----- Hold Table Setup -----
+        /**
+         * Binds the hold table column to the title property of the HoldRow.
+         */
         holdTitleColumn.setCellValueFactory(cell -> cell.getValue().titleProperty());
+        /**
+         * Binds the hold table column to the maximum date property of the HoldRow.
+         */
         holdMaxDateColumn.setCellValueFactory(cell -> cell.getValue().maxDateProperty());
         myHoldsTable.setItems(holdList);
 
         // Disable delete button when nothing is selected
+        /**
+         * Binds the disabled property of the delete hold button to the selection state of the hold table.
+         * The button is disabled when no hold is selected.
+         */
         deleteHoldButton.disableProperty().bind(
                 myHoldsTable.getSelectionModel().selectedItemProperty().isNull()
         );
@@ -180,7 +197,8 @@ public class    UserLandingController {
     }
 
     /**
-     * Checks overdue notifications for the user and updates the notifications button UI.
+     * Checks for overdue notifications for the specified user and updates the appearance of the notifications button.
+     * @param currentUser The user whose overdue status is being checked.
      */
     private void checkOverdueStatus(User currentUser) {
         try {
@@ -188,6 +206,7 @@ public class    UserLandingController {
             int count = overdueNotifications.size();
 
             if (count > 0) {
+                // Highlight button if notifications exist
                 notificationsButton.setStyle("-fx-background-color: #D32F2F; -fx-text-fill: white; -fx-font-weight: bold;");
                 notificationsButton.setText("Notifications (" + count + ")");
             } else {
@@ -203,7 +222,7 @@ public class    UserLandingController {
     }
 
     /**
-     * Loads loans and holds from the database and fills the UI tables.
+     * Loads the current loans and holds for the logged-in user from the database and populates the UI tables.
      */
     private void loadUserData() {
         if (currentUser == null) return;
@@ -274,6 +293,8 @@ public class    UserLandingController {
 
     /**
      * Event handler for the search button.
+     * Navigates to the user catalog view to allow the user to search for materials.
+     * @param event The action event.
      */
     @FXML
     protected void handleSearch(ActionEvent event) {
@@ -285,8 +306,8 @@ public class    UserLandingController {
     }
 
     /**
-     * Handles deleting a selected hold.
-     * Confirms with the user, updates material status, removes the hold from DB and UI.
+     * Handles deleting a selected hold from the {@code myHoldsTable}.
+     * Displays a confirmation dialog, removes the hold from the database, and updates the material status if necessary.
      */
     @FXML
     private void handleDeleteHold() {
@@ -342,6 +363,7 @@ public class    UserLandingController {
 
                 if (mats != null && !mats.isEmpty()) {
                     Material mat = mats.get(0);
+                    // Assume status should be reset to "available" if the hold is removed
                     mat.setMaterial_status("available");
                     MaterialDAOMySQLImpl.getInstance().update(mat);
                     materialUpdated = true;

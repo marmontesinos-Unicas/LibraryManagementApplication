@@ -42,7 +42,6 @@ import java.util.stream.Collectors;
 /**
  * Controller for Material Catalog - ADMIN VIEW ONLY
  * Allows full CRUD operations on materials
- * FIXED: Added debouncing to prevent connection leaks
  */
 public class AdminMaterialCatalogController {
 
@@ -96,7 +95,7 @@ public class AdminMaterialCatalogController {
 
     private final MaterialCatalogService catalogService = new MaterialCatalogService();
 
-    // FIXED: Debounce mechanism for search
+    // Debounce mechanism for search
     private ScheduledExecutorService searchScheduler = Executors.newSingleThreadScheduledExecutor();
     private java.util.concurrent.Future<?> filterTask;
 
@@ -132,7 +131,7 @@ public class AdminMaterialCatalogController {
     }
 
     /**
-     * FIXED: Schedule filter execution after 300ms delay
+     * Schedule filter execution after 300ms delay
      */
     private void scheduleFilter() {
         // Cancel previous filter task if still pending
@@ -272,7 +271,7 @@ public class AdminMaterialCatalogController {
                 }
                 selectAllCheckBox.setSelected(selectedOptions.size() == allOptions.size());
                 updateFilterButtonText(sourceButton, selectedOptions.size(), allOptions.size(), label);
-                // FIXED: Use scheduled filter instead of immediate
+                // Use scheduled filter instead of immediate
                 scheduleFilter();
             });
 
@@ -292,7 +291,7 @@ public class AdminMaterialCatalogController {
                 checkBoxMap.values().forEach(cb -> cb.setSelected(false));
             }
             updateFilterButtonText(sourceButton, selectedOptions.size(), allOptions.size(), label);
-            // FIXED: Use scheduled filter instead of immediate
+            // Use scheduled filter instead of immediate
             scheduleFilter();
         });
 
@@ -528,7 +527,7 @@ public class AdminMaterialCatalogController {
 
     /**
      * Enhanced filter with improved search algorithm and genre support
-     * FIXED: Now works with cached data (materialList) instead of hitting DB
+     * Now works with cached data (materialList) instead of hitting DB
      */
     @FXML
     private void handleFilter() {
@@ -554,6 +553,11 @@ public class AdminMaterialCatalogController {
         }
     }
 
+    /**
+     * Handles mouse clicks on the material table. Enables/disables edit/delete buttons based on selection
+     * and handles double-click to initiate the edit action.
+     * @param event The mouse event triggered by clicking the table.
+     */
     @FXML
     private void handleTableClick(MouseEvent event) {
         Material selected = materialTable.getSelectionModel().getSelectedItem();
@@ -654,6 +658,9 @@ public class AdminMaterialCatalogController {
         }
     }
 
+    /**
+     * Updates the label showing the count of filtered materials.
+     */
     private void updateResultCount() {
         resultCountLabel.setText(String.format("Total: %d materials", filteredList.size()));
     }
@@ -684,6 +691,11 @@ public class AdminMaterialCatalogController {
         alert.showAndWait();
     }
 
+    /**
+     * Displays a standard JavaFX alert for information.
+     * @param title The title of the alert window.
+     * @param content The main information message content.
+     */
     private void showInfo(String title, String content) {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle(title);
@@ -692,6 +704,10 @@ public class AdminMaterialCatalogController {
         alert.showAndWait();
     }
 
+    /**
+     * Reloads all material-related data (relationships and all materials) from the database
+     * and re-applies the current filter settings.
+     */
     public void refresh() {
         loadMaterialGenreRelationships();
         loadAllMaterials();

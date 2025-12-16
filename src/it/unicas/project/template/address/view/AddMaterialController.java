@@ -23,8 +23,18 @@ import javafx.stage.Stage;
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * Controller class for the "Add Material" dialog, used by the administrator
+ * to create a new material record, including its title, author, ISBN, year,
+ * material type, and associated genres.
+ * <p>
+ * Handles form validation, genre selection using a search/tagging mechanism,
+ * and calls the {@code MaterialService} for insertion (material + genres).
+ * </p>
+ */
 public class AddMaterialController {
 
+    // --- FXML Input Fields ---
     @FXML private TextField titleField;
     @FXML private TextField authorField;
     @FXML private TextField isbnField;
@@ -58,6 +68,9 @@ public class AddMaterialController {
         this.dialogStage = dialogStage;
     }
 
+    /**
+     * Initializes the controller after its root element has been completely processed.
+     */
     @FXML
     public void initialize() {
         System.out.println("AddMaterialController.initialize() called");
@@ -68,16 +81,25 @@ public class AddMaterialController {
         setupFieldValidation();
     }
 
+    /**
+     * Loads available material types from the database and populates the ComboBox.
+     */
     private void loadMaterialTypes() {
         List<MaterialType> types = materialTypeDAO.selectAll();
         ObservableList<MaterialType> obs = FXCollections.observableArrayList(types);
         materialTypeComboBox.setItems(obs);
     }
 
+    /**
+     * Loads all existing genres from the database into an internal list for searching.
+     */
     private void loadGenres() {
         allGenres = genreDAO.selectAll();
     }
 
+    /**
+     * Sets up listeners to clear validation error messages dynamically as the user interacts with the fields.
+     */
     private void setupFieldValidation() {
         // Clear error when user types in title field
         titleField.textProperty().addListener((obs, oldVal, newVal) -> {
@@ -101,6 +123,9 @@ public class AddMaterialController {
         });
     }
 
+    /**
+     * Configures the genre search field and results list behavior (filtering, selection, hiding).
+     */
     private void setupGenreSearch() {
         // Setup search field listener
         genreSearchField.textProperty().addListener((obs, oldVal, newVal) -> {
@@ -157,6 +182,11 @@ public class AddMaterialController {
         });
     }
 
+    /**
+     * Filters the genre list based on the user's query and updates the search results list.
+     *
+     * @param query The text to filter genres by.
+     */
     private void filterAndShowGenres(String query) {
         String lowerQuery = query.toLowerCase();
 
@@ -176,6 +206,11 @@ public class AddMaterialController {
         }
     }
 
+    /**
+     * Adds a selected {@code Genre} to the list of selected genres and displays it as a removable tag.
+     *
+     * @param genre The genre to add as a tag.
+     */
     private void addGenreTag(Genre genre) {
         if (selectedGenres.contains(genre)) {
             return;
@@ -216,6 +251,12 @@ public class AddMaterialController {
         selectedGenresPane.getChildren().add(tagButton);
     }
 
+    /**
+     * Handles the save operation: validates input, creates the Material, inserts it,
+     * and inserts the associated MaterialGenre links.
+     *
+     * Access Keyword Explanation: {@code private @FXML} - Event handler for the Save button.
+     */
     @FXML
     private void handleSaveMaterial() {
         // Clear all previous errors
@@ -292,6 +333,9 @@ public class AddMaterialController {
         }
     }
 
+    /**
+     * Applies standard error styling (red border) to a control and displays the error message.
+     */
     private void setFieldError(Control field, Label errorLabel, String message) {
         // Set red border on field
         field.setStyle("-fx-border-color: red; -fx-border-width: 2px;");
@@ -304,6 +348,9 @@ public class AddMaterialController {
         }
     }
 
+    /**
+     * Removes standard error styling from a control and hides the error message.
+     */
     private void clearFieldError(Control field, Label errorLabel) {
         // Remove red border
         field.setStyle("");
@@ -316,12 +363,20 @@ public class AddMaterialController {
         }
     }
 
+    /**
+     * Clears all validation error indicators across the form.
+     */
     private void clearAllErrors() {
         clearFieldError(titleField, titleErrorLabel);
         clearFieldError(yearField, yearErrorLabel);
         clearFieldError(materialTypeComboBox, materialTypeErrorLabel);
     }
 
+    /**
+     * Handles the cancel button action, confirming with the user if there are unsaved changes.
+     * <p>Access Keyword Explanation: {@code private @FXML} - Event handler for the Cancel button.</p>
+     * @param event The action event.
+     */
     @FXML
     private void handleCancel(ActionEvent event) {
 
@@ -366,6 +421,9 @@ public class AddMaterialController {
         }
     }
 
+    /**
+     * Resets all form fields and error indicators to their initial state.
+     */
     private void clearForm() {
         titleField.clear();
         authorField.clear();
@@ -378,6 +436,9 @@ public class AddMaterialController {
         clearAllErrors();
     }
 
+    /**
+     * Utility method to display an alert message.
+     */
     private void show(Alert.AlertType type, String message) {
         Alert a = new Alert(type);
         a.setHeaderText(null);

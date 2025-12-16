@@ -23,6 +23,11 @@ import javafx.stage.Stage;
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * Controller class for editing a single Material entity.
+ * This view allows modification of material details (title, author, ISBN, year, type)
+ * and managing its associated genres using a search and tag system.
+ */
 public class MonoMaterialEditController {
 
     @FXML private TextField titleField;
@@ -47,6 +52,10 @@ public class MonoMaterialEditController {
     private Set<Genre> selectedGenres = new HashSet<>();
     private Material currentMaterial; // The material being edited
 
+    /**
+     * Initializes the controller. This method is called automatically after the FXML file is loaded.
+     * It loads material types and genres, and sets up the genre search functionality.
+     */
     @FXML
     public void initialize() {
         System.out.println("MonoMaterialEditController.initialize() called");
@@ -57,7 +66,10 @@ public class MonoMaterialEditController {
     }
 
     /**
-     * Set the material to edit and populate fields
+     * Sets the material to be edited and populates all input fields with its current data.
+     * It also loads the existing genres associated with the material.
+     *
+     * @param material The {@code Material} object to be edited.
      */
     public void setMaterial(Material material) {
         this.currentMaterial = material;
@@ -83,6 +95,9 @@ public class MonoMaterialEditController {
         }
     }
 
+    /**
+     * Loads all available {@code MaterialType} entities from the database and populates the ComboBox.
+     */
     private void loadMaterialTypes() {
         List<MaterialType> types = materialTypeDAO.selectAll();
         ObservableList<MaterialType> obs = FXCollections.observableArrayList(types);
@@ -90,12 +105,18 @@ public class MonoMaterialEditController {
     }
 
 
+    /**
+     * Loads all available {@code Genre} entities from the database into the {@code allGenres} list.
+     */
     private void loadGenres() {
         allGenres = genreDAO.selectAll();
     }
 
     /**
-     * Load existing genres for the material
+     * Loads the existing genres for the material being edited from the {@code MaterialGenre} association table.
+     * The loaded genres are displayed as tags in the {@code selectedGenresPane}.
+     *
+     * @param materialId The ID of the material whose genres are to be loaded.
      */
     private void loadExistingGenres(Integer materialId) {
         try {
@@ -119,6 +140,10 @@ public class MonoMaterialEditController {
         }
     }
 
+    /**
+     * Sets up the listener for the genre search field, the mouse click handler for the
+     * search results list, and a focus listener to manage the visibility of the results list.
+     */
     private void setupGenreSearch() {
         // Setup search field listener
         genreSearchField.textProperty().addListener((obs, oldVal, newVal) -> {
@@ -155,16 +180,18 @@ public class MonoMaterialEditController {
             return cell;
         });
 
-        // Setup focus listener
+        // Setup focus listener to hide the search results when focus is lost
         genreSearchField.focusedProperty().addListener((obs, wasFocused, isNowFocused) -> {
             if (!isNowFocused) {
                 new Thread(() -> {
                     try {
+                        // Small delay to allow click on ListView to register
                         Thread.sleep(200);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
                     javafx.application.Platform.runLater(() -> {
+                        // Only hide if the ListView itself did not receive focus
                         if (!genreSearchResultsList.isFocused()) {
                             genreSearchResultsList.setVisible(false);
                             genreSearchResultsList.setManaged(false);
@@ -175,6 +202,12 @@ public class MonoMaterialEditController {
         });
     }
 
+    /**
+     * Filters the list of all available genres based on the query, excluding already selected genres,
+     * and updates the {@code genreSearchResultsList}.
+     *
+     * @param query The search string entered by the user.
+     */
     private void filterAndShowGenres(String query) {
         String lowerQuery = query.toLowerCase();
 
@@ -194,6 +227,12 @@ public class MonoMaterialEditController {
         }
     }
 
+    /**
+     * Adds a {@code Genre} to the {@code selectedGenres} set and displays it as a removable tag
+     * (a button) in the {@code selectedGenresPane}.
+     *
+     * @param genre The genre to be added as a tag.
+     */
     private void addGenreTag(Genre genre) {
         if (selectedGenres.contains(genre)) {
             return;
@@ -209,6 +248,7 @@ public class MonoMaterialEditController {
                         "-fx-cursor: hand;"
         );
 
+        // Hover styles
         tagButton.setOnMouseEntered(e ->
                 tagButton.setStyle(
                         "-fx-background-color: #d0d0d0; " +
@@ -226,6 +266,7 @@ public class MonoMaterialEditController {
                 )
         );
 
+        // Remove tag on click
         tagButton.setOnAction(e -> {
             selectedGenres.remove(genre);
             selectedGenresPane.getChildren().remove(tagButton);
@@ -234,6 +275,12 @@ public class MonoMaterialEditController {
         selectedGenresPane.getChildren().add(tagButton);
     }
 
+    /**
+     * Handles the material update action.
+     * It validates the input fields, updates the {@code currentMaterial} object,
+     * updates the material record in the database, and synchronizes the {@code MaterialGenre}
+     * associations (deleting old ones and inserting new ones).
+     */
     @FXML
     private void handleUpdateMaterial() {
         if (currentMaterial == null) {
@@ -306,6 +353,11 @@ public class MonoMaterialEditController {
         }
     }
 
+    /**
+     * Handles the "Go Back" button action. Prompts the user for confirmation if there are unsaved changes.
+     *
+     * @param event The event that triggered the handler.
+     */
     @FXML
     private void handleGoBack(ActionEvent event) {
         if (confirmClose()) {
@@ -313,6 +365,11 @@ public class MonoMaterialEditController {
         }
     }
 
+    /**
+     * Checks if there are any unsaved changes and prompts the user for confirmation to discard them.
+     *
+     * @return true if the user confirms closing or there are no unsaved changes, false otherwise.
+     */
     private boolean confirmClose() {
         boolean hasUnsavedData = false;
 
@@ -341,6 +398,10 @@ public class MonoMaterialEditController {
         Optional<ButtonType> result = alert.showAndWait();
         return result.isPresent() && result.get() == yes;
     }
+
+    /**
+     * Closes the current dialog stage.
+     */
     private void navigateBack() {
         Stage stage = (Stage) titleField.getScene().getWindow();
         if (stage != null) {
@@ -349,7 +410,12 @@ public class MonoMaterialEditController {
     }
 
 
-
+    /**
+     * Displays an alert dialog to the user.
+     *
+     * @param type The type of alert (e.g., WARNING, ERROR, INFORMATION).
+     * @param message The message content of the alert.
+     */
     private void showAlert(Alert.AlertType type, String message) {
         Alert a = new Alert(type);
         a.setHeaderText(null);

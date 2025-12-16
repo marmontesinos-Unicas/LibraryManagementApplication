@@ -12,12 +12,16 @@ import javafx.stage.Window;
 import javafx.event.ActionEvent;
 import java.time.LocalDate;
 
+/**
+ * Controller for the User Registration dialog.
+ * Handles input validation, user creation, and interaction with the {@code UserService}.
+ */
 public class UserRegistrationController {
 
     // Reference back to the main UserManagementController
     private UserManagementController userManagementController;
 
-    // UI Elements (must match fx:id in your FXML file)
+    // UI Elements
     @FXML
     private TextField nameField;
     @FXML
@@ -44,12 +48,14 @@ public class UserRegistrationController {
      */
     @FXML
     private void initialize() {
-       // This method is here for future expansion if a custom format is required.
+        // This method is here for future expansion if a custom format is required.
         // It's good practice to have an initialize method for FXML controllers.
     }
 
     /**
      * Sets the reference to the main management controller.
+     * This reference is used to refresh the user table in the main view after a successful registration.
+     * @param userManagementController The controller managing the user table.
      */
     public void setUserManagementController(UserManagementController userManagementController) {
         this.userManagementController = userManagementController;
@@ -57,6 +63,8 @@ public class UserRegistrationController {
 
     /**
      * Handles the 'Register' button click event.
+     * Gathers data from the form, validates it via {@code UserService}, registers the new user,
+     * and closes the dialog upon success.
      */
     @FXML
     private void handleRegisterUser() {
@@ -90,7 +98,7 @@ public class UserRegistrationController {
 
 
         } catch (UserServiceException e) {
-            // ... (rest of error mapping and alert logic remains the same) ...
+            // Catches business logic and input validation errors from the service layer.
             String msg = e.getMessage() != null ? e.getMessage() : "";
 
             if (msg.contains("Name is mandatory")) { // || msg.toLowerCase().contains("name") && msg.toLowerCase().contains("mandatory")) {
@@ -118,13 +126,15 @@ public class UserRegistrationController {
             }
 
         } catch (DAOException e) {
+            // Catches database/system errors
             showAlert("System Error", "Database Operation Failed", "An internal error occurred: " + e.getMessage(), AlertType.ERROR);
         }
     }
 
     /**
      * Handles the 'Cancel' button click event.
-     * Closes the registration dialog window.
+     * Closes the registration dialog window without registering the user.
+     * @param event The action event triggering the cancel operation.
      */
     @FXML
     private void handleCancel(ActionEvent event) {
@@ -132,6 +142,13 @@ public class UserRegistrationController {
         stage.close();
     }
 
+    /**
+     * Helper method to display various JavaFX alerts.
+     * @param title The title of the alert window.
+     * @param header The header text.
+     * @param content The main content message.
+     * @param type The type of alert (e.g., INFORMATION, ERROR).
+     */
     private void showAlert(String title, String header, String content, AlertType type) {
         Alert alert = new Alert(type);
         alert.setTitle(title);
@@ -150,7 +167,7 @@ public class UserRegistrationController {
     }
 
     /**
-     * Helper method to clear all input fields.
+     * Helper method to clear all input fields (currently unused but provided for completeness).
      */
     private void clearFields() {
         nameField.setText("");

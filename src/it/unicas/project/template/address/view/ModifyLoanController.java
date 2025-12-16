@@ -12,6 +12,10 @@ import javafx.stage.Stage;
 import java.time.LocalDateTime;
 
 
+/**
+ * Controller class for the loan modification view.
+ * Handles the logic for searching, selecting, and modifying an existing loan.
+ */
 public class ModifyLoanController {
 
     @FXML private TextField nationalIDField;
@@ -29,12 +33,18 @@ public class ModifyLoanController {
 
     private final ObservableList<Material> materialList = FXCollections.observableArrayList();
 
+    /**
+     * Initializes the controller class. This method is automatically called
+     * after the FXML file has been loaded.
+     * Sets up table column cell value factories and custom cell factories for status indication.
+     */
     @FXML
     public void initialize() {
         titleColumn.setCellValueFactory(c -> c.getValue().titleProperty());
         authorColumn.setCellValueFactory(c -> c.getValue().authorProperty());
         isbnColumn.setCellValueFactory(c -> c.getValue().ISBNProperty());
 
+        // Custom cell factory to color 'holded' materials orange
         titleColumn.setCellFactory(column -> new TableCell<>() {
             @Override
             protected void updateItem(String item, boolean empty) {
@@ -45,17 +55,27 @@ public class ModifyLoanController {
                 } else {
                     Material m = getTableView().getItems().get(getIndex());
                     setText(item);
+                    // Set color based on material status (Orange for 'holded')
                     setTextFill("holded".equalsIgnoreCase(m.getMaterial_status()) ? Color.ORANGE : Color.BLACK);
                 }
             }
         });
 
         materialTable.setItems(materialList);
+        // Add a listener to automatically search when the text field changes
         searchMaterialField.textProperty().addListener((o, oldV, newV) -> handleSearch());
+        // Set the action for the search/clear button
         searchButton.setOnAction(e -> handleClear());
     }
 
     /* ===================== INITIAL DATA ===================== */
+    /**
+     * Sets the loan to be modified in the controller.
+     * Loads the associated user and material data, populates the material table,
+     * and selects the original material.
+     *
+     * @param loan The Loan object to be modified.
+     */
     public void setLoan(Loan loan) {
         this.loanToModify = loan;
 
@@ -82,6 +102,10 @@ public class ModifyLoanController {
         }
     }
 
+    /**
+     * Selects and scrolls to the original material associated with the loan
+     * in the material table.
+     */
     private void selectOriginalMaterial() {
         if (originalMaterial == null) return;
 
@@ -94,6 +118,10 @@ public class ModifyLoanController {
         }
     }
 
+    /**
+     * Loads the materials from the database into the {@code materialList}.
+     * Only loads materials that are 'available', 'holded', or the {@code originalMaterial}.
+     */
     private void loadMaterials() {
         materialList.clear();
         try {
@@ -110,6 +138,10 @@ public class ModifyLoanController {
         }
     }
 
+    /**
+     * Handles the clear button action. Clears the search field,
+     * reloads all relevant materials, and re-selects the original material.
+     */
     @FXML
     private void handleClear() {
         searchMaterialField.clear();
@@ -117,6 +149,11 @@ public class ModifyLoanController {
         selectOriginalMaterial();
     }
 
+    /**
+     * Handles the material search functionality. Filters the materials in the
+     * table based on the text in the search field (matching title, author, or ISBN prefix).
+     * The list includes 'available', 'holded' materials, and the original material.
+     */
     @FXML
     private void handleSearch() {
         String text = searchMaterialField.getText().toLowerCase();
@@ -124,11 +161,13 @@ public class ModifyLoanController {
 
         try {
             for (Material m : MaterialDAOMySQLImpl.getInstance().select(null)) {
+                // Skip materials that are not available, holded, or the original material
                 if (!"available".equalsIgnoreCase(m.getMaterial_status())
                         && !"holded".equalsIgnoreCase(m.getMaterial_status())
                         && (originalMaterial == null || !m.getIdMaterial().equals(originalMaterial.getIdMaterial())))
                     continue;
 
+                // Apply search filter (empty text means show all relevant)
                 if (text.isEmpty()
                         || m.getTitle().toLowerCase().contains(text)
                         || m.getAuthor().toLowerCase().contains(text)
@@ -143,6 +182,11 @@ public class ModifyLoanController {
     }
 
     /* ===================== MODIFY ===================== */
+    /**
+     * Handles the action of modifying the loan.
+     * Validates the selected material and new user ID, updates the loan and material statuses
+     * in the database, and closes the dialog on success.
+     */
     @FXML
     private void handleModifyLoan() {
 
@@ -162,7 +206,7 @@ public class ModifyLoanController {
             LocalDateTime originalStartDate = loanToModify.getStart_date();
             LocalDateTime originalDueDate = loanToModify.getDue_date();
 
-            // ========================= USUARIO =========================
+            // ========================= USER =========================
             String newNationalID = nationalIDField.getText().trim();
             User newUser = null;
             if (!newNationalID.isEmpty()) {
@@ -227,12 +271,12 @@ public class ModifyLoanController {
                 loanToModify.setIdMaterial(selectedMaterial.getIdMaterial());
             }
 
-            // ========================= ACTUALIZAR USUARIO =========================
+            // ========================= UPDATE USUARIO =========================
             if (newUser != null) {
                 loanToModify.setIdUser(newUser.getIdUser());
             }
 
-            // ========================= MANTENER FECHAS =========================
+            // ========================= KEEP DATES =========================
             loanToModify.setStart_date(originalStartDate);
             loanToModify.setDue_date(originalDueDate);
 
@@ -250,6 +294,13 @@ public class ModifyLoanController {
 
 
     /* ===================== UTILS ===================== */
+    /**
+     * Shows a standard alert dialog with the specified type, title, and message.
+     *
+     * @param t The Alert type (e.g., ERROR, INFORMATION).
+     * @param title The title of the alert box.
+     * @param msg The message content of the alert.
+     */
     private void showAlert(Alert.AlertType t, String title, String msg) {
         Alert a = new Alert(t);
         a.setTitle(title);
@@ -258,6 +309,11 @@ public class ModifyLoanController {
         a.showAndWait();
     }
 
+    /**
+     * Sets the stage of this dialog.
+     *
+     * @param dialogStage The Stage object for this view.
+     */
     public void setDialogStage(Stage dialogStage) {
         this.dialogStage = dialogStage;
     }

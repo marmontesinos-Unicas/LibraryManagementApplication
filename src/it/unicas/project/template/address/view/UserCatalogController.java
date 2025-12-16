@@ -30,7 +30,8 @@ import java.util.stream.Collectors;
 
 /**
  * Controller for Material Catalog - USER VIEW.
- * FIXED: Added debouncing to prevent connection leaks on text input
+ * Manages the display, searching, filtering, and holding actions for the material catalog
+ * available to a logged-in user. Utilizes debouncing for search inputs to optimize performance.
  */
 public class UserCatalogController {
 
@@ -78,12 +79,13 @@ public class UserCatalogController {
     private Popup genrePopup;
 
     private final MaterialHoldService holdService = new MaterialHoldService();
-        // FIXED: Debounce mechanism for search
+    // FIXED: Debounce mechanism for search
     private ScheduledExecutorService searchScheduler = Executors.newSingleThreadScheduledExecutor();
     private java.util.concurrent.Future<?> filterTask;
     private final MaterialCatalogService catalogService = new MaterialCatalogService();
     /**
-     * Inner class to represent grouped materials.
+     * Inner class to represent materials grouped by common metadata (title, author, year, ISBN).
+     * Used for the catalog view where items are displayed by type/group rather than individual copies.
      */
     public static class GroupedMaterial {
         private String title;
@@ -96,6 +98,17 @@ public class UserCatalogController {
         private boolean hasAvailable;
         private boolean hasHolded;
 
+        /**
+         * Constructs a GroupedMaterial instance.
+         *
+         * @param title The title of the material group.
+         * @param author The author/creator of the material group.
+         * @param year The publication year.
+         * @param ISBN The ISBN (if applicable).
+         * @param type The material type name.
+         * @param genres The comma-separated string of genres.
+         * @param materials The list of all physical {@code Material} copies belonging to this group.
+         */
         public GroupedMaterial(String title, String author, Integer year, String ISBN,
                                String type, String genres, List<Material> materials) {
             this.title = title;
@@ -108,12 +121,15 @@ public class UserCatalogController {
             updateAvailability();
         }
 
+        /**
+         * Recalculates the availability status based on the status of the individual copies.
+         */
         public void updateAvailability() {
             hasAvailable = materials.stream()
                     .anyMatch(m -> "available".equalsIgnoreCase(m.getMaterial_status()));
         }
 
-        // Getters
+        // Getters for TableColumn binding
         public String getTitle() { return title; }
         public String getAuthor() { return author; }
         public Integer getYear() { return year; }
@@ -125,7 +141,9 @@ public class UserCatalogController {
     }
 
     /**
-     * Initialize the controller.
+     * Initialize the controller. This method is automatically called after the FXML file has been loaded.
+     * Sets up DAO instances, loads initial data (types, genres, relationships), configures table columns,
+     * sets up filter buttons, and adds debounced listeners for search inputs.
      */
     @FXML
     public void initialize() {
@@ -155,7 +173,9 @@ public class UserCatalogController {
     }
 
     /**
-     * FIXED: Schedule filter execution after 300ms delay
+     * FIXED: Schedule filter execution after 300ms delay.
+     * Cancels any pending filter task and schedules a new one, ensuring filters are not applied
+     * too frequently during rapid typing.
      */
     private void scheduleFilter() {
         // Cancel previous filter task if still pending
@@ -170,7 +190,7 @@ public class UserCatalogController {
     }
 
     /**
-     * Configure basic behavior for filter trigger controls.
+     * Configure basic behavior for filter trigger controls (ComboBoxes).
      */
     private void setupFilterButtons() {
         if (materialTypeFilterButton != null) {
@@ -185,7 +205,7 @@ public class UserCatalogController {
     }
 
     /**
-     * Toggle Material Type filter popup visibility.
+     * Toggles the visibility of the Material Type filter popup.
      */
     private void toggleMaterialTypeFilter() {
         if (materialTypePopup != null && materialTypePopup.isShowing()) {
@@ -193,6 +213,7 @@ public class UserCatalogController {
             return;
         }
 
+        // Collect all unique material types present in the grouped list
         Set<String> allTypes = groupedMaterialList.stream()
                 .map(GroupedMaterial::getType)
                 .collect(Collectors.toCollection(TreeSet::new));
@@ -202,7 +223,7 @@ public class UserCatalogController {
     }
 
     /**
-     * Toggle Genre filter popup visibility.
+     * Toggles the visibility of the Genre filter popup.
      */
     private void toggleGenreFilter() {
         if (genrePopup != null && genrePopup.isShowing()) {
@@ -210,6 +231,7 @@ public class UserCatalogController {
             return;
         }
 
+        // Collect all unique genres present in the grouped list
         Set<String> allGenres = groupedMaterialList.stream()
                 .map(GroupedMaterial::getGenres)
                 .filter(g -> g != null && !g.equals("—"))
@@ -221,7 +243,13 @@ public class UserCatalogController {
     }
 
     /**
-     * Create a popup containing a list of checkboxes for filtering.
+     * Creates and displays a popup containing a scrollable list of checkboxes for multi-selection filtering.
+     *
+     * @param sourceButton The ComboBox that triggered the popup, used for positioning and styling.
+     * @param label The category label (e.g., "Material Types").
+     * @param allOptions The set of all possible filter options.
+     * @param selectedOptions The set holding the currently selected options.
+     * @return The created {@code Popup} instance.
      */
     private Popup createFilterPopup(ComboBox<String> sourceButton, String label,
                                     Set<String> allOptions, Set<String> selectedOptions) {
@@ -303,7 +331,12 @@ public class UserCatalogController {
     }
 
     /**
-     * Update the text and style of a filter trigger button according to selection.
+     * Updates the text and style of a filter trigger button according to the current selection.
+     *
+     * @param button The ComboBox acting as the filter button.
+     * @param selected The number of currently selected options.
+     * @param total The total number of available options.
+     * @param label The filter category label.
      */
     private void updateFilterButtonText(ComboBox<String> button, int selected, int total, String label) {
         if (selected == 0) {
@@ -319,7 +352,7 @@ public class UserCatalogController {
     }
 
     /**
-     * Load material types from the database into materialTypeMap.
+     * Loads material types from the database into {@code materialTypeMap}.
      */
     private void loadMaterialTypes() {
         List<MaterialType> types = materialTypeDAO.selectAll();
@@ -330,7 +363,7 @@ public class UserCatalogController {
     }
 
     /**
-     * Load genres from the database into genreMap.
+     * Loads genres from the database into {@code genreMap}.
      */
     private void loadGenres() {
         List<Genre> genres = genreDAO.selectAll();
@@ -341,7 +374,7 @@ public class UserCatalogController {
     }
 
     /**
-     * Load material-genre relationship table into materialGenreMap.
+     * Loads all material-genre relationships from the database into {@code materialGenreMap}.
      */
     private void loadMaterialGenreRelationships() {
         try {
@@ -358,7 +391,8 @@ public class UserCatalogController {
     }
 
     /**
-     * Setup table column bindings and the action column cell factory.
+     * Sets up table column bindings and configures the custom cell factory for the action column
+     * (Hold/Holded/Unavailable button).
      */
     private void setupTableColumns() {
         titleColumn.setCellValueFactory(new PropertyValueFactory<>("title"));
@@ -437,7 +471,9 @@ public class UserCatalogController {
     }
 
     /**
-     * Handle toggle of a hold for the provided grouped material.
+     * Handles the action to place or release a hold for the provided grouped material.
+     *
+     * @param groupedMaterial The material group to toggle hold status for.
      */
     private void handleHoldToggle(GroupedMaterial groupedMaterial) {
         if (currentUser == null) {
@@ -450,6 +486,7 @@ public class UserCatalogController {
             Hold userHold = null;
             Material heldMaterial = null;
 
+            // Check if the user already has a hold on any copy in the group
             for (Material material : groupedMaterial.getMaterials()) {
                 if ("holded".equalsIgnoreCase(material.getMaterial_status())) {
                     Hold searchHold = new Hold();
@@ -466,14 +503,17 @@ public class UserCatalogController {
             }
 
             if (userHasHold) {
+                // Release the existing hold
                 try {
                     holdService.releaseHold(userHold, heldMaterial);
+                    showInfo("Success", "Hold released successfully.");
                     refresh();
                 } catch (DAOException e) {
                     showError("Error", "Could not release hold: " + e.getMessage());
                     e.printStackTrace();
                 }
             } else if (groupedMaterial.hasAvailable()) {
+                // Place a new hold on an available copy
                 Material availableMaterial = groupedMaterial.getMaterials().stream()
                         .filter(m -> "available".equalsIgnoreCase(m.getMaterial_status()))
                         .findFirst()
@@ -482,6 +522,7 @@ public class UserCatalogController {
                 if (availableMaterial != null) {
                     try {
                         holdService.holdMaterial(currentUser.getIdUser(), availableMaterial);
+                        showInfo("Success", "Hold placed successfully.");
                         refresh();
                     } catch (DAOException e) {
                         showError("Error", "Could not place hold: " + e.getMessage());
@@ -498,8 +539,8 @@ public class UserCatalogController {
     }
 
     /**
-     * Load all materials from the database, group them and populate the
-     * groupedMaterialList used by the table view.
+     * Load all materials from the database, groups them by common metadata, and populates the
+     * {@code groupedMaterialList}. Initializes filter sets based on the loaded data.
      */
     private void loadAllMaterials() {
         try {
@@ -532,7 +573,7 @@ public class UserCatalogController {
                 groupedMaterialList.add(gm);
             }
 
-            // Initialize filters
+            // Initialize filters based on current data
             selectedMaterialTypes.clear();
             selectedMaterialTypes.addAll(groupedMaterialList.stream()
                     .map(GroupedMaterial::getType)
@@ -554,7 +595,10 @@ public class UserCatalogController {
     }
 
     /**
-     * Generate a grouping key for a material.
+     * Generates a grouping key for a material based on its Title, Author, Year, and ISBN.
+     *
+     * @param material The material instance.
+     * @return A unique string key for grouping materials with identical metadata.
      */
     private String generateGroupKey(Material material) {
         String isbn = (material.getISBN() != null && !material.getISBN().trim().isEmpty())
@@ -568,7 +612,10 @@ public class UserCatalogController {
     }
 
     /**
-     * Build a comma-separated genre string for a material.
+     * Builds a comma-separated genre string for a material based on its associated genre IDs.
+     *
+     * @param materialId The ID of the material.
+     * @return A sorted, comma-separated string of genre names, or "—" if none are found.
      */
     private String getGenresForMaterial(Integer materialId) {
         Set<Integer> genreIds = materialGenreMap.get(materialId);
@@ -582,7 +629,8 @@ public class UserCatalogController {
     }
 
     /**
-     * Clear all filters and reset the view.
+     * Clears all search fields, resets the filter selections, and reapplies the filter
+     * to show all grouped materials.
      */
     @FXML
     private void handleClear() {
@@ -590,6 +638,7 @@ public class UserCatalogController {
         yearFromField.clear();
         yearToField.clear();
 
+        // Reset filter selections to include all loaded items
         selectedMaterialTypes.clear();
         selectedMaterialTypes.addAll(groupedMaterialList.stream()
                 .map(GroupedMaterial::getType)
@@ -617,12 +666,12 @@ public class UserCatalogController {
     }
 
     /**
-     * Apply the combined search and filter criteria.
-     * uses SearchService for prioritized field searching
+     * Applies the combined search and filter criteria to the list of grouped materials.
      */
     @FXML
     private void handleFilter() {
         try {
+            // Use the service layer to perform the filtering logic
             List<GroupedMaterial> result = catalogService.filterGroupedMaterials(
                     groupedMaterialList,
                     selectedMaterialTypes,
@@ -640,7 +689,7 @@ public class UserCatalogController {
         }
     }
     /**
-     * Navigate back to the user landing view.
+     * Navigates back to the user landing view using the main application reference.
      */
     @FXML
     private void handleBack() {
@@ -652,14 +701,17 @@ public class UserCatalogController {
     }
 
     /**
-     * Update the label that reports the number of visible materials.
+     * Updates the label that reports the number of visible materials in the table.
      */
     private void updateResultCount() {
         resultCountLabel.setText(String.format("Total: %d materials", filteredList.size()));
     }
 
     /**
-     * Lookup human-friendly material type name by id.
+     * Lookup human-friendly material type name by ID.
+     *
+     * @param typeId The ID of the material type.
+     * @return The material type name, or "Unknown" if not found.
      */
     private String getMaterialTypeName(Integer typeId) {
         if (typeId == null) return "Unknown";
@@ -689,7 +741,8 @@ public class UserCatalogController {
     }
 
     /**
-     * Refresh lookup relationships and material list, then reapply filters.
+     * Refreshes lookup relationships and the material list, then reapplies filters.
+     * Called after actions that modify material status (like placing a hold).
      */
     public void refresh() {
         loadMaterialGenreRelationships();
@@ -698,14 +751,18 @@ public class UserCatalogController {
     }
 
     /**
-     * Set the main application reference used for navigation.
+     * Sets the main application reference used for navigation.
+     *
+     * @param mainApp The {@code MainApp} instance.
      */
     public void setMainApp(MainApp mainApp) {
         this.mainApp = mainApp;
     }
 
     /**
-     * Set the current logged-in user.
+     * Sets the current logged-in user and triggers the initial data load if it hasn't happened yet.
+     *
+     * @param user The logged-in {@code User}.
      */
     public void setCurrentUser(User user) {
         this.currentUser = user;
@@ -715,7 +772,7 @@ public class UserCatalogController {
     }
 
     /**
-     * Cleanup when controller is destroyed.
+     * Cleanup method called when the view is closed to properly shut down the thread pool.
      */
     public void cleanup() {
         if (searchScheduler != null && !searchScheduler.isShutdown()) {

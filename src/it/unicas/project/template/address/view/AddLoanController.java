@@ -18,10 +18,17 @@ import javafx.scene.paint.Color;
 
 /**
  * Controller class for adding a new loan in the library system.
- * Handles user input, material selection, validation, and database operations.
+ * <p>
+ * Handles user input (National ID), material selection, validation (user existence,
+ * material availability, hold status), and the transactional database operations
+ * required to create a loan and update material/hold status.
+ * </p>
+ *
+ * Access Keyword Explanation: {@code public} - FXMLLoader requires public access to the class and @FXML methods.
  */
 public class AddLoanController {
 
+    // Initialize all the interface components (text fields, buttons, table view and columns of the table view)
     @FXML private TextField nationalIDField;        // Field for entering user national ID
     @FXML private TextField searchMaterialField;    // Field for searching materials
     @FXML private Button searchButton;              // Button to clear search
@@ -54,10 +61,11 @@ public class AddLoanController {
                     setText(null);
                     setTextFill(Color.BLACK);
                 } else {
+                    // Access the Material object for the current row
                     Material material = getTableView().getItems().get(getIndex());
                     setText(item);
                     if ("holded".equalsIgnoreCase(material.getMaterial_status())) {
-                        setTextFill(Color.ORANGE);
+                        setTextFill(Color.ORANGE); // Highlight holded materials
                     } else {
                         setTextFill(Color.BLACK);
                     }
@@ -68,7 +76,7 @@ public class AddLoanController {
         materialTable.setItems(materialList);
         loadAvailableMaterials();
 
-        // Real-time search listener
+        // Real-time search listener: re-filters the displayed list on every text change
         searchMaterialField.textProperty().addListener((obs, oldText, newText) -> handleSearch());
 
         // Configure search button as Clear
@@ -77,7 +85,8 @@ public class AddLoanController {
     }
 
     /**
-     * Loads all available or hold materials into the table.
+     * Loads all materials that are either 'available' or 'holded' into the internal list.
+     * This is the initial population and the target for subsequent searches/clears.
      */
     private void loadAvailableMaterials() {
         materialList.clear();
@@ -167,8 +176,13 @@ public class AddLoanController {
     }
 
     /**
-     * Handles the creation of a new loan.
-     * Validates user, material availability, handles holds, updates the database, and refreshes the table.
+     * Handles the creation of a new loan. This involves multiple transactional steps:
+     * <p>1. Validate User and Material.</p>
+     * <p>2. Handle Hold: If on hold, check if it belongs to the current user and delete the hold.</p>
+     * <p>3. Create Loan record.</p>
+     * <p>4. Update Material status to "loaned".</p>
+     *
+     * Access Keyword Explanation: {@code private @FXML} - Event handler for the "Add Loan" button.
      */
     @FXML
     private void handleAddLoan() {

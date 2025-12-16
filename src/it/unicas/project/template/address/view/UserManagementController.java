@@ -29,10 +29,12 @@ import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.Future; // Explicitly importing Future for clarity
 
 /**
  * Controller for User Management view.
- * FIXED: Added debouncing to prevent connection leaks on search
+ * This class handles the display, searching, registration, and editing of user data
+ * within an administrative interface. It implements a debouncing mechanism to optimize search performance.
  */
 public class UserManagementController {
 
@@ -63,17 +65,34 @@ public class UserManagementController {
 
     /**
      * Sets the reference to the main application.
+     * @param mainApp The main application instance.
      */
     public void setMainApp(MainApp mainApp) {
         this.mainApp = mainApp;
     }
 
+    /**
+     * Initializes the controller. This method is automatically called after the FXML file has been loaded.
+     * It sets up column binding, loads initial data, and configures the debounced search listener.
+     */
     @FXML
     public void initialize() {
         // 1. Initialize TableView Columns
+        /**
+         * Binds the name column to the "name" property of the User object.
+         */
         nameColumn.setCellValueFactory(new PropertyValueFactory<>("name"));
+        /**
+         * Binds the surname column to the "surname" property of the User object.
+         */
         surnameColumn.setCellValueFactory(new PropertyValueFactory<>("surname"));
+        /**
+         * Binds the national ID column to the "nationalID" property of the User object.
+         */
         nationalIdColumn.setCellValueFactory(new PropertyValueFactory<>("nationalID"));
+        /**
+         * Binds the email column to the "email" property of the User object.
+         */
         emailColumn.setCellValueFactory(new PropertyValueFactory<>("email"));
 
         // 2. Load the initial data (from DB)
@@ -82,7 +101,7 @@ public class UserManagementController {
         // 3. Wrap the ObservableList in a SortedList
         SortedList<User> sortedData = new SortedList<>(userList);
 
-        // 4. Bind the SortedList comparator to the TableView comparator
+        // 4. Bind the SortedList comparator to the TableView comparator (allows sorting via column headers)
         sortedData.comparatorProperty().bind(userTable.comparatorProperty());
 
         // 5. Set the sorted data to the table
@@ -91,13 +110,18 @@ public class UserManagementController {
         userTable.setPlaceholder(new Label("No users registered in the database."));
 
         // Add debounced listener for search (300ms delay)
+        /**
+         * Adds a listener to the search field text property to trigger a debounced search.
+         */
         searchField.textProperty().addListener((observable, oldValue, newValue) -> {
             scheduleSearch();
         });
     }
 
     /**
-     * Schedule search execution after 300ms delay
+     * Implements the debouncing mechanism by canceling any pending search task
+     * and scheduling a new search execution after a 300ms delay. The actual search
+     * execution is run on the JavaFX application thread via {@code Platform.runLater()}.
      */
     private void scheduleSearch() {
         // Cancel previous search task if still pending
@@ -112,12 +136,13 @@ public class UserManagementController {
     }
 
     /**
-     * Loads initial data from the database and caches it.
-     * Changed to public so it can be called externally after registration.
+     * Loads all user data from the database into the {@code userList} and caches it
+     * in {@code cachedAllUsers}. This method is called upon initialization and after
+     * a user registration or edit action.
      */
     public void loadInitialUserData() {
         userList.clear();
-        cachedAllUsers = null; // Clear cache
+        cachedAllUsers = null; // Clear cache to force reload
 
         try {
             List<User> usersFromDB = UserDAOMySQLImpl.getInstance().select(null);
@@ -136,8 +161,8 @@ public class UserManagementController {
     }
 
     /**
-     * Handles search using cached data.
-     * Uses cached data instead of hitting DB on every keystroke.
+     * Handles search execution using the cached user data.
+     * Filters the cached list based on the current text in the search field and updates the table.
      */
     @FXML
     private void handleSearch() {
@@ -145,7 +170,7 @@ public class UserManagementController {
         userList.clear();
 
         try {
-            // If cache is empty, load from database
+            // If cache is empty, reload from database (safety net)
             if (cachedAllUsers == null) {
                 cachedAllUsers = UserDAOMySQLImpl.getInstance().select(null);
             }
@@ -154,11 +179,11 @@ public class UserManagementController {
                 // If search is empty, show all users from cache
                 userList.addAll(cachedAllUsers);
             } else {
-                // Use UserCatalogService to search cached data
+                // Use UserCatalogService to search cached data (performs client-side filtering)
                 List<User> searchResults = userCatalogService.filterUsers(
                         cachedAllUsers,           // Use cached data
-                        Collections.emptyMap(),   // No role map needed
-                        Collections.emptySet(),   // No role filter
+                        Collections.emptyMap(),   // No role map needed for basic user search
+                        Collections.emptySet(),   // No role filter needed for basic user search
                         query
                 );
                 userList.addAll(searchResults);
@@ -178,6 +203,7 @@ public class UserManagementController {
 
     /**
      * Handles the 'Register New User' button click event.
+     * Opens the {@code UserRegistration.fxml} dialog modally.
      */
     @FXML
     private void handleRegisterNewUser() {
@@ -198,6 +224,7 @@ public class UserManagementController {
             dialogStage.setScene(scene);
 
             UserRegistrationController controller = loader.getController();
+            // Pass this controller instance to the registration dialog to allow it to trigger data refresh
             controller.setUserManagementController(this);
 
             dialogStage.showAndWait();
@@ -217,6 +244,7 @@ public class UserManagementController {
 
     /**
      * Handles the 'Go Back' button click.
+     * Navigates the application back to the Admin Landing page.
      */
     @FXML
     private void handleGoBack() {
@@ -228,7 +256,8 @@ public class UserManagementController {
     }
 
     /**
-     * Handles the 'View/Edit User' button click.
+     * Handles the 'View/Edit User' action, typically triggered by a button or double-click.
+     * Opens the {@code UserEdit.fxml} dialog modally for the selected user.
      */
     @FXML
     private void handleViewEditUser() {
@@ -260,10 +289,12 @@ public class UserManagementController {
 
             UserEditController controller = loader.getController();
             controller.setDialogStage(dialogStage);
+            // Pass this controller to the edit dialog to allow data refresh after save/delete
             controller.setUserManagementController(this);
             controller.setSelectedUser(selectedUser);
 
             dialogStage.showAndWait();
+            // Data refresh is handled within UserEditController calling loadInitialUserData()
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -276,7 +307,8 @@ public class UserManagementController {
     }
 
     /**
-     * Cleanup when controller is destroyed.
+     * Cleans up resources used by the controller, specifically shutting down the
+     * {@code ScheduledExecutorService} used for search debouncing to prevent resource leaks.
      */
     public void cleanup() {
         if (searchScheduler != null && !searchScheduler.isShutdown()) {

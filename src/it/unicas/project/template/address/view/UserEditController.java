@@ -8,8 +8,6 @@ import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.Alert.AlertType;
 import javafx.stage.Stage;
-
-import java.time.LocalDate;
 import java.util.Optional;
 
 public class UserEditController {

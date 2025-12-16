@@ -26,6 +26,12 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+/**
+ * Controller for editing the metadata of a Material group (Multi-Material editing).
+ * This controller allows modifying common fields (title, author, year, ISBN, genres)
+ * associated with a group of identical physical items represented by a {@code MaterialInventory}.
+ * Changes are applied to the representative Material record in the database.
+ */
 public class MultiMaterialEditController {
 
     @FXML private TextField materialTypeField;
@@ -53,7 +59,9 @@ public class MultiMaterialEditController {
     private String materialTypeName;
 
     /**
-     * Initializes the controller.
+     * Initializes the controller. This method is automatically called
+     * after the FXML file has been loaded.
+     * Loads material types and genres, and sets up the genre search listeners.
      */
     @FXML
     private void initialize() {
@@ -64,6 +72,7 @@ public class MultiMaterialEditController {
         allGenres.addAll(GenreDAOMySQLImpl.getInstance().selectAll());
         genreSearchResultsList.setItems(filteredGenres);
 
+        // Listener for dynamic genre filtering
         genreSearchField.textProperty().addListener((obs, oldVal, newVal) -> {
             filterGenres(newVal);
             boolean shouldShow = !newVal.trim().isEmpty() && !filteredGenres.isEmpty();
@@ -71,6 +80,7 @@ public class MultiMaterialEditController {
             genreSearchResultsList.setManaged(shouldShow);
         });
 
+        // Handler for selecting a genre from the search results
         genreSearchResultsList.setOnMouseClicked(event -> {
             Genre selected = genreSearchResultsList.getSelectionModel().getSelectedItem();
             if (selected != null) {
@@ -83,20 +93,28 @@ public class MultiMaterialEditController {
 
     /**
      * Sets the stage of this dialog.
+     *
+     * @param dialogStage The stage object for this dialog.
      */
     public void setDialogStage(Stage dialogStage) {
         this.dialogStage = dialogStage;
     }
 
     /**
-     * Sets the MaterialManagementController reference for data refresh.
+     * Sets the reference to the parent controller to allow refreshing the main data table
+     * upon a successful update.
+     *
+     * @param controller The {@code MaterialManagementController} instance.
      */
     public void setMaterialManagementController(MaterialManagementController controller) {
         this.materialManagementController = controller;
     }
 
     /**
-     * Sets the material to be edited in the dialog.
+     * Sets the material inventory (representing the material group) to be edited in the dialog
+     * and populates the fields with its current data.
+     *
+     * @param materialInventory The {@code MaterialInventory} item selected from the main view.
      */
     public void setSelectedMaterialInventory(MaterialInventory materialInventory) {
         this.selectedMaterialInventory = materialInventory;
@@ -127,6 +145,9 @@ public class MultiMaterialEditController {
     }
 
     // --- Genre Helper Methods (copied from AddMaterialController logic) ---
+    /**
+     * Loads the existing genre associations for the representative material ID and displays them as tags.
+     */
     private void loadExistingGenres() {
         Integer representativeId = selectedMaterialInventory.getIdMaterial();
         if (representativeId == null || representativeId <= 0) return;
@@ -147,6 +168,12 @@ public class MultiMaterialEditController {
         }
     }
 
+    /**
+     * Filters the list of all genres based on the search text, excluding already selected genres,
+     * and updates the {@code filteredGenres} list.
+     *
+     * @param searchText The text entered in the genre search field.
+     */
     private void filterGenres(String searchText) {
         filteredGenres.clear();
         String lowerCaseSearch = searchText.toLowerCase();
@@ -159,6 +186,11 @@ public class MultiMaterialEditController {
         }
     }
 
+    /**
+     * Adds a genre to the selected set and displays it as a removable tag in the FlowPane.
+     *
+     * @param genre The genre to add.
+     */
     private void addGenreTag(Genre genre) {
         if (!selectedGenreIds.contains(genre.getIdGenre())) {
             selectedGenreIds.add(genre.getIdGenre());
@@ -172,10 +204,11 @@ public class MultiMaterialEditController {
             HBox tagContainer = new HBox(5, tagLabel, removeButton);
             tagContainer.setStyle("-fx-border-color: #ccc; -fx-border-radius: 5; -fx-padding: 2;");
 
+            // Define action to remove the tag
             removeButton.setOnAction(e -> {
                 selectedGenresPane.getChildren().remove(tagContainer);
                 selectedGenreIds.remove(genre.getIdGenre());
-                filterGenres(genreSearchField.getText());
+                filterGenres(genreSearchField.getText()); // Refresh search results after removal
             });
 
             selectedGenresPane.getChildren().add(tagContainer);
@@ -183,12 +216,15 @@ public class MultiMaterialEditController {
     }
 
     /**
-     * Called when the user clicks save.
+     * Called when the user clicks the Save button.
+     * Validates input, updates the representative Material's metadata,
+     * updates the genre associations, closes the dialog, and refreshes the main table.
      */
     @FXML
     private void handleSave() {
         if (isInputValid()) {
 
+            // Create a Material object containing the updated group metadata
             Material updatedMaterial = new Material(
                     selectedMaterialInventory.getIdMaterial(),
                     titleField.getText(),
@@ -200,7 +236,7 @@ public class MultiMaterialEditController {
             );
 
             try {
-                // 1. Update the Material Group metadata
+                // 1. Update the Material Group metadata (DAO implements logic to update all items in the group)
                 ((MaterialDAOMySQLImpl) MaterialDAOMySQLImpl.getInstance()).updateMaterialGroup(updatedMaterial, selectedMaterialInventory);
 
                 // 2. Update Genres for the representative material ID
@@ -224,7 +260,10 @@ public class MultiMaterialEditController {
     }
 
     /**
-     * Deletes all current genres for the material and inserts the new list.
+     * Deletes all current genres for the specified material ID and inserts the newly selected genres.
+     *
+     * @param materialId The ID of the representative Material to update genres for.
+     * @throws DAOException If a database error occurs during deletion or insertion.
      */
     private void updateMaterialGenres(Integer materialId) throws DAOException {
         MaterialGenreDAOMySQLImpl mgDAO = (MaterialGenreDAOMySQLImpl) MaterialGenreDAOMySQLImpl.getInstance();
@@ -240,7 +279,8 @@ public class MultiMaterialEditController {
     }
 
     /**
-     * Called when the user clicks cancel.
+     * Called when the user clicks the Cancel button.
+     * Closes the dialog stage.
      */
     @FXML
     private void handleCancel() {
@@ -248,7 +288,9 @@ public class MultiMaterialEditController {
     }
 
     /**
-     * Validates the user input in the text fields.
+     * Validates the user input in the text fields (Title, Year, ISBN).
+     *
+     * @return true if the input is valid, false otherwise.
      */
     private boolean isInputValid() {
         String errorMessage = "";
