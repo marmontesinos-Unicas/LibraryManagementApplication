@@ -42,7 +42,6 @@ public class UserRegistrationController {
     @FXML private Label birthdateErrorLabel;
     @FXML private Label usernameErrorLabel;
     @FXML private Label passwordErrorLabel;
-    @FXML private Label roleErrorLabel;
 
     // Instance of the Service Layer
     private UserService userService = new UserService();
@@ -54,6 +53,10 @@ public class UserRegistrationController {
     @FXML
     private void initialize() {
         setupFieldValidation();
+        // Set default role to "User"
+        if (roleComboBox != null) {
+            roleComboBox.getSelectionModel().select("User");
+        }
     }
 
     /**
@@ -121,11 +124,11 @@ public class UserRegistrationController {
         // Validate email
         String email = emailField.getText();
 
-        // Validate role
+        // Get role (will default to "User" if not changed)
         String roleText = roleComboBox.getSelectionModel().getSelectedItem();
+        // Fallback to "User" if somehow null
         if (roleText == null) {
-            setFieldError(roleComboBox, roleErrorLabel, "Role is required");
-            hasErrors = true;
+            roleText = "User";
         }
 
         // If there are validation errors, stop here
@@ -197,7 +200,6 @@ public class UserRegistrationController {
         clearFieldError(birthdateField, birthdateErrorLabel);
         clearFieldError(usernameField, usernameErrorLabel);
         clearFieldError(passwordField, passwordErrorLabel);
-        clearFieldError(roleComboBox, roleErrorLabel);
     }
 
     private void setupFieldValidation() {
@@ -240,13 +242,6 @@ public class UserRegistrationController {
         passwordField.textProperty().addListener((obs, oldVal, newVal) -> {
             if (newVal != null && !newVal.trim().isEmpty()) {
                 clearFieldError(passwordField, passwordErrorLabel);
-            }
-        });
-
-        // Clear error when user selects role
-        roleComboBox.valueProperty().addListener((obs, oldVal, newVal) -> {
-            if (newVal != null) {
-                clearFieldError(roleComboBox, roleErrorLabel);
             }
         });
     }
