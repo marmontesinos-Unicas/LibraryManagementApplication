@@ -373,6 +373,12 @@ public class    UserLandingController {
             // Delete hold
             HoldDAOMySQLImpl.getInstance().delete(realHold);
 
+            // And update notifications
+            if (currentUser != null) {
+                // Check overdue notifications for this user
+                checkOverdueStatus(currentUser);
+            }
+
             // Remove from UI
             holdList.removeIf(h -> h.getIdHold() == selected.getIdHold());
 
