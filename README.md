@@ -31,7 +31,7 @@ For quick testing, this repository provides a ready-to-use DDL schema (`db/dls_s
 ![ER Diagram](db/ER_diagram_DLS.png)
 
 ## Usage — Admin
-(Detailed step-by-step guides with images are provided separately in the `admin-instructions.pdf`)
+(Detailed step-by-step guides with images are provided separately in the `documentation/admin-instructions.pdf` file)
 
 - Manage catalog items (add, edit, delete).
 - Edit metadata (title, author, year, genre, ISBN).
@@ -40,7 +40,7 @@ For quick testing, this repository provides a ready-to-use DDL schema (`db/dls_s
 - Monitor overdue loans.
 
 ## Usage — User
-(Detailed guides provided separately in the `user-instructions.pdf`)
+(Detailed guides provided separately in the `documentation/user-instructions.pdf` file)
 
 - Register and log in.
 - Browse the catalog by categories or text search with dynamic filters.
