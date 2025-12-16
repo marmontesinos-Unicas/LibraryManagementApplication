@@ -169,7 +169,10 @@ public class UserEditController {
                 }
 
                 // 2. Call the Business Logic to delete the user
-                userService.deleteUser(selectedUser);
+                userService.deleteUserLoans(selectedUser.getIdUser()); // Delete associated loans first
+                userService.deleteUser(selectedUser); // Then delete the user. If the loans were not previously
+                                                        // deleted, this would fail since we would be leaving Loan records
+                                                        // orphaned (no user associated to them)
 
                 // 3. Success Feedback ("Deletion completed")
                 showAlert("Success", "Deletion Complete", "The user has been successfully deleted.", AlertType.INFORMATION);

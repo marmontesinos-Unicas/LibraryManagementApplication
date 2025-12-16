@@ -362,5 +362,29 @@ public class LoanDAOMySQLImpl implements DAO<Loan> {
 
         return overdueItems;
     }
+
+    /**
+     * Deletes ALL loan records associated with a user, regardless of their status.
+     * This is used for cleanup before deleting the User record to satisfy the foreign key constraint.
+     *
+     * @param idUser The ID of the user whose loans to delete.
+     * @throws DAOException if a database error occurs.
+     */
+    public void deleteAllLoansByUserId(Integer idUser) throws DAOException {
+        String sql = "DELETE FROM loans WHERE idUser=?";
+        logger.info("Executing DELETE SQL: " + sql + " for idUser: " + idUser);
+
+        try (Connection conn = DAOMySQLSettings.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, idUser);
+            int rowsAffected = ps.executeUpdate();
+            logger.info("Successfully deleted " + rowsAffected + " loan records for user ID: " + idUser);
+
+        } catch (SQLException e) {
+            // If the foreign key constraint fails here, it indicates a logic error (the active loan check was skipped).
+            throw new DAOException("Error deleting all loans by user ID: " + e.getMessage());
+        }
+    }
 }
 

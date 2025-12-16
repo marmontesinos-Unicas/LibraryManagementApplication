@@ -208,6 +208,24 @@ public class UserService {
     }
 
     /**
+     * Deletes all loan records associated with a specific user ID.
+     * This is a mandatory step before deleting a user who has no outstanding loans
+     * to satisfy the database foreign key constraint for historical/closed loans.
+     *
+     * @param idUser The ID of the user whose loans should be deleted.
+     * @throws DAOException if a database error occurs during deletion.
+     */
+    public void deleteUserLoans(Integer idUser) throws DAOException {
+        if (idUser == null || idUser <= 0) {
+            // Should be prevented by controller/pre-check, but good for robustness
+            return;
+        }
+
+        // Delegate deletion of all loans (open and closed) to the LoanDAO.
+        loanDAO.deleteAllLoansByUserId(idUser);
+    }
+
+    /**
      * Deletes a user from the system by their ID.
      *
      * Access Keyword Explanation: {@code public} - This is a core business method
