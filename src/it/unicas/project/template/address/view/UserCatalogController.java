@@ -6,6 +6,7 @@ import it.unicas.project.template.address.model.dao.DAO;
 import it.unicas.project.template.address.model.dao.DAOException;
 import it.unicas.project.template.address.model.dao.GenreDAO;
 import it.unicas.project.template.address.model.dao.mysql.*;
+import it.unicas.project.template.address.service.MaterialCatalogService;
 import it.unicas.project.template.address.service.MaterialHoldService;
 import it.unicas.project.template.address.service.SearchService;
 import java.util.function.Function;
@@ -77,13 +78,10 @@ public class UserCatalogController {
     private Popup genrePopup;
 
     private final MaterialHoldService holdService = new MaterialHoldService();
-    // Search service for prioritized field searching
-    private final SearchService<GroupedMaterial> searchService = new SearchService<>();
-    private List<Function<GroupedMaterial, String>> searchFields;
-    // FIXED: Debounce mechanism for search
+        // FIXED: Debounce mechanism for search
     private ScheduledExecutorService searchScheduler = Executors.newSingleThreadScheduledExecutor();
     private java.util.concurrent.Future<?> filterTask;
-
+    private final MaterialCatalogService catalogService = new MaterialCatalogService();
     /**
      * Inner class to represent grouped materials.
      */
@@ -148,21 +146,12 @@ public class UserCatalogController {
         loadGenres();
         loadMaterialGenreRelationships();
         setupTableColumns();
-
         setupFilterButtons();
 
         // FIXED: Add debounced listeners for real-time search (300ms delay)
         searchField.textProperty().addListener((obs, oldVal, newVal) -> scheduleFilter());
         yearFromField.textProperty().addListener((obs, oldVal, newVal) -> scheduleFilter());
         yearToField.textProperty().addListener((obs, oldVal, newVal) -> scheduleFilter());
-        // Setup search fields in priority order
-        searchFields = SearchService.<GroupedMaterial>fieldsBuilder()
-                .addField(GroupedMaterial::getTitle)     // Highest priority
-                .addField(GroupedMaterial::getAuthor)    // Second priority
-                .addField(GroupedMaterial::getISBN)      // Third priority
-                .addField(GroupedMaterial::getType)      // Fourth priority
-                .addField(GroupedMaterial::getGenres)    // Fifth priority
-                .build();
     }
 
     /**
@@ -634,62 +623,22 @@ public class UserCatalogController {
     @FXML
     private void handleFilter() {
         try {
-            String searchText = searchField.getText().trim();
-            String yearFrom = yearFromField.getText().trim();
-            String yearTo = yearToField.getText().trim();
+            List<GroupedMaterial> result = catalogService.filterGroupedMaterials(
+                    groupedMaterialList,
+                    selectedMaterialTypes,
+                    selectedGenres,
+                    yearFromField.getText().trim(),
+                    yearToField.getText().trim(),
+                    searchField.getText().trim()
+            );
 
-            // Start with all materials
-            List<GroupedMaterial> candidates = new ArrayList<>(groupedMaterialList);
-
-            // Apply type filter
-            candidates = candidates.stream()
-                    .filter(gm -> selectedMaterialTypes.contains(gm.getType()))
-                    .collect(Collectors.toList());
-
-            // Apply genre filter
-            candidates = candidates.stream()
-                    .filter(gm -> {
-                        if (gm.getGenres() == null || gm.getGenres().equals("—")) {
-                            return true; // Include materials with no genres
-                        }
-                        for (String genre : gm.getGenres().split(", ")) {
-                            if (selectedGenres.contains(genre)) {
-                                return true;
-                            }
-                        }
-                        return false;
-                    })
-                    .collect(Collectors.toList());
-
-            // Apply year range filter
-            if (!yearFrom.isEmpty() || !yearTo.isEmpty()) {
-                candidates = candidates.stream()
-                        .filter(gm -> {
-                            try {
-                                int year = gm.getYear();
-                                if (!yearFrom.isEmpty() && year < Integer.parseInt(yearFrom)) return false;
-                                if (!yearTo.isEmpty() && year > Integer.parseInt(yearTo)) return false;
-                                return true;
-                            } catch (NumberFormatException e) {
-                                return false;
-                            }
-                        })
-                        .collect(Collectors.toList());
-            }
-
-            // Apply search text filter using SearchService for prioritized results
-            if (!searchText.isEmpty()) {
-                candidates = searchService.searchAndSort(candidates, searchText, searchFields);
-            }
-
-            filteredList.setAll(candidates);
+            filteredList.setAll(result);
             updateResultCount();
         } catch (Exception e) {
             showError("Filter Error", "Failed to filter materials: " + e.getMessage());
             e.printStackTrace();
         }
     }
-
     /**
      * Navigate back to the user landing view.
      */
