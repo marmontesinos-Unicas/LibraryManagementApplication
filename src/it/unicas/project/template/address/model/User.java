@@ -116,7 +116,11 @@ public class User {
     public void setEmail(String email) { this.email.set(email); }
     public StringProperty emailProperty() { return email; }
 
-    public Integer getIdRole() { return idRole.get(); }
+    public Integer getIdRole() {
+        // Initialize the property if it is null (meaning the default constructor was used)
+        if (idRole == null) idRole = new SimpleIntegerProperty(-1);
+        return idRole.get();
+    }
     public void setIdRole(Integer idRole) { this.idRole.set(idRole); }
     public IntegerProperty idRoleProperty() { return idRole; }
 
