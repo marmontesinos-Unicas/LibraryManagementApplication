@@ -37,11 +37,25 @@ public class Genre {
     public Integer getIdGenre() { return idGenre.get(); }
 
     /**
+     * Returns the genre ID property for JavaFX bindings.
+     *
+     * @return genre ID property
+     */
+    public IntegerProperty idGenreProperty() { return idGenre; }
+
+    /**
      * Returns the name of the genre.
      *
      * @return genre name
      */
     public String getGenre() { return genre.get(); }
+
+    /**
+     * Returns the genre property for JavaFX bindings.
+     *
+     * @return genre name property
+     */
+    public StringProperty genreProperty() { return genre; }
 
     /**
      * Returns the string representation of the genre.

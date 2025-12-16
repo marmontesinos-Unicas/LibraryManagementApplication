@@ -38,6 +38,7 @@ public class OverdueLoan {
     }
 
     /** Getters for UI binding and data access */
+    public int getLoanId() { return loanId; }
     public String getMaterialTitle() { return materialTitle; }
     public String getMaterialAuthor() { return materialAuthor; }
     public LocalDate getDueDate() { return dueDate; }
