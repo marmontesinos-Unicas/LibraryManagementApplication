@@ -23,19 +23,6 @@
         private MainApp mainApp;
         // Access Keyword Explanation: {@code private} - Encapsulates the reference to the main application.
 
-        /**
-         * Is called by the main application to give a reference back to itself.
-         * This establishes the link necessary for navigation (switching scenes).
-         *
-         * Access Keyword Explanation: {@code public} - This method must be public because
-         * it is called explicitly by the {@code MainApp} class immediately after loading this FXML view.
-         *
-         * @param mainApp The reference to the main application instance.
-         */
-        public void setMainApp(MainApp mainApp) {
-            this.mainApp = mainApp;
-        }
-
         // References to the buttons (Injected from FXML)
         // Access Keyword Explanation: {@code private} - FXML injection works on private fields,
         // and they should be kept private as they are UI elements specific to this controller.
@@ -178,5 +165,18 @@
                 // User cancelled or closed the dialog. Do nothing.
                 System.out.println("Logout cancelled by the user.");
             }
+        }
+
+        /**
+         * Is called by the main application to give a reference back to itself.
+         * This establishes the link necessary for navigation (switching scenes).
+         *
+         * Access Keyword Explanation: {@code public} - This method must be public because
+         * it is called explicitly by the {@code MainApp} class immediately after loading this FXML view.
+         *
+         * @param mainApp The reference to the main application instance.
+         */
+        public void setMainApp(MainApp mainApp) {
+            this.mainApp = mainApp;
         }
     }

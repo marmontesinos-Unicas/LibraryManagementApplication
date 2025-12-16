@@ -35,23 +35,6 @@ public class DAOMySQLSettings {
     // current configuration settings. They are private to ensure they are accessed
     // and modified only through controlled public methods (getters/setters).
 
-    // --- Getters for Current Configuration ---
-    public String getHost() { return host; }
-    public String getUserName() { return userName; }
-    public String getPwd() { return pwd; }
-    public String getSchema() { return schema; }
-    // Access Keyword Explanation: {@code public} - Getters are public to provide
-    // read-only access to the current configuration settings to external classes.
-
-    // --- Setters for Current Configuration ---
-    public void setHost(String host) { this.host = host; }
-    public void setUserName(String userName) { this.userName = userName; }
-    public void setPwd(String pwd) { this.pwd = pwd; }
-    public void setSchema(String schema) { this.schema = schema; }
-    // Access Keyword Explanation: {@code public} - Setters are public to allow
-    // external classes (e.g., a configuration controller) to change the DB connection
-    // parameters at runtime.
-
     // --- Static Initialization Block ---
     static {
         // This static block runs exactly once when the class is first loaded into memory by the JVM.
@@ -69,24 +52,6 @@ public class DAOMySQLSettings {
     // --- Singleton Pattern Implementation ---
     private static DAOMySQLSettings currentDAOMySQLSettings = null;
     // This private static field holds the single, globally accessible configuration instance (the Singleton).
-
-    /**
-     * <p>Retrieves the current (active) DAO settings instance.
-     * Initializes to default settings if no instance has been set yet.</p>
-     *
-     * <p>Access Keyword Explanation: {@code public static} - This is the standard
-     * access point for the Singleton instance. It must be static so it can be called
-     * without an instance of the class.</p>
-     *
-     * @return The single, current DAOMySQLSettings instance.
-     */
-    public static DAOMySQLSettings getCurrentDAOMySQLSettings() {
-        if (currentDAOMySQLSettings == null) {
-            // Lazy initialization: create default settings only when they are first requested.
-            currentDAOMySQLSettings = getDefaultDAOSettings();
-        }
-        return currentDAOMySQLSettings;
-    }
 
     /**
      * <p>Creates and returns a new DAOMySQLSettings instance populated with the static default constants.</p>
@@ -107,60 +72,8 @@ public class DAOMySQLSettings {
         return daoMySQLSettings;
     }
 
-    /**
-     * <p>Sets the active configuration instance. Used to switch connection details at runtime.</p>
-     *
-     * Access Keyword Explanation: {@code public static} - Allows other components
-     * to globally change the application's database configuration.
-     *
-     * @param daoMySQLSettings The new settings instance to use globally.
-     */
-    public static void setCurrentDAOMySQLSettings(DAOMySQLSettings daoMySQLSettings) {
-        // Overwrites the current global settings with a new provided set of settings.
-        currentDAOMySQLSettings = daoMySQLSettings;
-    }
-
     // --- Connection Utility Methods ---
 
-    /**
-     * <p>Establishes a new database connection and creates a Statement object for executing SQL queries.
-     * This method is convenient for simple, one-off query execution.</p>
-     *
-     * Access Keyword Explanation: {@code public static} - This is a central utility
-     * method used by all DAO classes to interact with the database; it must be static
-     * for easy access without requiring an instance.
-     *
-     * @return A new Statement object ready for use.
-     * @throws SQLException if a database access error occurs.
-     */
-    public static Statement getStatement() throws SQLException {
-        Connection connection = getConnection(); // Get a Connection object first, then create a Statement from it.
-        return connection.createStatement(); // Statement is used to execute static SQL statements and return their results.
-    }
-
-    /**
-     * <p>Closes the provided Statement and its underlying Connection, ensuring resources are freed.
-     * JDBC resources MUST be closed to prevent resource leaks (connections, file handles).</p>
-     *
-     * Access Keyword Explanation: {@code public static} - Essential utility for
-     * resource management, must be static for easy access by DAOs.
-     *
-     * @param st The Statement object to be closed.
-     * @throws SQLException if a database access error occurs during closing.
-     */
-    public static void closeStatement(Statement st) throws SQLException {
-        // Retrieve the Connection object associated with the Statement
-        Connection conn = st.getConnection();
-
-        // 1. Close the connection first
-        if (conn != null) {
-            conn.close();
-        }
-        // 2. Close the Statement itself
-        if (st != null) {
-            st.close();
-        }
-    }
 
     /**
      * <p>Establishes and returns a new Connection to the MySQL database

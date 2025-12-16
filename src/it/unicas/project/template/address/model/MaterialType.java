@@ -29,10 +29,8 @@ public class MaterialType {
 
     /** Getters, setters, and JavaFX properties for UI binding */
     public Integer getIdMaterialType() { return idMaterialType.get(); }
-    public IntegerProperty idMaterialTypeProperty() { return idMaterialType; }
 
     public String getMaterial_type() { return material_type.get(); }
-    public StringProperty material_typeProperty() { return material_type; }
 
     @Override
     public String toString() {

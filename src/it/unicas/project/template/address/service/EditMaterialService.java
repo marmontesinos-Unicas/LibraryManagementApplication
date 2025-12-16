@@ -1,6 +1,5 @@
 package it.unicas.project.template.address.service;
 
-import it.unicas.project.template.address.model.Genre;
 import it.unicas.project.template.address.model.Material;
 import it.unicas.project.template.address.model.MaterialGenre;
 import it.unicas.project.template.address.model.dao.DAO;

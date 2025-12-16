@@ -9,7 +9,6 @@ import javafx.scene.control.*;
 import javafx.scene.control.Alert.AlertType;
 import javafx.stage.Stage;
 
-import java.time.LocalDate;
 import java.util.Optional;
 
 public class UserEditController {
@@ -31,45 +30,6 @@ public class UserEditController {
     private UserManagementController userManagementController;
     private UserService userService = new UserService();
 
-    /**
-     * Sets the stage of this dialog.
-     */
-    public void setDialogStage(Stage dialogStage) {
-        this.dialogStage = dialogStage;
-    }
-
-    /**
-     * Sets the user to be edited and populates the fields.
-     * Initializes the current password fields.
-     * @param selectedUser The user object to display and edit.
-     */
-    public void setSelectedUser(User selectedUser) {
-        this.selectedUser = selectedUser;
-
-        nameField.setText(selectedUser.getName());
-        surnameField.setText(selectedUser.getSurname());
-        nationalIDField.setText(selectedUser.getNationalID());
-        birthdateField.setValue(selectedUser.getBirthdate());
-        usernameField.setText(selectedUser.getUsername());
-        emailField.setText(selectedUser.getEmail());
-
-        // Map idRole back to Role String for ComboBox display
-        String roleText = selectedUser.getIdRole() != null && selectedUser.getIdRole() == 1 ? "Admin" : "User";
-        roleComboBox.getSelectionModel().select(roleText);
-
-        // Populate the Current Password field(s)
-        String currentPassword = selectedUser.getPassword();
-        currentPasswordField.setText(currentPassword);
-        visiblePasswordField.setText(currentPassword);
-    }
-
-    /**
-     * Sets the reference to the main management controller.
-     * @param userManagementController The controller managing the user table.
-     */
-    public void setUserManagementController(UserManagementController userManagementController) {
-        this.userManagementController = userManagementController;
-    }
 
     /**
      * Handles the action of the password toggle button.
@@ -208,4 +168,45 @@ public class UserEditController {
         alert.initOwner(dialogStage);
         alert.showAndWait();
     }
+
+    /**
+     * Sets the stage of this dialog.
+     */
+    public void setDialogStage(Stage dialogStage) {
+        this.dialogStage = dialogStage;
+    }
+
+    /**
+     * Sets the user to be edited and populates the fields.
+     * Initializes the current password fields.
+     * @param selectedUser The user object to display and edit.
+     */
+    public void setSelectedUser(User selectedUser) {
+        this.selectedUser = selectedUser;
+
+        nameField.setText(selectedUser.getName());
+        surnameField.setText(selectedUser.getSurname());
+        nationalIDField.setText(selectedUser.getNationalID());
+        birthdateField.setValue(selectedUser.getBirthdate());
+        usernameField.setText(selectedUser.getUsername());
+        emailField.setText(selectedUser.getEmail());
+
+        // Map idRole back to Role String for ComboBox display
+        String roleText = selectedUser.getIdRole() != null && selectedUser.getIdRole() == 1 ? "Admin" : "User";
+        roleComboBox.getSelectionModel().select(roleText);
+
+        // Populate the Current Password field(s)
+        String currentPassword = selectedUser.getPassword();
+        currentPasswordField.setText(currentPassword);
+        visiblePasswordField.setText(currentPassword);
+    }
+
+    /**
+     * Sets the reference to the main management controller.
+     * @param userManagementController The controller managing the user table.
+     */
+    public void setUserManagementController(UserManagementController userManagementController) {
+        this.userManagementController = userManagementController;
+    }
+
 }

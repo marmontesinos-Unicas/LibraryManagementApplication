@@ -152,35 +152,4 @@ public class NotificationsService {
             return false;
         }
     }
-
-    // ----------------------------------------------------------------------
-    //                              No-Usage Methods
-    /**
-     * Overload for backward compatibility in existing tests that only mock LoanDAO.
-     *
-     * Access Keyword Explanation: {@code public} - Used by external test classes
-     * for convenience when only the LoanDAO needs mocking.
-     */
-    public NotificationsService(LoanDAOMySQLImpl loanDAO) {
-        // Delegates to the main constructor, providing the real HoldDAO instance
-        this(loanDAO, (HoldDAOMySQLImpl) HoldDAOMySQLImpl.getInstance());
-    }
-
-    /**
-    * Old method renamed/deprecated for proper usage.
-    * Redirects to the new, comprehensive check.
-    *
-    * Access Keyword Explanation: {@code public} - Kept public for compatibility,
-    * but this method should be considered deprecated and {@code hasPendingNotifications}
-    * should be used instead.
-    *
-    * @param userId The ID of the user.
-    * @return The result of the comprehensive check.
-    */
-    public boolean hasOverdueMaterials(int userId) {
-        // Delegates to the comprehensive check
-        return hasPendingNotifications(userId);
-    }
-
-    // ----------------------------------------------------------------------
 }

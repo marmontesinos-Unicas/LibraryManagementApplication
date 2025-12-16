@@ -37,22 +37,13 @@ public class MaterialInventory extends Material {
 
     /** Getters, setters, and JavaFX properties for UI binding */
     public Integer getQuantity() { return quantity.get(); }
-    public void setQuantity(Integer quantity) { this.quantity.set(quantity); }
-    public IntegerProperty quantityProperty() { return quantity; }
 
     public String getMaterialTypeName() { return materialTypeName.get(); }
     public void setMaterialTypeName(String materialTypeName) { this.materialTypeName.set(materialTypeName); }
-    public StringProperty materialTypeNameProperty() { return materialTypeName; }
 
-    public Integer getAvailableCount() { return availableCount.get(); }
     public void setAvailableCount(Integer availableCount) { this.availableCount.set(availableCount); }
-    public IntegerProperty availableCountProperty() { return availableCount; }
 
-    public Integer getOnHoldCount() { return onHoldCount.get(); }
     public void setOnHoldCount(Integer onHoldCount) { this.onHoldCount.set(onHoldCount); }
-    public IntegerProperty onHoldCountProperty() { return onHoldCount; }
 
-    public Integer getLoanedCount() { return loanedCount.get(); }
     public void setLoanedCount(Integer loanedCount) { this.loanedCount.set(loanedCount); }
-    public IntegerProperty loanedCountProperty() { return loanedCount; }
 }

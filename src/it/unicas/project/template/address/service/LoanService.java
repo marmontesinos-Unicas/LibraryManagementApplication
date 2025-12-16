@@ -61,40 +61,6 @@ public class LoanService {
     }
 
     /**
-     * Performs a case-insensitive search among all available materials.
-     * <p>
-     * The search query is compared against:
-     * <ul>
-     *     <li>Title</li>
-     *     <li>Author</li>
-     *     <li>ISBN</li>
-     * </ul>
-     * </p>
-     *
-     * @param query the text input to match against material fields.
-     *              If {@code null} or empty, returns all available materials.
-     * @return a list of materials matching the given search text
-     * @throws DAOException if an error occurs while retrieving materials
-     */
-    public List<Material> searchAvailableMaterials(String query) throws DAOException {
-        String q = query == null ? "" : query.trim().toLowerCase();
-
-        // Retrieve the current list of available materials
-        List<Material> available = getAvailableMaterials();
-
-        if (q.isEmpty()) return available;
-
-        // Exclude materials that do not match any searchable field
-        available.removeIf(m ->
-                (m.getTitle() == null || !m.getTitle().toLowerCase().contains(q)) &&
-                        (m.getAuthor() == null || !m.getAuthor().toLowerCase().contains(q)) &&
-                        (m.getISBN() == null || !m.getISBN().toLowerCase().contains(q))
-        );
-
-        return available;
-    }
-
-    /**
      * Creates a new loan for a specific material and user.
      * <p>
      * Business rules enforced:

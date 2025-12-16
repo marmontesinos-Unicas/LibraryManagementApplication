@@ -26,13 +26,6 @@ public class Role {
         this.admin_type = new SimpleStringProperty(admin_type);
     }
 
-    /** Getters and JavaFX properties for UI binding */
-    public Integer getIdRole() { return idRole.get(); }
-    public IntegerProperty idRoleProperty() { return idRole; }
-
-    public String getAdmin_type() { return admin_type.get(); }
-    public StringProperty admin_typeProperty() { return admin_type; }
-
     /** Returns the role name as string */
     @Override
     public String toString() {

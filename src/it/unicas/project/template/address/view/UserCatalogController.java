@@ -8,8 +8,6 @@ import it.unicas.project.template.address.model.dao.GenreDAO;
 import it.unicas.project.template.address.model.dao.mysql.*;
 import it.unicas.project.template.address.service.MaterialCatalogService;
 import it.unicas.project.template.address.service.MaterialHoldService;
-import it.unicas.project.template.address.service.SearchService;
-import java.util.function.Function;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -78,7 +76,7 @@ public class UserCatalogController {
     private Popup genrePopup;
 
     private final MaterialHoldService holdService = new MaterialHoldService();
-        // FIXED: Debounce mechanism for search
+    // FIXED: Debounce mechanism for search
     private ScheduledExecutorService searchScheduler = Executors.newSingleThreadScheduledExecutor();
     private java.util.concurrent.Future<?> filterTask;
     private final MaterialCatalogService catalogService = new MaterialCatalogService();
@@ -711,15 +709,6 @@ public class UserCatalogController {
         this.currentUser = user;
         if (allMaterials.isEmpty()) {
             loadAllMaterials();
-        }
-    }
-
-    /**
-     * Cleanup when controller is destroyed.
-     */
-    public void cleanup() {
-        if (searchScheduler != null && !searchScheduler.isShutdown()) {
-            searchScheduler.shutdown();
         }
     }
 }

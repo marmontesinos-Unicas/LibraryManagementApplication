@@ -49,11 +49,8 @@ public class MaterialManagementController {
 
     // FXML fields for buttons (must match fx:id in FXML)
     @FXML private Button viewEditMaterialButton;
-    @FXML private Button backButton;
-    @FXML private Button searchButton;
 
 
-    private ObservableList<MaterialInventory> materialList = FXCollections.observableArrayList();
     private ObservableList<MaterialInventory> allMaterialList = FXCollections.observableArrayList();
     private ObservableList<MaterialInventory> filteredList = FXCollections.observableArrayList();
 
@@ -62,9 +59,7 @@ public class MaterialManagementController {
     private ScheduledExecutorService searchScheduler = Executors.newSingleThreadScheduledExecutor();
     private java.util.concurrent.Future<?> searchTask;
     private List<Function<MaterialInventory, String>> searchFields;
-    public void setMainApp(MainApp mainApp) {
-        this.mainApp = mainApp;
-    }
+
 
     @FXML
     public void initialize() {
@@ -211,13 +206,8 @@ public class MaterialManagementController {
         }
     }
 
-    /**
-     * Cleanup when controller is destroyed
-     */
-    public void cleanup() {
-        if (searchScheduler != null && !searchScheduler.isShutdown()) {
-            searchScheduler.shutdown();
-        }
+    public void setMainApp(MainApp mainApp) {
+        this.mainApp = mainApp;
     }
 
 }

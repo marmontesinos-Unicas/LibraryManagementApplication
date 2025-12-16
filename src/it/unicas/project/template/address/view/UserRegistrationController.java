@@ -148,18 +148,4 @@ public class UserRegistrationController {
 
         alert.showAndWait();
     }
-
-    /**
-     * Helper method to clear all input fields.
-     */
-    private void clearFields() {
-        nameField.setText("");
-        surnameField.setText("");
-        nationalIDField.setText("");
-        birthdateField.setValue(null);
-        usernameField.setText("");
-        passwordField.setText("");
-        emailField.setText("");
-        roleComboBox.getSelectionModel().clearSelection();
-    }
 }

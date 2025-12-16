@@ -11,7 +11,6 @@ import it.unicas.project.template.address.model.dao.mysql.UserDAOMySQLImpl;
 import it.unicas.project.template.address.service.LoanCatalogService;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
-import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -38,7 +37,6 @@ public class LoanReturnController {
     @FXML private TextField searchField;                 // Field for searching loans
     @FXML private Button searchButton;                   // Button to clear search
     @FXML private Button returnLoanButton;
-    @FXML private Button editLoanButton;
 
     @FXML private TableView<LoanRow> loansTable;        // Table to display loans
     @FXML private TableColumn<LoanRow, String> materialTypeColumn;
@@ -62,22 +60,6 @@ public class LoanReturnController {
     // Debounce mechanism for search
     private ScheduledExecutorService searchScheduler = Executors.newSingleThreadScheduledExecutor();
     private java.util.concurrent.Future<?> searchTask;
-
-    /**
-     * Sets the dialog stage for this controller.
-     * @param dialogStage The stage object.
-     */
-    public void setDialogStage(Stage dialogStage) {
-        this.dialogStage = dialogStage;
-    }
-
-    /**
-     * Sets a reference back to the main application.
-     * @param mainApp The main application object.
-     */
-    public void setMainApp(MainApp mainApp) {
-        this.mainApp = mainApp;
-    }
 
     /**
      * Initializes the controller.
@@ -437,11 +419,19 @@ public class LoanReturnController {
     }
 
     /**
-     * Cleanup when controller is destroyed.
+     * Sets the dialog stage for this controller.
+     * @param dialogStage The stage object.
      */
-    public void cleanup() {
-        if (searchScheduler != null && !searchScheduler.isShutdown()) {
-            searchScheduler.shutdown();
-        }
+    public void setDialogStage(Stage dialogStage) {
+        this.dialogStage = dialogStage;
     }
+
+    /**
+     * Sets a reference back to the main application.
+     * @param mainApp The main application object.
+     */
+    public void setMainApp(MainApp mainApp) {
+        this.mainApp = mainApp;
+    }
+
 }

@@ -29,16 +29,6 @@ public class MaterialService {
     private final DAO<MaterialGenre> materialGenreDAO;
 
     /**
-     * No-arg constructor to support the call: new MaterialService().
-     * Initializes DAOs using their respective Singleton instances.
-     */
-    public MaterialService() {
-        // Initialize DAOs using their singletons/instances
-        this.materialDao = MaterialDAOMySQLImpl.getInstance();
-        this.materialGenreDAO = MaterialGenreDAOMySQLImpl.getInstance();
-    }
-
-    /**
      * Constructor for Dependency Injection (mostly for testing).
      *
      * @param materialDao The {@code Material} DAO implementation to use.
@@ -47,49 +37,6 @@ public class MaterialService {
         this.materialDao = materialDao;
         // Initialize other DAOs needed by the service methods
         this.materialGenreDAO = MaterialGenreDAOMySQLImpl.getInstance();
-    }
-
-    /**
-     * Inserts a new Material into the database, retrieves its generated ID,
-     * and then links all provided genres to it.
-     * <p>
-     * Note: This method does *not* use a single explicit transaction block (Connection/setAutoCommit/commit/rollback).
-     * It relies on the DAOs to handle their own connection closing. If either the Material insert
-     * or any MaterialGenre insert fails, the previously inserted records will remain in the database.
-     * For true atomicity, an explicit transaction spanning both DAO calls should be used, similar
-     * to what is done in {@code MaterialHoldService}.
-     * </p>
-     *
-     * @param material The Material object to insert. Its ID will be updated by the DAO.
-     * @param genreIds A list of IDGenre integers.
-     * @throws DAOException If the insertion fails at any step.
-     */
-    public void insertNewMaterialWithGenres(Material material, List<Integer> genreIds) throws DAOException {
-
-        // 1. Insert the material. The DAO's insert method (as provided by you)
-        //    will automatically set the generated ID onto the 'material' object.
-        logger.info("Service: Attempting to insert new material.");
-
-        materialDao.insert(material); // This call modifies 'material' by setting its ID.
-
-        Integer newMaterialId = material.getIdMaterial();
-
-        if (newMaterialId == null || newMaterialId <= 0) {
-            // This case should be rare if the DAO is correct, but is a safe check.
-            throw new DAOException("Failed to retrieve ID for new Material after insertion. Insertion failed or ID was not set by DAO.");
-        }
-
-        // 2. Insert the material-genre links using the newly generated ID
-        if (genreIds != null && !genreIds.isEmpty()) {
-            logger.info("Service: Linking " + genreIds.size() + " genres for material ID: " + newMaterialId);
-            for (Integer idGenre : genreIds) {
-                // MaterialGenre constructor is (idMaterial, idGenre)
-                MaterialGenre mg = new MaterialGenre(newMaterialId, idGenre);
-                materialGenreDAO.insert(mg);
-            }
-        }
-
-        logger.info("Service: Material and genres successfully inserted for ID: " + newMaterialId);
     }
 
     /**
