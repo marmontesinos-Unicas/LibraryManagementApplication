@@ -14,11 +14,18 @@ import java.time.LocalDateTime;
 
 /**
  * Service layer that groups material + hold operations into a single transaction.
- * Uses DAO<T> interface types.
+ * <p>
+ * This class ensures that linked database operations (e.g., updating a material's
+ * status and inserting a hold record) are performed atomically using SQL transactions.
+ * It uses generic DAO<T> interface types for database interaction.
+ * </p>
+ *
+ * Access Keyword Explanation: {@code public} - Accessible by controllers or other service components.
  */
 public class MaterialHoldService {
 
-    // Use the DAO interface type — these getInstance() methods return DAO<T> in your code.
+    // --- Dependencies ---
+    // Use the DAO interface type — these getInstance() methods return DAO<T>
     private final DAO<Material> materialDAO = MaterialDAOMySQLImpl.getInstance();
     private final DAO<Hold> holdDAO = HoldDAOMySQLImpl.getInstance();
 
@@ -26,7 +33,7 @@ public class MaterialHoldService {
      * Atomically place a hold on the given material for the given user.
      * This method:
      *  - sets material status to "holded" (match your existing status strings)
-     *  - inserts a Hold record
+     *  - inserts a Hold record linking user and material with current timestamp
      */
     public void holdMaterial(int userId, Material material) throws DAOException {
         Connection conn = null; // should be static in your project

@@ -12,6 +12,8 @@ import java.util.stream.Collectors;
  * <p>
  * This class applies multiple filtering criteria (type, status, genre, year range)
  * and then performs a prioritized search on the remaining list of materials.
+ * It provides separate methods for filtering individual {@code Material} records (Admin view)
+ * and aggregated {@code GroupedMaterial} records (User view).
  * </p>
  *
  * Access Keyword Explanation: {@code public} - Allows other service or controller layers to utilize the filtering logic.
@@ -21,7 +23,11 @@ public class MaterialCatalogService {
     private final SearchService<Material> materialSearchService = new SearchService<>();
     private final SearchService<GroupedMaterial> groupedSearchService = new SearchService<>();
 
-    // Search fields for Material
+    // Search fields for Material (Individual Copies - Admin View)
+    /**
+     * Defines the prioritized search fields for individual {@code Material} records.
+     * Priority: Title > Author > ISBN > Status.
+     */
     private static final List<Function<Material, String>> MATERIAL_SEARCH_FIELDS =
             SearchService.<Material>fieldsBuilder()
                     .addField(Material::getTitle)
@@ -30,7 +36,11 @@ public class MaterialCatalogService {
                     .addField(Material::getMaterial_status)
                     .build();
 
-    // Search fields for GroupedMaterial
+    // Search fields for GroupedMaterial (Aggregated Groups - User View)
+    /**
+     * Defines the prioritized search fields for aggregated {@code GroupedMaterial} records.
+     * Priority: Title > Author > ISBN > Type > Genres.
+     */
     private static final List<Function<GroupedMaterial, String>> GROUPED_SEARCH_FIELDS =
             SearchService.<GroupedMaterial>fieldsBuilder()
                     .addField(GroupedMaterial::getTitle)
@@ -41,7 +51,23 @@ public class MaterialCatalogService {
                     .build();
 
     /**
-     * Filter individual materials (for Admin view)
+     * Filters individual materials (for Admin view).
+     * <p>
+     * Applies filters for Type, Status, Genre, and Year range, followed by a search term.
+     * Note: Filter logic for empty selections is designed to match records with *missing* data.
+     * </p>
+     *
+     * @param materials The initial, unfiltered list of all Material objects (individual copies).
+     * @param materialGenreMap Map linking Material ID to a Set of Genre IDs.
+     * @param materialTypeMap Map linking Material Type ID to its name.
+     * @param genreMap Map linking Genre ID to its name.
+     * @param selectedTypes Set of selected Material Type names.
+     * @param selectedStatuses Set of selected Material Status names.
+     * @param selectedGenres Set of selected Genre names.
+     * @param yearFrom String representing the minimum year (inclusive).
+     * @param yearTo String representing the maximum year (inclusive).
+     * @param searchTerm The user-entered term for relevance-based searching.
+     * @return The final list of filtered and sorted individual materials.
      */
     public List<Material> filterMaterials(
             List<Material> materials,
@@ -118,7 +144,20 @@ public class MaterialCatalogService {
     }
 
     /**
-     * Filter grouped materials (for User view)
+     * Filter grouped materials (for the User view).
+     * <p>
+     * Applies filters for Type, Genre, and Year range, followed by a search term.
+     * Status filtering is implicitly handled by the GroupedMaterial object's availability.
+     * Note: Filter logic for empty selections is designed to match records with *missing* data.
+     * </p>
+     *
+     * @param groupedMaterials The initial, unfiltered list of all GroupedMaterial objects (aggregated items).
+     * @param selectedTypes Set of selected Material Type names.
+     * @param selectedGenres Set of selected Genre names.
+     * @param yearFrom String representing the minimum year (inclusive).
+     * @param yearTo String representing the maximum year (inclusive).
+     * @param searchTerm The user-entered term for relevance-based searching.
+     * @return The final list of filtered and sorted grouped materials.
      */
     public List<GroupedMaterial> filterGroupedMaterials(
             List<GroupedMaterial> groupedMaterials,

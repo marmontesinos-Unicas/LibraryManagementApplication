@@ -12,25 +12,37 @@ import java.util.logging.Logger;
 
 /**
  * Service layer for Material-related business logic.
- * Handles operations that involve multiple DAOs or complex logic (like transactions).
+ * <p>
+ * Handles operations that involve multiple DAOs (e.g., Material and MaterialGenre)
+ * or complex logic (like cross-DAO transactions and business validation).
+ * </p>
+ *
+ * Access Keyword Explanation: {@code public} - Accessible by controllers or other service components.
  */
 public class MaterialService {
 
     private static final Logger logger = Logger.getLogger(MaterialService.class.getName());
 
-    // We must use the concrete implementation (or a parent interface) and the Genre DAO.
-    // Assuming MaterialDAOMySQLImpl implements DAO<Material>
+    // --- Dependencies ---
+    // Use the DAO interface type, initialized with MySQL implementations.
     private final DAO<Material> materialDao;
     private final DAO<MaterialGenre> materialGenreDAO;
 
-    // ADDED: No-arg constructor to support the call: new MaterialService()
+    /**
+     * No-arg constructor to support the call: new MaterialService().
+     * Initializes DAOs using their respective Singleton instances.
+     */
     public MaterialService() {
         // Initialize DAOs using their singletons/instances
         this.materialDao = MaterialDAOMySQLImpl.getInstance();
         this.materialGenreDAO = MaterialGenreDAOMySQLImpl.getInstance();
     }
 
-    // Existing constructor (kept for compatibility)
+    /**
+     * Constructor for Dependency Injection (mostly for testing).
+     *
+     * @param materialDao The {@code Material} DAO implementation to use.
+     */
     public MaterialService(DAO<Material> materialDao) {
         this.materialDao = materialDao;
         // Initialize other DAOs needed by the service methods
@@ -40,6 +52,13 @@ public class MaterialService {
     /**
      * Inserts a new Material into the database, retrieves its generated ID,
      * and then links all provided genres to it.
+     * <p>
+     * Note: This method does *not* use a single explicit transaction block (Connection/setAutoCommit/commit/rollback).
+     * It relies on the DAOs to handle their own connection closing. If either the Material insert
+     * or any MaterialGenre insert fails, the previously inserted records will remain in the database.
+     * For true atomicity, an explicit transaction spanning both DAO calls should be used, similar
+     * to what is done in {@code MaterialHoldService}.
+     * </p>
      *
      * @param material The Material object to insert. Its ID will be updated by the DAO.
      * @param genreIds A list of IDGenre integers.
@@ -73,7 +92,18 @@ public class MaterialService {
         logger.info("Service: Material and genres successfully inserted for ID: " + newMaterialId);
     }
 
-    // Existing `save` method from your original file.
+    /**
+     * Performs business validation and then inserts a new Material into the database.
+     * <p>
+     * This method is a simpler insertion focusing only on the Material entity itself
+     * and applying default status.
+     * </p>
+     *
+     * @param m The Material object to validate and insert.
+     * @return The inserted Material object (with its generated ID).
+     * @throws IllegalArgumentException if any business rule validation fails (Title, Year, Type).
+     * @throws DAOException if the database insertion fails.
+     */
     public Material save(Material m) throws DAOException {
         if (m.getTitle() == null || m.getTitle().trim().isEmpty()) {
             throw new IllegalArgumentException("Title is required");
