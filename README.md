@@ -24,7 +24,7 @@ Replace `APP_DIR` and `JAVA_FX` with your paths.
 ## Database Setup (SQL / JDBC)
 The application requires an SQL database accessed via JDBC.
 
-For quick testing, this repository provides a ready-to-use DDL schema (`db/dls_schema.sql`) that can be executed directly to create the required tables and relationships.
+For quick testing, this repository provides a ready-to-use dls_schema (`db/dls_schema.sql`).
 
 ## Database Design
 
