@@ -5,14 +5,12 @@ import it.unicas.project.template.address.model.dao.DAO;
 import it.unicas.project.template.address.model.dao.DAOException;
 
 import java.sql.*;
-import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 import it.unicas.project.template.address.model.OverdueLoan;
 import java.time.LocalDate;
-import java.time.ZoneId;
 
 /**
  * MySQL implementation for the Loan data access object (DAO).

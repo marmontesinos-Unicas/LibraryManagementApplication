@@ -64,11 +64,7 @@ public class AdminMaterialCatalogController {
     @FXML private Button addButton;
     @FXML private Button editButton;
     @FXML private Button deleteButton;
-    @FXML private Button searchButton;
-    @FXML private Button clearButton;
     @FXML private Label resultCountLabel;
-    @FXML private HBox adminActionsBox;
-    @FXML private Button backButton;
 
     private MainApp mainApp;
 
@@ -716,14 +712,5 @@ public class AdminMaterialCatalogController {
 
     public void setMainApp(MainApp mainApp) {
         this.mainApp = mainApp;
-    }
-
-    /**
-     * Cleanup when controller is destroyed
-     */
-    public void cleanup() {
-        if (searchScheduler != null && !searchScheduler.isShutdown()) {
-            searchScheduler.shutdown();
-        }
     }
 }

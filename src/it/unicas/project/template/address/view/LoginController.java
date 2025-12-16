@@ -30,31 +30,10 @@ public class LoginController {
     private final LoginService loginService = new LoginService();
 
     /**
-     * Called by the MainApp to pass the reference of the MainApp object.
-     */
-    public void setMainApp(MainApp mainApp) {
-        this.mainApp = mainApp;
-    }
-
-    /**
-     * Called by the MainApp to pass the reference of the Stage.
-     */
-    public void setDialogStage(Stage dialogStage) {
-        this.dialogStage = dialogStage;
-    }
-
-    /**
      * Returns true if the login was successful.
      */
     public boolean isLoginSuccessful() {
         return loginSuccessful;
-    }
-
-    /**
-     * Returns the username of the logged-in user.
-     */
-    public String getUsername() {
-        return username;
     }
 
     /**
@@ -107,4 +86,26 @@ public class LoginController {
             System.out.println("Login canceled on main scene.");
         }
     }
+
+    /**
+     * Called by the MainApp to pass the reference of the MainApp object.
+     */
+    public void setMainApp(MainApp mainApp) {
+        this.mainApp = mainApp;
+    }
+
+    /**
+     * Called by the MainApp to pass the reference of the Stage.
+     */
+    public void setDialogStage(Stage dialogStage) {
+        this.dialogStage = dialogStage;
+    }
+
+    /**
+     * Returns the username of the logged-in user.
+     */
+    public String getUsername() {
+        return username;
+    }
+
 }

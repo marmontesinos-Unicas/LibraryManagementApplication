@@ -47,8 +47,6 @@ public class UserManagementController {
     @FXML private TableColumn<User, String> surnameColumn;
     @FXML private TableColumn<User, String> nationalIdColumn;
     @FXML private TableColumn<User, String> emailColumn;
-    @FXML private Button registerButton;
-    @FXML private Button backButton;
 
     // Data structure
     private ObservableList<User> userList = FXCollections.observableArrayList();
@@ -63,13 +61,7 @@ public class UserManagementController {
     private ScheduledExecutorService searchScheduler = Executors.newSingleThreadScheduledExecutor();
     private java.util.concurrent.Future<?> searchTask;
 
-    /**
-     * Sets the reference to the main application.
-     * @param mainApp The main application instance.
-     */
-    public void setMainApp(MainApp mainApp) {
-        this.mainApp = mainApp;
-    }
+
 
     /**
      * Initializes the controller. This method is automatically called after the FXML file has been loaded.
@@ -307,12 +299,11 @@ public class UserManagementController {
     }
 
     /**
-     * Cleans up resources used by the controller, specifically shutting down the
-     * {@code ScheduledExecutorService} used for search debouncing to prevent resource leaks.
+     * Sets the reference to the main application.
+     * @param mainApp The main application instance.
      */
-    public void cleanup() {
-        if (searchScheduler != null && !searchScheduler.isShutdown()) {
-            searchScheduler.shutdown();
-        }
+    public void setMainApp(MainApp mainApp) {
+        this.mainApp = mainApp;
     }
+
 }

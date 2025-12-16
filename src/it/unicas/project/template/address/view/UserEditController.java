@@ -24,49 +24,24 @@ public class UserEditController {
     @FXML private ToggleButton showPasswordToggle;
     @FXML private PasswordField newPasswordField;
 
+    // Error labels
+    @FXML private Label nameErrorLabel;
+    @FXML private Label surnameErrorLabel;
+    @FXML private Label nationalIDErrorLabel;
+    @FXML private Label birthdateErrorLabel;
+    @FXML private Label usernameErrorLabel;
+    @FXML private Label roleErrorLabel;
+    @FXML private Label newPasswordErrorLabel;
+
     private Stage dialogStage;
     private User selectedUser;
     private UserManagementController userManagementController;
     private UserService userService = new UserService();
 
-    /**
-     * Sets the stage of this dialog.
-     */
-    public void setDialogStage(Stage dialogStage) {
-        this.dialogStage = dialogStage;
-    }
 
-    /**
-     * Sets the user to be edited and populates the fields.
-     * Initializes the current password fields.
-     * @param selectedUser The user object to display and edit.
-     */
-    public void setSelectedUser(User selectedUser) {
-        this.selectedUser = selectedUser;
-
-        nameField.setText(selectedUser.getName());
-        surnameField.setText(selectedUser.getSurname());
-        nationalIDField.setText(selectedUser.getNationalID());
-        birthdateField.setValue(selectedUser.getBirthdate());
-        usernameField.setText(selectedUser.getUsername());
-        emailField.setText(selectedUser.getEmail());
-
-        // Map idRole back to Role String for ComboBox display
-        String roleText = selectedUser.getIdRole() != null && selectedUser.getIdRole() == 1 ? "Admin" : "User";
-        roleComboBox.getSelectionModel().select(roleText);
-
-        // Populate the Current Password field(s)
-        String currentPassword = selectedUser.getPassword();
-        currentPasswordField.setText(currentPassword);
-        visiblePasswordField.setText(currentPassword);
-    }
-
-    /**
-     * Sets the reference to the main management controller.
-     * @param userManagementController The controller managing the user table.
-     */
-    public void setUserManagementController(UserManagementController userManagementController) {
-        this.userManagementController = userManagementController;
+    @FXML
+    private void initialize() {
+        setupFieldValidation();
     }
 
     /**
@@ -98,25 +73,86 @@ public class UserEditController {
      */
     @FXML
     private void handleSave() {
+        // Clear all previous errors
+        clearAllErrors();
+
+        boolean hasErrors = false;
+
+        // Validate name
+        String name = nameField.getText();
+        if (name == null || name.trim().isEmpty()) {
+            setFieldError(nameField, nameErrorLabel, "Name is required");
+            hasErrors = true;
+        }
+
+        // Validate surname
+        String surname = surnameField.getText();
+        if (surname == null || surname.trim().isEmpty()) {
+            setFieldError(surnameField, surnameErrorLabel, "Surname is required");
+            hasErrors = true;
+        }
+
+        // Validate national ID
+        String nationalID = nationalIDField.getText();
+        if (nationalID == null || nationalID.trim().isEmpty()) {
+            setFieldError(nationalIDField, nationalIDErrorLabel, "National ID is required");
+            hasErrors = true;
+        }
+
+        // Validate birthdate
+        if (birthdateField.getValue() == null) {
+            setFieldError(birthdateField, birthdateErrorLabel, "Birthdate is required");
+            hasErrors = true;
+        }
+
+        // Validate username
+        String username = usernameField.getText();
+        if (username == null || username.trim().isEmpty()) {
+            setFieldError(usernameField, usernameErrorLabel, "Username is required");
+            hasErrors = true;
+        }
+
+        // Validate email
+        String email = emailField.getText();
+
+        // Validate role
+        String roleText = roleComboBox.getSelectionModel().getSelectedItem();
+        if (roleText == null) {
+            setFieldError(roleComboBox, roleErrorLabel, "Role is required");
+            hasErrors = true;
+        }
+
+        // Validate new password (only if user entered something)
+        String newPassword = newPasswordField.getText();
+        if (!newPassword.isEmpty()) {
+            if (newPassword.length() < 8 || !newPassword.matches(".*[A-Z].*") || !newPassword.matches(".*\\d.*")) {
+                setFieldError(newPasswordField, newPasswordErrorLabel, "Password must be at least 8 characters with uppercase and number");
+                hasErrors = true;
+            }
+        }
+
+        // If there are validation errors, stop here
+        if (hasErrors) {
+            return;
+        }
+
         // Determine the password to save: new password if entered, otherwise keep old one
-        String newPassword = newPasswordField.getText(); // Use the new FXML field name
         String passwordToSave = newPassword.isEmpty() ? selectedUser.getPassword() : newPassword;
 
-        // Convert Role String back to Integer ID (assuming 1=Admin, 2=User)
-        String roleText = roleComboBox.getSelectionModel().getSelectedItem();
-        Integer newIdRole = roleText != null && roleText.equals("Admin") ? 1 : 2; // Default to User (2) if null/not Admin
+        // Convert Role String back to Integer ID
+        Integer newIdRole = roleText.equals("Admin") ? 1 : 2;
 
         // Create the updated User object
         User updatedUser = new User(
                 selectedUser.getIdUser(),
-                nameField.getText(),
-                surnameField.getText(),
-                usernameField.getText(),
-                nationalIDField.getText(),
+                name,
+                surname,
+                username,
+                nationalID,
                 birthdateField.getValue(),
-                passwordToSave, // Use the determined password
-                emailField.getText(),
-                newIdRole // PASS THE ID ROLE HERE (Fixes NullPointerException)
+                passwordToSave,
+                email,
+                newIdRole
         );
 
         try {
@@ -130,7 +166,7 @@ public class UserEditController {
 
             showAlert("Success", "Update Complete", "User details have been successfully updated.", AlertType.INFORMATION);
 
-            // Update the selectedUser object with the new data for immediate display/use
+            // Update the selectedUser object with the new data
             this.selectedUser = updatedUser;
 
             userManagementController.loadInitialUserData();
@@ -190,6 +226,90 @@ public class UserEditController {
         }
     }
 
+    private void setFieldError(Control field, Label errorLabel, String message) {
+        // Set red border on field
+        field.setStyle("-fx-border-color: red; -fx-border-width: 2px;");
+
+        // Show error message
+        if (errorLabel != null) {
+            errorLabel.setText(message);
+            errorLabel.setVisible(true);
+            errorLabel.setManaged(true);
+        }
+    }
+
+    private void clearFieldError(Control field, Label errorLabel) {
+        // Remove red border
+        field.setStyle("");
+
+        // Hide error message
+        if (errorLabel != null) {
+            errorLabel.setText("");
+            errorLabel.setVisible(false);
+            errorLabel.setManaged(false);
+        }
+    }
+
+    private void clearAllErrors() {
+        clearFieldError(nameField, nameErrorLabel);
+        clearFieldError(surnameField, surnameErrorLabel);
+        clearFieldError(nationalIDField, nationalIDErrorLabel);
+        clearFieldError(birthdateField, birthdateErrorLabel);
+        clearFieldError(usernameField, usernameErrorLabel);
+        clearFieldError(roleComboBox, roleErrorLabel);
+        clearFieldError(newPasswordField, newPasswordErrorLabel);
+    }
+
+    private void setupFieldValidation() {
+        // Clear error when user types in name field
+        nameField.textProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal != null && !newVal.trim().isEmpty()) {
+                clearFieldError(nameField, nameErrorLabel);
+            }
+        });
+
+        // Clear error when user types in surname field
+        surnameField.textProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal != null && !newVal.trim().isEmpty()) {
+                clearFieldError(surnameField, surnameErrorLabel);
+            }
+        });
+
+        // Clear error when user types in national ID field
+        nationalIDField.textProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal != null && !newVal.trim().isEmpty()) {
+                clearFieldError(nationalIDField, nationalIDErrorLabel);
+            }
+        });
+
+        // Clear error when user selects birthdate
+        birthdateField.valueProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal != null) {
+                clearFieldError(birthdateField, birthdateErrorLabel);
+            }
+        });
+
+        // Clear error when user types in username field
+        usernameField.textProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal != null && !newVal.trim().isEmpty()) {
+                clearFieldError(usernameField, usernameErrorLabel);
+            }
+        });
+
+        // Clear error when user selects role
+        roleComboBox.valueProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal != null) {
+                clearFieldError(roleComboBox, roleErrorLabel);
+            }
+        });
+
+        // Clear error when user types in new password field
+        newPasswordField.textProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal != null && !newVal.trim().isEmpty()) {
+                clearFieldError(newPasswordField, newPasswordErrorLabel);
+            }
+        });
+    }
     /**
      * Handles the 'Cancel' button click event.
      */
@@ -209,4 +329,45 @@ public class UserEditController {
         alert.initOwner(dialogStage);
         alert.showAndWait();
     }
+
+    /**
+     * Sets the stage of this dialog.
+     */
+    public void setDialogStage(Stage dialogStage) {
+        this.dialogStage = dialogStage;
+    }
+
+    /**
+     * Sets the user to be edited and populates the fields.
+     * Initializes the current password fields.
+     * @param selectedUser The user object to display and edit.
+     */
+    public void setSelectedUser(User selectedUser) {
+        this.selectedUser = selectedUser;
+
+        nameField.setText(selectedUser.getName());
+        surnameField.setText(selectedUser.getSurname());
+        nationalIDField.setText(selectedUser.getNationalID());
+        birthdateField.setValue(selectedUser.getBirthdate());
+        usernameField.setText(selectedUser.getUsername());
+        emailField.setText(selectedUser.getEmail());
+
+        // Map idRole back to Role String for ComboBox display
+        String roleText = selectedUser.getIdRole() != null && selectedUser.getIdRole() == 1 ? "Admin" : "User";
+        roleComboBox.getSelectionModel().select(roleText);
+
+        // Populate the Current Password field(s)
+        String currentPassword = selectedUser.getPassword();
+        currentPasswordField.setText(currentPassword);
+        visiblePasswordField.setText(currentPassword);
+    }
+
+    /**
+     * Sets the reference to the main management controller.
+     * @param userManagementController The controller managing the user table.
+     */
+    public void setUserManagementController(UserManagementController userManagementController) {
+        this.userManagementController = userManagementController;
+    }
+
 }

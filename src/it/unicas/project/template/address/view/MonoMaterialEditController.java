@@ -42,7 +42,6 @@ public class MonoMaterialEditController {
     @FXML private FlowPane selectedGenresPane;
 
     private final DAO<Material> materialDAO = MaterialDAOMySQLImpl.getInstance();
-    private final MaterialService materialService = new MaterialService(materialDAO);
     private final MaterialTypeDAOMySQLImpl materialTypeDAO = MaterialTypeDAOMySQLImpl.getInstance();
     private final GenreDAO genreDAO = GenreDAOMySQLImpl.getInstance();
     private final DAO<MaterialGenre> materialGenreDAO = MaterialGenreDAOMySQLImpl.getInstance();
@@ -351,52 +350,6 @@ public class MonoMaterialEditController {
         } catch (Exception ex) {
             showAlert(Alert.AlertType.ERROR, "Unexpected error: " + ex.getMessage());
         }
-    }
-
-    /**
-     * Handles the "Go Back" button action. Prompts the user for confirmation if there are unsaved changes.
-     *
-     * @param event The event that triggered the handler.
-     */
-    @FXML
-    private void handleGoBack(ActionEvent event) {
-        if (confirmClose()) {
-            navigateBack();
-        }
-    }
-
-    /**
-     * Checks if there are any unsaved changes and prompts the user for confirmation to discard them.
-     *
-     * @return true if the user confirms closing or there are no unsaved changes, false otherwise.
-     */
-    private boolean confirmClose() {
-        boolean hasUnsavedData = false;
-
-        if (!titleField.getText().trim().isEmpty() ||
-                !authorField.getText().trim().isEmpty() ||
-                !isbnField.getText().trim().isEmpty() ||
-                !yearField.getText().trim().isEmpty() ||
-                materialTypeComboBox.getValue() != null ||
-                !selectedGenres.isEmpty()) {
-            hasUnsavedData = true;
-        }
-
-        if (!hasUnsavedData) {
-            return true;
-        }
-
-        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-        alert.setTitle("Go Back Confirmation");
-        alert.setHeaderText(null);
-        alert.setContentText("You have unsaved changes. Are you sure you want to go back?");
-
-        ButtonType yes = new ButtonType("Yes");
-        ButtonType no = new ButtonType("No");
-        alert.getButtonTypes().setAll(yes, no);
-
-        Optional<ButtonType> result = alert.showAndWait();
-        return result.isPresent() && result.get() == yes;
     }
 
     /**

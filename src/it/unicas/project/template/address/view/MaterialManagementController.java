@@ -23,7 +23,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
-import javafx.scene.control.Button;
+import javafx.scene.control.Button; // Need to explicitly import Button if not already there
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.Modality;
@@ -55,13 +55,10 @@ public class MaterialManagementController {
 
     // FXML fields for buttons (must match fx:id in FXML)
     @FXML private Button viewEditMaterialButton;
-    @FXML private Button backButton;
-    @FXML private Button searchButton;
+
 
 
     // --- Data Management ---
-
-    private ObservableList<MaterialInventory> materialList = FXCollections.observableArrayList();
 
     /**
      * Observable list holding all material inventory records fetched from the database.
@@ -91,13 +88,7 @@ public class MaterialManagementController {
     private List<Function<MaterialInventory, String>> searchFields;
 
 
-    /**
-     * Sets the main application reference, necessary for navigation between views.
-     * @param mainApp The main application instance.
-     */
-    public void setMainApp(MainApp mainApp) {
-        this.mainApp = mainApp;
-    }
+
 
     /**
      * Initializes the controller. Sets up table columns, loads initial data,
@@ -267,11 +258,12 @@ public class MaterialManagementController {
     }
 
     /**
-     * Cleanup when controller is destroyed
+     * Sets the main application reference, necessary for navigation between views.
+     * @param mainApp The main application instance.
      */
-    public void cleanup() {
-        if (searchScheduler != null && !searchScheduler.isShutdown()) {
-            searchScheduler.shutdown();
-        }
+    public void setMainApp(MainApp mainApp) {
+        this.mainApp = mainApp;
     }
+
+
 }

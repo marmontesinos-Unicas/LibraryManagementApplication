@@ -39,6 +39,14 @@ public class UserRegistrationController {
     @FXML
     public ComboBox<String> roleComboBox; // Changed to parameterized type for better safety
 
+    // Error labels
+    @FXML private Label nameErrorLabel;
+    @FXML private Label surnameErrorLabel;
+    @FXML private Label nationalIDErrorLabel;
+    @FXML private Label birthdateErrorLabel;
+    @FXML private Label usernameErrorLabel;
+    @FXML private Label passwordErrorLabel;
+
     // Instance of the Service Layer
     private UserService userService = new UserService();
 
@@ -48,8 +56,11 @@ public class UserRegistrationController {
      */
     @FXML
     private void initialize() {
-        // This method is here for future expansion if a custom format is required.
-        // It's good practice to have an initialize method for FXML controllers.
+        setupFieldValidation();
+        // Set default role to "User"
+        if (roleComboBox != null) {
+            roleComboBox.getSelectionModel().select("User");
+        }
     }
 
     /**
@@ -68,17 +79,73 @@ public class UserRegistrationController {
      */
     @FXML
     private void handleRegisterUser() {
+        // Clear all previous errors
+        clearAllErrors();
 
+        boolean hasErrors = false;
+
+        // Validate name
         String name = nameField.getText();
+        if (name == null || name.trim().isEmpty()) {
+            setFieldError(nameField, nameErrorLabel, "Name is required");
+            hasErrors = true;
+        }
+
+        // Validate surname
         String surname = surnameField.getText();
+        if (surname == null || surname.trim().isEmpty()) {
+            setFieldError(surnameField, surnameErrorLabel, "Surname is required");
+            hasErrors = true;
+        }
+
+        // Validate national ID
         String nationalID = nationalIDField.getText();
+        if (nationalID == null || nationalID.trim().isEmpty()) {
+            setFieldError(nationalIDField, nationalIDErrorLabel, "National ID is required");
+            hasErrors = true;
+        }
+
+        // Validate birthdate
         LocalDate birthdate = birthdateField.getValue();
+        if (birthdate == null) {
+            setFieldError(birthdateField, birthdateErrorLabel, "Birthdate is required");
+            hasErrors = true;
+        }
+
+        // Validate username
         String username = usernameField.getText();
+        if (username == null || username.trim().isEmpty()) {
+            setFieldError(usernameField, usernameErrorLabel, "Username is required");
+            hasErrors = true;
+        }
+
+        // Validate password
         String password = passwordField.getText();
+        if (password == null || password.trim().isEmpty()) {
+            setFieldError(passwordField, passwordErrorLabel, "Password is required");
+            hasErrors = true;
+        } else if (password.length() < 8 || !password.matches(".*[A-Z].*") || !password.matches(".*\\d.*")) {
+            setFieldError(passwordField, passwordErrorLabel, "Password must be at least 8 characters with uppercase and number");
+            hasErrors = true;
+        }
+
+        // Validate email
         String email = emailField.getText();
+
+        // Get role (will default to "User" if not changed)
         String roleText = roleComboBox.getSelectionModel().getSelectedItem();
-        // Simple mapping: 1 for Admin, 2 for User. Adjust this based on your database roles.
-        Integer idRole = roleText != null && roleText.equals("Admin") ? 1 : 2;
+        // Fallback to "User" if somehow null
+        if (roleText == null) {
+            roleText = "User";
+        }
+
+        // If there are validation errors, stop here
+        if (hasErrors) {
+            return;
+        }
+
+        // Simple mapping: 1 for Admin, 2 for User
+        Integer idRole = roleText.equals("Admin") ? 1 : 2;
 
         User newUser = new User(null, name, surname, username, nationalID, birthdate, password, email, idRole);
 
@@ -87,40 +154,21 @@ public class UserRegistrationController {
 
             showAlert("Success", "Registration Successful", "The user has been registered.", AlertType.INFORMATION);
 
-            // 1. Tell the main controller to refresh its table (if the reference exists)
+            // Refresh the main table
             if (userManagementController != null) {
                 userManagementController.loadInitialUserData();
             }
 
-            // 2. Close the registration dialog
+            // Close the registration dialog
             Stage stage = (Stage) nameField.getScene().getWindow();
             stage.close();
-
 
         } catch (UserServiceException e) {
             // Catches business logic and input validation errors from the service layer.
             String msg = e.getMessage() != null ? e.getMessage() : "";
 
-            if (msg.contains("Name is mandatory")) { // || msg.toLowerCase().contains("name") && msg.toLowerCase().contains("mandatory")) {
-                showAlert("Validation Error", "Missing Name", "Please enter the user's name.", AlertType.ERROR);
-            } else if (msg.contains("Surname is mandatory") || msg.toLowerCase().contains("surname")) {
-                showAlert("Validation Error", "Missing Surname", "Please enter the user's surname.", AlertType.ERROR);
-            } else if (msg.contains("Username is mandatory") || msg.toLowerCase().contains("username")) {
-                showAlert("Validation Error", "Missing Username", "Please enter a username.", AlertType.ERROR);
-            } else if (msg.contains("Password is mandatory") || msg.toLowerCase().contains("password is mandatory")) {
-                showAlert("Validation Error", "Missing Password", "Please enter a password.", AlertType.ERROR);
-            } else if (msg.toLowerCase().contains("password must be") || msg.toLowerCase().contains("at least 8")) {
-                showAlert("Validation Error", "Invalid Password Format", "Password must be at least 8 characters long and include at least one uppercase letter and one number.", AlertType.ERROR);
-            } else if (msg.contains("Birth Date is mandatory") || msg.toLowerCase().contains("birth date is mandatory")) {
-                showAlert("Validation Error", "Missing Birthdate", "Please provide the user's birthdate.", AlertType.ERROR);
-            } else if (msg.contains("yyyy-MM-dd") || msg.toLowerCase().contains("birth date must be")) {
-                showAlert("Validation Error", "Invalid Birthdate Format", "Birthdate must be in yyyy-MM-dd format.", AlertType.ERROR);
-            } else if (msg.contains("Role is mandatory") || msg.toLowerCase().contains("role") && msg.toLowerCase().contains("mandatory")) {
-                showAlert("Validation Error", "Missing Role", "Please select a role.", AlertType.ERROR);
-            } else if (msg.toLowerCase().contains("already registered") || msg.toLowerCase().contains("already")) {
-                showAlert("Duplicate Error", "User Combination Already Registered", "The provided National ID and Role combination is already registered in the system.", AlertType.ERROR);
-            } else if (msg.contains("National ID is mandatory") || msg.toLowerCase().contains("national id")) {
-                showAlert("Validation Error", "Missing National ID", "Please enter the user's national ID.", AlertType.ERROR);
+            if (msg.toLowerCase().contains("already registered") || msg.toLowerCase().contains("already")) {
+                showAlert("Duplicate Error", "User Already Registered", "The provided National ID and Role combination is already registered in the system.", AlertType.ERROR);
             } else {
                 showAlert("Validation Error", "Cannot Register User", msg.isEmpty() ? "Validation failed." : msg, AlertType.ERROR);
             }
@@ -129,6 +177,83 @@ public class UserRegistrationController {
             // Catches database/system errors
             showAlert("System Error", "Database Operation Failed", "An internal error occurred: " + e.getMessage(), AlertType.ERROR);
         }
+    }
+
+    private void setFieldError(Control field, Label errorLabel, String message) {
+        // Set red border on field
+        field.setStyle("-fx-border-color: red; -fx-border-width: 2px;");
+
+        // Show error message
+        if (errorLabel != null) {
+            errorLabel.setText(message);
+            errorLabel.setVisible(true);
+            errorLabel.setManaged(true);
+        }
+    }
+
+    private void clearFieldError(Control field, Label errorLabel) {
+        // Remove red border
+        field.setStyle("");
+
+        // Hide error message
+        if (errorLabel != null) {
+            errorLabel.setText("");
+            errorLabel.setVisible(false);
+            errorLabel.setManaged(false);
+        }
+    }
+
+    private void clearAllErrors() {
+        clearFieldError(nameField, nameErrorLabel);
+        clearFieldError(surnameField, surnameErrorLabel);
+        clearFieldError(nationalIDField, nationalIDErrorLabel);
+        clearFieldError(birthdateField, birthdateErrorLabel);
+        clearFieldError(usernameField, usernameErrorLabel);
+        clearFieldError(passwordField, passwordErrorLabel);
+    }
+
+    private void setupFieldValidation() {
+        // Clear error when user types in name field
+        nameField.textProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal != null && !newVal.trim().isEmpty()) {
+                clearFieldError(nameField, nameErrorLabel);
+            }
+        });
+
+        // Clear error when user types in surname field
+        surnameField.textProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal != null && !newVal.trim().isEmpty()) {
+                clearFieldError(surnameField, surnameErrorLabel);
+            }
+        });
+
+        // Clear error when user types in national ID field
+        nationalIDField.textProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal != null && !newVal.trim().isEmpty()) {
+                clearFieldError(nationalIDField, nationalIDErrorLabel);
+            }
+        });
+
+        // Clear error when user selects birthdate
+        birthdateField.valueProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal != null) {
+                clearFieldError(birthdateField, birthdateErrorLabel);
+            }
+        });
+
+        // Clear error when user types in username field
+        usernameField.textProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal != null && !newVal.trim().isEmpty()) {
+                clearFieldError(usernameField, usernameErrorLabel);
+            }
+        });
+
+        // Clear error when user types in password field
+        passwordField.textProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal != null && !newVal.trim().isEmpty()) {
+                clearFieldError(passwordField, passwordErrorLabel);
+            }
+        });
     }
 
     /**
@@ -164,19 +289,5 @@ public class UserRegistrationController {
         }
 
         alert.showAndWait();
-    }
-
-    /**
-     * Helper method to clear all input fields (currently unused but provided for completeness).
-     */
-    private void clearFields() {
-        nameField.setText("");
-        surnameField.setText("");
-        nationalIDField.setText("");
-        birthdateField.setValue(null);
-        usernameField.setText("");
-        passwordField.setText("");
-        emailField.setText("");
-        roleComboBox.getSelectionModel().clearSelection();
     }
 }

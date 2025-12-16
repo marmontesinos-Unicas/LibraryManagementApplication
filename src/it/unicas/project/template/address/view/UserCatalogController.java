@@ -770,13 +770,4 @@ public class UserCatalogController {
             loadAllMaterials();
         }
     }
-
-    /**
-     * Cleanup method called when the view is closed to properly shut down the thread pool.
-     */
-    public void cleanup() {
-        if (searchScheduler != null && !searchScheduler.isShutdown()) {
-            searchScheduler.shutdown();
-        }
-    }
 }

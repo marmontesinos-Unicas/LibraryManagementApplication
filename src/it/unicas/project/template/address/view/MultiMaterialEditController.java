@@ -56,7 +56,6 @@ public class MultiMaterialEditController {
 
     // Static mapping of MaterialType IDs to names (for display purposes)
     private ObservableList<MaterialType> materialTypes = FXCollections.observableArrayList();
-    private String materialTypeName;
 
     /**
      * Initializes the controller. This method is automatically called

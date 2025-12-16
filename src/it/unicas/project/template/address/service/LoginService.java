@@ -31,7 +31,6 @@ public class LoginService {
         this.userDAO = userDAO;
     }
 
-    // ... (authenticate method remains the same)
 
     /**
      * Attempts to authenticate a user with the provided credentials.

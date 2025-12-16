@@ -85,31 +85,6 @@ public class    UserLandingController {
 
     private final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
-    /**
-     * Called by MainApp after loading the FXML. Sets the reference to MainApp.
-     * @param mainApp main application reference
-     */
-    public void setMainApp(MainApp mainApp) {
-        this.mainApp = mainApp;
-
-        // Prepare binding of ListViews after MainApp reference is set
-        setupListBindings();
-    }
-
-    /**
-     * Sets the current logged user and loads user data.
-     * @param user the logged user
-     */
-    public void setCurrentUser(User user) {
-        this.currentUser = user;
-
-        if (currentUser != null) {
-            // Check overdue notifications for this user
-            checkOverdueStatus(currentUser);
-        }
-
-        loadUserData(); // Load loans and holds for the user
-    }
 
     /**
      * Handle the Notifications button click.
@@ -442,4 +417,30 @@ public class    UserLandingController {
             System.out.println("Logout cancelled by the user.");
         }
     }
+    /**
+     * Called by MainApp after loading the FXML. Sets the reference to MainApp.
+     * @param mainApp main application reference
+     */
+    public void setMainApp(MainApp mainApp) {
+        this.mainApp = mainApp;
+
+        // Prepare binding of ListViews after MainApp reference is set
+        setupListBindings();
+    }
+
+    /**
+     * Sets the current logged user and loads user data.
+     * @param user the logged user
+     */
+    public void setCurrentUser(User user) {
+        this.currentUser = user;
+
+        if (currentUser != null) {
+            // Check overdue notifications for this user
+            checkOverdueStatus(currentUser);
+        }
+
+        loadUserData(); // Load loans and holds for the user
+    }
+
 }
