@@ -10,33 +10,56 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * Service class responsible for aggregating and formatting all user-facing notifications.
+ * This includes alerts for overdue loans and holds that are about to expire.
+ *
+ * Access Keyword Explanation: {@code public} - This class is the dedicated
+ * business logic provider for notifications and must be accessible by the
+ * {@code UserLandingController} in the view layer.
+ */
 public class NotificationsService {
 
     // Instance of the DAO to fetch data
     private final LoanDAOMySQLImpl loanDAO;
     private final HoldDAOMySQLImpl holdDAO;
+    // Access Keyword Explanation: {@code private final} - These fields hold the
+    // necessary Data Access Objects (DAOs). They are private to enforce encapsulation
+    // and final because dependencies should not change after construction.
 
-    // 1. Production Constructor (uses singleton/DI)
+    /**
+     * 1. Production Constructor: Initializes DAOs using the singleton pattern.
+     *
+     * Access Keyword Explanation: {@code public} - Standard constructor used
+     * when the service is instantiated within the application context.
+     */
     public NotificationsService() {
-        // Initialize the DAO instance
+        // Initialize the DAO instance by retrieving the Singleton instance
         this.loanDAO = (LoanDAOMySQLImpl) LoanDAOMySQLImpl.getInstance();
         this.holdDAO = (HoldDAOMySQLImpl) HoldDAOMySQLImpl.getInstance();
     }
 
-    // 2. Test Constructor (Accepts the stubbing for the JUnit tests)
+    /**
+     * 2. Test Constructor: Allows dependency injection for mocking DAOs in unit tests.
+     *
+     * Access Keyword Explanation: {@code public} - Used by external test classes
+     * to provide mock implementations.
+     *
+     * @param loanDAO The mock/real Loan DAO implementation.
+     * @param holdDAO The mock/real Hold DAO implementation.
+     */
     public NotificationsService(LoanDAOMySQLImpl loanDAO, HoldDAOMySQLImpl holdDAO) {
         this.loanDAO = loanDAO;
         this.holdDAO = holdDAO;
     }
 
-    // Overload for backward compatibility in existing tests that only mock LoanDAO
-    public NotificationsService(LoanDAOMySQLImpl loanDAO) {
-        this(loanDAO, (HoldDAOMySQLImpl) HoldDAOMySQLImpl.getInstance());
-    }
-
     /**
      * Core Method: Retrieves all overdue loans and expiring holds for a user and
      * formats them into user-friendly notification messages.
+     *
+     * Access Keyword Explanation: {@code public} - This is the primary method
+     * called by the {@code UserLandingController} to fetch and display notifications.
+     *
      * @param userId The ID of the currently logged-in user.
      * @return A list of formatted notification strings, ready for UI display.
      * @throws DAOException if a database error occurs during retrieval.
@@ -44,29 +67,38 @@ public class NotificationsService {
     public List<String> getFormattedNotifications(int userId) throws DAOException {
         List<String> notifications = new ArrayList<>();
 
-        // 1. Retrieve and format Overdue Loans
+        // Retrieve and format Overdue Loans
         List<OverdueLoan> overdueLoans = loanDAO.getOverdueLoansForUser(userId);
         notifications.addAll(
+                // Use a stream to transform the list of DTOs into a list of formatted strings
                 overdueLoans.stream()
                         .map(this::formatOverdueMessage)
                         .collect(Collectors.toList())
         );
 
-        // --- NEW LOGIC: Retrieve and format Expiring Holds ---
+        // Retrieve and format Expiring Holds ---
         List<ExpiringHoldInfo> expiringHolds = holdDAO.getExpiringHoldsForUser(userId);
         notifications.addAll(
+                // Transform the list of ExpiringHoldInfo DTOs into a list of formatted strings
                 expiringHolds.stream()
                         .map(this::formatExpiringHoldMessage)
                         .collect(Collectors.toList())
         );
-
         return notifications;
     }
 
     /**
      * Helper method to create a user-facing message from an OverdueLoan object.
+     *
+     * Access Keyword Explanation: {@code private} - This is an internal utility method
+     * used only by {@code getFormattedNotifications} to maintain clean code and should
+     * not be called directly from outside the service.
+     *
+     * @param item The OverdueLoan data transfer object.
+     * @return The formatted overdue message string.
      */
     private String formatOverdueMessage(OverdueLoan item) {
+        // Uses String.format for easy readability and substitution of data values
         return String.format(
                 "OVERDUE: The material '%s' (Author: %s) was due on %s. Please return it immediately to your local library.",
                 item.getMaterialTitle(),
@@ -78,8 +110,14 @@ public class NotificationsService {
     /**
      * Helper method to create a user-facing message from an ExpiringHoldInfo object.
      * Tells the user to go to the library before the expiration date.
+     *
+     * Access Keyword Explanation: {@code private} - Internal utility method.
+     *
+     * @param item The ExpiringHoldInfo data transfer object.
+     * @return The formatted expiring hold message string.
      */
     private String formatExpiringHoldMessage(ExpiringHoldInfo item) {
+        // Uses String.format to construct the expiration notification message
         return String.format(
                 "HOLD EXPIRING: The material '%s' (Author: %s) is ready for pickup and your hold expires on %s. Please loan your material at your local library before this date.",
                 item.getMaterialTitle(),
@@ -90,6 +128,11 @@ public class NotificationsService {
 
     /**
      * Helper Method for UI Logic: Checks if the user has any pending notifications (overdue or expiring holds).
+     * This is typically used by the controller to decide whether to display a notification icon/badge.
+     *
+     * Access Keyword Explanation: {@code public} - This method is called by the
+     * {@code UserLandingController} to check the pre-condition for displaying the notification view.
+     *
      * @param userId The ID of the currently logged-in user.
      * @return true if one or more notifications exist, false otherwise.
      */
@@ -99,18 +142,45 @@ public class NotificationsService {
             boolean hasOverdue = loanDAO.getOverdueLoansForUser(userId).size() > 0;
             if (hasOverdue) return true;
 
-            // --- NEW LOGIC: Check for expiring holds ---
+            // Check for expiring holds (new logic)
             return holdDAO.getExpiringHoldsForUser(userId).size() > 0;
 
         } catch (DAOException e) {
             System.err.println("Error checking for pending notifications: " + e.getMessage());
-            // Fail safe: if DAO fails, assume no notifications to avoid blocking UI
+            // Fail-safe: if DAO fails (e.g., DB offline), assume no notifications
+            // to prevent the UI from being blocked.
             return false;
         }
     }
 
-    // Old method renamed/deprecated for proper usage:
+    // ----------------------------------------------------------------------
+    //                              No-Usage Methods
+    /**
+     * Overload for backward compatibility in existing tests that only mock LoanDAO.
+     *
+     * Access Keyword Explanation: {@code public} - Used by external test classes
+     * for convenience when only the LoanDAO needs mocking.
+     */
+    public NotificationsService(LoanDAOMySQLImpl loanDAO) {
+        // Delegates to the main constructor, providing the real HoldDAO instance
+        this(loanDAO, (HoldDAOMySQLImpl) HoldDAOMySQLImpl.getInstance());
+    }
+
+    /**
+    * Old method renamed/deprecated for proper usage.
+    * Redirects to the new, comprehensive check.
+    *
+    * Access Keyword Explanation: {@code public} - Kept public for compatibility,
+    * but this method should be considered deprecated and {@code hasPendingNotifications}
+    * should be used instead.
+    *
+    * @param userId The ID of the user.
+    * @return The result of the comprehensive check.
+    */
     public boolean hasOverdueMaterials(int userId) {
+        // Delegates to the comprehensive check
         return hasPendingNotifications(userId);
     }
+
+    // ----------------------------------------------------------------------
 }
