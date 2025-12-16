@@ -42,7 +42,7 @@ For quick testing, this repository provides a ready-to-use DDL schema (`db/dls_s
 ## Usage — User
 (Detailed guides provided separately in the `documentation/user-instructions.pdf` file)
 
-- Register and log in.
+- Log in.
 - Browse the catalog by categories or text search with dynamic filters.
 - Check item availability.
 - Request or reserve available items.
