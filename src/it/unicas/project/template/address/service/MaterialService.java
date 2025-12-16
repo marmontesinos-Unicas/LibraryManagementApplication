@@ -70,6 +70,7 @@ public class MaterialService {
 
         // Save to DAO
         materialDao.insert(m);
+        logger.info("Material added to catalog: " + m.getTitle() + " (ID: " + m.getIdMaterial() + ")");
 
         return m;
     }
