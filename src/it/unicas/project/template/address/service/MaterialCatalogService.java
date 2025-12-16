@@ -1,6 +1,7 @@
 package it.unicas.project.template.address.service;
 
 import it.unicas.project.template.address.model.Material;
+import it.unicas.project.template.address.view.UserCatalogController.GroupedMaterial;
 
 import java.util.*;
 import java.util.function.Function;
@@ -17,15 +18,10 @@ import java.util.stream.Collectors;
  */
 public class MaterialCatalogService {
 
-    private final SearchService<Material> searchService = new SearchService<>();
+    private final SearchService<Material> materialSearchService = new SearchService<>();
+    private final SearchService<GroupedMaterial> groupedSearchService = new SearchService<>();
 
-    // Define search fields once as a constant - Priority: Title > Author > ISBN > Status
-    /**
-     * Defines the prioritized fields used by the SearchService for ranking and searching materials.
-     * <p>
-     * The order (Title, Author, ISBN, Status) dictates the priority for relevance scoring.
-     * </p>
-     */
+    // Search fields for Material
     private static final List<Function<Material, String>> MATERIAL_SEARCH_FIELDS =
             SearchService.<Material>fieldsBuilder()
                     .addField(Material::getTitle)
@@ -34,25 +30,18 @@ public class MaterialCatalogService {
                     .addField(Material::getMaterial_status)
                     .build();
 
+    // Search fields for GroupedMaterial
+    private static final List<Function<GroupedMaterial, String>> GROUPED_SEARCH_FIELDS =
+            SearchService.<GroupedMaterial>fieldsBuilder()
+                    .addField(GroupedMaterial::getTitle)
+                    .addField(GroupedMaterial::getAuthor)
+                    .addField(GroupedMaterial::getISBN)
+                    .addField(GroupedMaterial::getType)
+                    .addField(GroupedMaterial::getGenres)
+                    .build();
+
     /**
-     * Applies a chain of filters (Type, Status, Genre, Year Range) and a search term
-     * to a base list of materials.
-     * <p>
-     * Filtering is done using the Java Stream API for efficiency and readability.
-     * Search is applied last using the dedicated {@code SearchService}.
-     * </p>
-     *
-     * @param materials The initial, unfiltered list of all Material objects.
-     * @param materialGenreMap Map linking Material ID to a Set of Genre IDs (for genre lookup).
-     * @param materialTypeMap Map linking Material Type ID to its name (for type name lookup).
-     * @param genreMap Map linking Genre ID to its name (for genre name lookup).
-     * @param selectedTypes Set of selected Material Type names to filter by.
-     * @param selectedStatuses Set of selected Material Status names to filter by.
-     * @param selectedGenres Set of selected Genre names to filter by.
-     * @param yearFrom String representing the minimum year for the range filter (inclusive).
-     * @param yearTo String representing the maximum year for the range filter (inclusive).
-     * @param searchTerm The user-entered term for relevance-based searching.
-     * @return The final list of materials after all filters and search criteria have been applied.
+     * Filter individual materials (for Admin view)
      */
     public List<Material> filterMaterials(
             List<Material> materials,
@@ -69,24 +58,41 @@ public class MaterialCatalogService {
 
         List<Material> filtered = materials.stream()
                 .filter(material -> {
-                    boolean matchesType =
-                            selectedTypes.isEmpty() ||
-                                    selectedTypes.contains(materialTypeMap.get(material.getIdMaterialType()));
+                    // Type filter: if empty, show only materials with no type
+                    boolean matchesType;
+                    if (selectedTypes.isEmpty()) {
+                        matchesType = material.getIdMaterialType() == null ||
+                                materialTypeMap.get(material.getIdMaterialType()) == null;
+                    } else {
+                        matchesType = selectedTypes.contains(materialTypeMap.get(material.getIdMaterialType()));
+                    }
 
-                    boolean matchesStatus =
-                            selectedStatuses.isEmpty() ||
-                                    selectedStatuses.contains(material.getMaterial_status());
+                    // Status filter: if empty, show only materials with no status
+                    boolean matchesStatus;
+                    if (selectedStatuses.isEmpty()) {
+                        matchesStatus = material.getMaterial_status() == null ||
+                                material.getMaterial_status().isEmpty();
+                    } else {
+                        matchesStatus = selectedStatuses.contains(material.getMaterial_status());
+                    }
 
-                    boolean matchesGenre = true;
-                    if (!selectedGenres.isEmpty()) {
+                    // Genre filter: if empty, show only materials with no genre
+                    boolean matchesGenre;
+                    if (selectedGenres.isEmpty()) {
+                        Set<Integer> genreIds = materialGenreMap.get(material.getIdMaterial());
+                        matchesGenre = genreIds == null || genreIds.isEmpty();
+                    } else {
                         Set<Integer> genreIds = materialGenreMap.get(material.getIdMaterial());
                         if (genreIds != null && !genreIds.isEmpty()) {
                             matchesGenre = genreIds.stream()
                                     .map(genreMap::get)
                                     .anyMatch(selectedGenres::contains);
+                        } else {
+                            matchesGenre = false;
                         }
                     }
 
+                    // Year filter
                     boolean matchesYear = true;
                     try {
                         if (!yearFrom.isEmpty()) {
@@ -103,13 +109,76 @@ public class MaterialCatalogService {
                 })
                 .collect(Collectors.toList());
 
-        // Apply search with prioritized fields.
-        // If a search term is provided, apply the search and sorting logic from the utility service
+        // Apply search with prioritized fields
         if (!searchTerm.isEmpty()) {
-            filtered = searchService.searchAndSort(filtered, searchTerm, MATERIAL_SEARCH_FIELDS);
+            filtered = materialSearchService.searchAndSort(filtered, searchTerm, MATERIAL_SEARCH_FIELDS);
+        }
+
+        return filtered;
+    }
+
+    /**
+     * Filter grouped materials (for User view)
+     */
+    public List<GroupedMaterial> filterGroupedMaterials(
+            List<GroupedMaterial> groupedMaterials,
+            Set<String> selectedTypes,
+            Set<String> selectedGenres,
+            String yearFrom,
+            String yearTo,
+            String searchTerm
+    ) {
+
+        List<GroupedMaterial> filtered = groupedMaterials.stream()
+                .filter(gm -> {
+                    // Type filter: if empty, show only materials with no type
+                    boolean matchesType;
+                    if (selectedTypes.isEmpty()) {
+                        matchesType = gm.getType() == null ||
+                                gm.getType().isEmpty() ||
+                                gm.getType().equals("Unknown");
+                    } else {
+                        matchesType = selectedTypes.contains(gm.getType());
+                    }
+
+                    // Genre filter: if empty, show only materials with no genre
+                    boolean matchesGenre;
+                    if (selectedGenres.isEmpty()) {
+                        matchesGenre = gm.getGenres() == null ||
+                                gm.getGenres().equals("—") ||
+                                gm.getGenres().isEmpty();
+                    } else {
+                        if (gm.getGenres() == null || gm.getGenres().equals("—")) {
+                            matchesGenre = false;
+                        } else {
+                            // Check if any genre in the comma-separated list matches
+                            matchesGenre = Arrays.stream(gm.getGenres().split(", "))
+                                    .anyMatch(selectedGenres::contains);
+                        }
+                    }
+
+                    // Year filter
+                    boolean matchesYear = true;
+                    try {
+                        if (!yearFrom.isEmpty()) {
+                            matchesYear = gm.getYear() >= Integer.parseInt(yearFrom);
+                        }
+                        if (!yearTo.isEmpty() && matchesYear) {
+                            matchesYear = gm.getYear() <= Integer.parseInt(yearTo);
+                        }
+                    } catch (NumberFormatException ignored) {
+                        matchesYear = true;
+                    }
+
+                    return matchesType && matchesGenre && matchesYear;
+                })
+                .collect(Collectors.toList());
+
+        // Apply search with prioritized fields
+        if (!searchTerm.isEmpty()) {
+            filtered = groupedSearchService.searchAndSort(filtered, searchTerm, GROUPED_SEARCH_FIELDS);
         }
 
         return filtered;
     }
 }
-
