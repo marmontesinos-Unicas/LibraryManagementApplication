@@ -567,24 +567,9 @@ public class AdminMaterialCatalogController {
 
     @FXML
     private void handleAddMaterial() {
-        try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/it/unicas/project/template/address/view/AddMaterial.fxml"));
-            Parent root = loader.load();
-
-            Stage dialogStage = new Stage();
-            dialogStage.setTitle("Add New Material");
-            dialogStage.initModality(Modality.WINDOW_MODAL);
-            dialogStage.initOwner(addButton.getScene().getWindow());
-            dialogStage.setScene(new Scene(root));
-
-            dialogStage.showAndWait();  // This waits for dialog to close
-
-            // FIXED: Refresh data after dialog closes
-            refresh();  // This line was already there!
-
-        } catch (IOException e) {
-            showError("Error", "Could not load Add Material dialog: " + e.getMessage());
-            e.printStackTrace();
+        if (mainApp != null) {
+            mainApp.showAddMaterial();
+            refresh();
         }
     }
 
