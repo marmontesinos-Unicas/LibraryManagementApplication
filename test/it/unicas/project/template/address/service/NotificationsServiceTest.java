@@ -188,5 +188,6 @@ public class NotificationsServiceTest {
 
         // Case D: DAO fails (should return false for safety)
         assertFalse(notificationsService.hasPendingNotifications(0), "Should be false when DAO fails.");
+        System.out.println("All hasPendingNotifications test cases passed. The error message shown above is expected for the DAO failure case.");
     }
 }
