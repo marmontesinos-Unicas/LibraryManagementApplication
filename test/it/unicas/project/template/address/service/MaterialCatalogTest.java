@@ -56,14 +56,16 @@ class MaterialCatalogServiceTest {
 
     @Test
     void filter_by_type() {
+        // Cuando se selecciona un tipo específico, solo se deben mostrar
+        // materiales de ese tipo
         List<Material> result = service.filterMaterials(
                 materials,
                 materialGenreMap,
                 typeMap,
                 genreMap,
                 Set.of("Book"),
-                Set.of(),
-                Set.of(),
+                Set.of("Available", "On Loan"), // Incluir todos los estados
+                Set.of("Programming", "Databases"), // Incluir todos los géneros
                 "",
                 "",
                 ""
@@ -75,13 +77,14 @@ class MaterialCatalogServiceTest {
 
     @Test
     void filter_by_genre() {
+        // Cuando se selecciona un género específico, se filtran los materiales
         List<Material> result = service.filterMaterials(
                 materials,
                 materialGenreMap,
                 typeMap,
                 genreMap,
-                Set.of(),
-                Set.of(),
+                Set.of("Book", "DVD"), // Incluir todos los tipos
+                Set.of("Available", "On Loan"), // Incluir todos los estados
                 Set.of("Databases"),
                 "",
                 "",
@@ -94,14 +97,15 @@ class MaterialCatalogServiceTest {
 
     @Test
     void search_prioritizes_title() {
+        // La búsqueda debe encontrar materiales que coincidan con el término
         List<Material> result = service.filterMaterials(
                 materials,
                 materialGenreMap,
                 typeMap,
                 genreMap,
-                Set.of(),
-                Set.of(),
-                Set.of(),
+                Set.of("Book", "DVD"), // Incluir todos los tipos
+                Set.of("Available", "On Loan"), // Incluir todos los estados
+                Set.of("Programming", "Databases"), // Incluir todos los géneros
                 "",
                 "",
                 "java"
@@ -113,19 +117,40 @@ class MaterialCatalogServiceTest {
 
     @Test
     void invalid_year_does_not_crash() {
+        // Con años inválidos, debe ignorar el filtro de año y no fallar
         List<Material> result = service.filterMaterials(
                 materials,
                 materialGenreMap,
                 typeMap,
                 genreMap,
-                Set.of(),
-                Set.of(),
-                Set.of(),
+                Set.of("Book", "DVD"), // Incluir todos los tipos
+                Set.of("Available", "On Loan"), // Incluir todos los estados
+                Set.of("Programming", "Databases"), // Incluir todos los géneros
                 "abc",
                 "xyz",
                 ""
         );
 
         assertEquals(2, result.size());
+    }
+
+    @Test
+    void filter_by_year_range() {
+        // Test adicional para verificar el filtro de año
+        List<Material> result = service.filterMaterials(
+                materials,
+                materialGenreMap,
+                typeMap,
+                genreMap,
+                Set.of("Book", "DVD"),
+                Set.of("Available", "On Loan"),
+                Set.of("Programming", "Databases"),
+                "2016",
+                "2021",
+                ""
+        );
+
+        assertEquals(1, result.size());
+        assertEquals("Java Programming", result.get(0).getTitle());
     }
 }
