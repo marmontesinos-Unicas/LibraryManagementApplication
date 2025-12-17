@@ -506,7 +506,6 @@ public class UserCatalogController {
                 // Release the existing hold
                 try {
                     holdService.releaseHold(userHold, heldMaterial);
-                    showInfo("Success", "Hold released successfully.");
                     refresh();
                 } catch (DAOException e) {
                     showError("Error", "Could not release hold: " + e.getMessage());
@@ -522,7 +521,6 @@ public class UserCatalogController {
                 if (availableMaterial != null) {
                     try {
                         holdService.holdMaterial(currentUser.getIdUser(), availableMaterial);
-                        showInfo("Success", "Hold placed successfully.");
                         refresh();
                     } catch (DAOException e) {
                         showError("Error", "Could not place hold: " + e.getMessage());

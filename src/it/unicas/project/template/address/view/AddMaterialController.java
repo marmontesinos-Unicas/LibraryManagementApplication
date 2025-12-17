@@ -44,14 +44,13 @@ public class AddMaterialController {
     // Error labels
     @FXML private Label titleErrorLabel;
     @FXML private Label yearErrorLabel;
+    @FXML private Label isbnErrorLabel;
     @FXML private Label materialTypeErrorLabel;
 
     // New Genre UI Components
     @FXML private TextField genreSearchField;
     @FXML private ListView<Genre> genreSearchResultsList;
     @FXML private FlowPane selectedGenresPane;
-    @FXML private Button saveButton;
-    @FXML private Button cancelButton;
 
     private Stage dialogStage;
 
@@ -115,10 +114,22 @@ public class AddMaterialController {
             }
         });
 
+        // Clear error when user types in ISBN field
+        isbnField.textProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal != null && !newVal.trim().isEmpty()) {
+                clearFieldError(isbnField, isbnErrorLabel);
+            }
+        });
+
         // Clear error when user selects material type
         materialTypeComboBox.valueProperty().addListener((obs, oldVal, newVal) -> {
             if (newVal != null) {
                 clearFieldError(materialTypeComboBox, materialTypeErrorLabel);
+
+                // Auto-clear ISBN if material type is not "Book"
+                if (!isBookType(newVal)) {
+                    isbnField.clear();
+                }
             }
         });
     }
@@ -292,6 +303,15 @@ public class AddMaterialController {
             hasErrors = true;
         }
 
+        // Validate ISBN - required only for books
+        String isbn = isbnField.getText().trim();
+        if (mt != null && isBookType(mt)) {
+            if (isbn.isEmpty()) {
+                setFieldError(isbnField, isbnErrorLabel, "ISBN is required for books");
+                hasErrors = true;
+            }
+        }
+
         // If there are validation errors, stop here
         if (hasErrors) {
             return;
@@ -301,7 +321,12 @@ public class AddMaterialController {
         Material m = new Material();
         m.setTitle(title);
         m.setAuthor(authorField.getText().trim());
-        m.setISBN(isbnField.getText().trim());
+        // Only set ISBN if material type is book
+        if (isBookType(mt)) {
+            m.setISBN(isbn);
+        } else {
+            m.setISBN(""); // Empty string for non-books
+        }
         m.setYear(Integer.parseInt(ytxt));
         m.setIdMaterialType(mt.getIdMaterialType());
 
@@ -332,6 +357,17 @@ public class AddMaterialController {
             show(Alert.AlertType.ERROR, "Unexpected error: " + ex.getMessage());
         }
     }
+
+    /**
+     * Checks if the given material type represents a book.
+     */
+    private boolean isBookType(MaterialType mt) {
+        if (mt == null) return false;
+        // Check if the material type name is "Book" (case-insensitive)
+        String typeName = mt.getMaterial_type();
+        return typeName != null && typeName.equalsIgnoreCase("Book");
+    }
+
 
     /**
      * Applies standard error styling (red border) to a control and displays the error message.
@@ -369,6 +405,7 @@ public class AddMaterialController {
     private void clearAllErrors() {
         clearFieldError(titleField, titleErrorLabel);
         clearFieldError(yearField, yearErrorLabel);
+        clearFieldError(isbnField, isbnErrorLabel);
         clearFieldError(materialTypeComboBox, materialTypeErrorLabel);
     }
 
