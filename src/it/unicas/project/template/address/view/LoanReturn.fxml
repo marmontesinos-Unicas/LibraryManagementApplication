@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<AnchorPane xmlns="http://javafx.com/javafx/17.0.12"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="it.unicas.project.template.address.view.LoanReturnController">
+
+    <!-- Root layout -->
+    <VBox spacing="20"
+          alignment="TOP_CENTER"
+          style="-fx-padding: 20;"
+          AnchorPane.topAnchor="0"
+          AnchorPane.bottomAnchor="0"
+          AnchorPane.leftAnchor="0"
+          AnchorPane.rightAnchor="0">
+
+        <!-- TOP BAR -->
+        <HBox spacing="10" alignment="CENTER_LEFT">
+            <Button text="&lt; Back to Home"
+                    onAction="#handleBackToHome"/>
+
+            <TextField fx:id="searchField"
+                       promptText="Search loans..."
+                       HBox.hgrow="ALWAYS"/>
+
+            <Button fx:id="searchButton"
+                    text="Clear"
+                    onAction="#handleSearch"/>
+        </HBox>
+
+        <!-- TABLE -->
+        <TableView fx:id="loansTable"
+                   VBox.vgrow="ALWAYS">
+
+            <columns>
+                <TableColumn fx:id="materialTypeColumn" text="Type"/>
+                <TableColumn fx:id="titleColumn" text="Title"/>
+                <TableColumn fx:id="authorColumn" text="Author"/>
+                <TableColumn fx:id="isbnColumn" text="ISBN"/>
+                <TableColumn fx:id="userColumn" text="User"/>
+                <TableColumn fx:id="dueDateColumn" text="Due Date"/>
+                <TableColumn fx:id="delayedColumn" text="Delayed"/>
+            </columns>
+
+            <columnResizePolicy>
+                <TableView fx:constant="CONSTRAINED_RESIZE_POLICY"/>
+            </columnResizePolicy>
+        </TableView>
+
+        <!-- BUTTON BAR -->
+        <HBox spacing="20" alignment="CENTER">
+            <Button fx:id="addLoanButton"
+                    text="Add Loan"
+                    prefWidth="150"
+                    onAction="#handleAddLoan"/>
+
+            <Button fx:id="returnLoanButton"
+                    text="Return"
+                    prefWidth="150"
+                    onAction="#handleReturnLoan"/>
+
+            <Button fx:id="editLoanButton"
+                    text="Edit Loan"
+                    prefWidth="150"
+                    onAction="#handleEditLoan"/>
+        </HBox>
+
+    </VBox>
+</AnchorPane>
