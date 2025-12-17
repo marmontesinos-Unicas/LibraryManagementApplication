@@ -579,7 +579,6 @@ public class AdminMaterialCatalogController {
 
             dialogStage.showAndWait();  // This waits for dialog to close
 
-            // FIXED: Refresh data after dialog closes
             refresh();  // This line was already there!
 
         } catch (IOException e) {

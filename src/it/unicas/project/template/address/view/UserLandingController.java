@@ -1,10 +1,7 @@
 package it.unicas.project.template.address.view;
 
 import it.unicas.project.template.address.MainApp;
-import it.unicas.project.template.address.model.Hold;
-import it.unicas.project.template.address.model.Loan;
-import it.unicas.project.template.address.model.Material;
-import it.unicas.project.template.address.model.User;
+import it.unicas.project.template.address.model.*;
 import it.unicas.project.template.address.model.dao.DAOException;
 import it.unicas.project.template.address.model.dao.mysql.HoldDAOMySQLImpl;
 import it.unicas.project.template.address.model.dao.mysql.LoanDAOMySQLImpl;
@@ -159,16 +156,6 @@ public class    UserLandingController {
         deleteHoldButton.disableProperty().bind(
                 myHoldsTable.getSelectionModel().selectedItemProperty().isNull()
         );
-    }
-
-    /**
-     * Binds the ListViews to values coming from MainApp.
-     */
-    private void setupListBindings() {
-        if (mainApp != null && myLoansList != null) {
-            myLoansList.setItems(mainApp.getUserLoans());
-            myReservationsList.setItems(mainApp.getUserReservations());
-        }
     }
 
     /**
@@ -423,9 +410,6 @@ public class    UserLandingController {
      */
     public void setMainApp(MainApp mainApp) {
         this.mainApp = mainApp;
-
-        // Prepare binding of ListViews after MainApp reference is set
-        setupListBindings();
     }
 
     /**

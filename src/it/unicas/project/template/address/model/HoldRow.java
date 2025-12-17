@@ -1,4 +1,4 @@
-package it.unicas.project.template.address.view;
+package it.unicas.project.template.address.model;
 
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
@@ -55,13 +55,5 @@ public class HoldRow {
      */
     public String getTitle() {
         return title.get();
-    }
-
-    /**
-     * Returns the maximum date until the hold is valid.
-     * @return maxDate
-     */
-    public String getMaxDate() {
-        return maxDate.get();
     }
 }

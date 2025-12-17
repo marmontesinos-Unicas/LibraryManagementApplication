@@ -109,7 +109,6 @@
         @FXML
         protected void handleSearch(ActionEvent event) {
             System.out.println("Action: Advanced search of the catalog.");
-            // The code to switch to the search screen will go here.
             if (mainApp != null) {
                 mainApp.showCatalog(); // Calls a mainApp Method to show the catalog of the admins.
             } else {
