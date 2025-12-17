@@ -1,4 +1,4 @@
-package it.unicas.project.template.address.view;
+package it.unicas.project.template.address.model;
 
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;

@@ -6,8 +6,8 @@ import it.unicas.project.template.address.model.Material;
 import it.unicas.project.template.address.model.User;
 import it.unicas.project.template.address.model.dao.DAO;
 import it.unicas.project.template.address.model.dao.DAOException;
-import it.unicas.project.template.address.view.HoldRow;
-import it.unicas.project.template.address.view.LoanRow;
+import it.unicas.project.template.address.model.HoldRow;
+import it.unicas.project.template.address.model.LoanRow;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

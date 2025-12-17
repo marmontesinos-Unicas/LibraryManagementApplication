@@ -10,8 +10,6 @@ import it.unicas.project.template.address.model.dao.mysql.UserDAOMySQLImpl;
 import it.unicas.project.template.address.view.*;
 
 import javafx.application.Application;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.layout.AnchorPane;
@@ -44,35 +42,6 @@ public class MainApp extends Application {
     // Access Keyword Explanation: {@code private} - These fields are marked private
     // to encapsulate the application's core state and ensure they are only modified
     // internally or via controlled public methods (getters).
-
-    // Lists for the user's loans and reservations that will be used when the User Landing page is called.
-    private ObservableList<String> userLoans = FXCollections.observableArrayList();
-    private ObservableList<String> userReservations = FXCollections.observableArrayList();
-
-    /**
-     * Gets the ObservableList of the current user's active loans (as String representations).
-     *
-     * Access Keyword Explanation: {@code public} - This method is public so that
-     * FXML controllers (like the User Dashboard) can access the data needed for
-     * displaying lists of loans via data binding.
-     *
-     * @return The list of user loans.
-     */
-    public ObservableList<String> getUserLoans() {
-        return userLoans;
-    }
-
-    /**
-     * Gets the ObservableList of the current user's active reservations (as String representations).
-     *
-     * Access Keyword Explanation: {@code public} - This method is public so that
-     * FXML controllers can access the data needed for displaying lists of reservations.
-     *
-     * @return The list of user reservations.
-     */
-    public ObservableList<String> getUserReservations() {
-        return userReservations;
-    }
 
     /**
      * The main entry point for all JavaFX applications.
