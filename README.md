@@ -1,6 +1,6 @@
 # Digital Library
 This application is designed to manage a small digital library that provides a complete system for cataloging materials (books, magazines, multimedia), managing loans and returns, handling users, and tracking due dates.
-The project was developed using SCRUM across four sprints.
+The project was developed using SCRUM across four sprints of one week each.
 
 ## Requirements
 - Git
