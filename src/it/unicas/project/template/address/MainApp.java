@@ -149,7 +149,7 @@ public class MainApp extends Application {
         for (Hold hold : allHolds) {
             if (hold.getHold_date() != null) {
                 // Adjust the hold date to Rome timezone if necessary
-                LocalDateTime holdAdjusted = hold.getHold_date().minusHours(1); // Adjusts to +2 if Rome is UTC+2
+                LocalDateTime holdAdjusted = hold.getHold_date();
                 System.out.println("Checking hold " + hold.getIdHold() + " with date " + holdAdjusted);
 
                 if (holdAdjusted.isBefore(cutoffDate)) {
