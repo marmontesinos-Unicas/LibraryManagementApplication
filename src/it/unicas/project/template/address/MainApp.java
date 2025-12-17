@@ -129,8 +129,7 @@ public class MainApp extends Application {
     }
 
     /**
-     * Borra los holds caducados (anteriores a ayer) y marca los materiales como available.
-     * A hold is considered expired if it was created more than 24 hours ago.
+     * Erases holds that have expired (older than 24 hours) from the database.
      *
      * Access Keyword Explanation: {@code private} - This is a utility method used only
      * internally by the {@code start()} method for application maintenance. It does not
