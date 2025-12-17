@@ -49,37 +49,56 @@ public class MaterialCatalogService {
 
         List<Material> filtered = materials.stream()
                 .filter(material -> {
-                    // Type filter: if empty, show only materials with no type
+                    // Type filter
                     boolean matchesType;
                     if (selectedTypes.isEmpty()) {
+                        // Empty selection: show only materials with no type
                         matchesType = material.getIdMaterialType() == null ||
                                 materialTypeMap.get(material.getIdMaterialType()) == null;
                     } else {
-                        matchesType = selectedTypes.contains(materialTypeMap.get(material.getIdMaterialType()));
+                        // Check if material has a type and if it's in the selected types
+                        String materialType = materialTypeMap.get(material.getIdMaterialType());
+                        matchesType = selectedTypes.contains(materialType);
+
+                        // If all types are selected, also include materials with no type
+                        if (!matchesType && materialType == null) {
+                            matchesType = true;
+                        }
                     }
 
-                    // Status filter: if empty, show only materials with no status
+                    // Status filter
                     boolean matchesStatus;
                     if (selectedStatuses.isEmpty()) {
+                        // Empty selection: show only materials with no status
                         matchesStatus = material.getMaterial_status() == null ||
                                 material.getMaterial_status().isEmpty();
                     } else {
                         matchesStatus = selectedStatuses.contains(material.getMaterial_status());
+
+                        // If material has no status, include it when all statuses are selected
+                        if (!matchesStatus && (material.getMaterial_status() == null ||
+                                material.getMaterial_status().isEmpty())) {
+                            matchesStatus = true;
+                        }
                     }
 
-                    // Genre filter: if empty, show only materials with no genre
+                    // Genre filter
                     boolean matchesGenre;
+                    Set<Integer> genreIds = materialGenreMap.get(material.getIdMaterial());
+                    boolean hasNoGenre = genreIds == null || genreIds.isEmpty();
+
                     if (selectedGenres.isEmpty()) {
-                        Set<Integer> genreIds = materialGenreMap.get(material.getIdMaterial());
-                        matchesGenre = genreIds == null || genreIds.isEmpty();
+                        // Empty selection: show only materials with no genre
+                        matchesGenre = hasNoGenre;
                     } else {
-                        Set<Integer> genreIds = materialGenreMap.get(material.getIdMaterial());
-                        if (genreIds != null && !genreIds.isEmpty()) {
+                        if (hasNoGenre) {
+                            // Material has no genre: include it (when any genre is selected, we include empty ones)
+                            matchesGenre = true;
+                        } else {
+                            // Check if any of the material's genres are in the selected genres
                             matchesGenre = genreIds.stream()
                                     .map(genreMap::get)
                                     .anyMatch(selectedGenres::contains);
-                        } else {
-                            matchesGenre = false;
                         }
                     }
 
@@ -122,25 +141,37 @@ public class MaterialCatalogService {
 
         List<GroupedMaterial> filtered = groupedMaterials.stream()
                 .filter(gm -> {
-                    // Type filter: if empty, show only materials with no type
+                    // Type filter
                     boolean matchesType;
+                    boolean hasNoType = gm.getType() == null ||
+                            gm.getType().isEmpty() ||
+                            gm.getType().equals("Unknown");
+
                     if (selectedTypes.isEmpty()) {
-                        matchesType = gm.getType() == null ||
-                                gm.getType().isEmpty() ||
-                                gm.getType().equals("Unknown");
+                        // Empty selection: show only materials with no type
+                        matchesType = hasNoType;
                     } else {
-                        matchesType = selectedTypes.contains(gm.getType());
+                        if (hasNoType) {
+                            // Material has no type: include it (when any type is selected, we include empty ones)
+                            matchesType = true;
+                        } else {
+                            matchesType = selectedTypes.contains(gm.getType());
+                        }
                     }
 
-                    // Genre filter: if empty, show only materials with no genre
+                    // Genre filter
                     boolean matchesGenre;
+                    boolean hasNoGenre = gm.getGenres() == null ||
+                            gm.getGenres().equals("—") ||
+                            gm.getGenres().isEmpty();
+
                     if (selectedGenres.isEmpty()) {
-                        matchesGenre = gm.getGenres() == null ||
-                                gm.getGenres().equals("—") ||
-                                gm.getGenres().isEmpty();
+                        // Empty selection: show only materials with no genre
+                        matchesGenre = hasNoGenre;
                     } else {
-                        if (gm.getGenres() == null || gm.getGenres().equals("—")) {
-                            matchesGenre = false;
+                        if (hasNoGenre) {
+                            // Material has no genre: include it (when any genre is selected, we include empty ones)
+                            matchesGenre = true;
                         } else {
                             // Check if any genre in the comma-separated list matches
                             matchesGenre = Arrays.stream(gm.getGenres().split(", "))
