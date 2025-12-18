@@ -428,7 +428,7 @@ public class AdminMaterialCatalogController {
                     setText(status);
                     if (status.equalsIgnoreCase("available")) {
                         setStyle("-fx-text-fill: green; -fx-font-weight: bold;");
-                    } else if (status.equalsIgnoreCase("On Loan")) {
+                    } else if (status.equalsIgnoreCase("loaned")) {
                         setStyle("-fx-text-fill: orange; -fx-font-weight: bold;");
                     } else {
                         setStyle("-fx-text-fill: red;");
@@ -567,23 +567,9 @@ public class AdminMaterialCatalogController {
 
     @FXML
     private void handleAddMaterial() {
-        try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/it/unicas/project/template/address/view/AddMaterial.fxml"));
-            Parent root = loader.load();
-
-            Stage dialogStage = new Stage();
-            dialogStage.setTitle("Add New Material");
-            dialogStage.initModality(Modality.WINDOW_MODAL);
-            dialogStage.initOwner(addButton.getScene().getWindow());
-            dialogStage.setScene(new Scene(root));
-
-            dialogStage.showAndWait();  // This waits for dialog to close
-
-            refresh();  // This line was already there!
-
-        } catch (IOException e) {
-            showError("Error", "Could not load Add Material dialog: " + e.getMessage());
-            e.printStackTrace();
+        if (mainApp != null) {
+            mainApp.showAddMaterial();
+            refresh();
         }
     }
 
