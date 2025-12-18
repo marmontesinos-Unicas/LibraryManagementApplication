@@ -119,7 +119,7 @@ public class GenreDAOMySQLImpl implements GenreDAO {
                     // If a row is found, return the ID
                     return rs.getInt("idGenre");
                 }
-            } // rs is closed here automatically
+            } // rs is closed here
 
         } catch (SQLException e) {
             // Log the error but don't rethrow, as a null return is an acceptable outcome here

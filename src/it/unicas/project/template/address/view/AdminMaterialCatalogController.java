@@ -428,7 +428,7 @@ public class AdminMaterialCatalogController {
                     setText(status);
                     if (status.equalsIgnoreCase("available")) {
                         setStyle("-fx-text-fill: green; -fx-font-weight: bold;");
-                    } else if (status.equalsIgnoreCase("On Loan")) {
+                    } else if (status.equalsIgnoreCase("loaned")) {
                         setStyle("-fx-text-fill: orange; -fx-font-weight: bold;");
                     } else {
                         setStyle("-fx-text-fill: red;");
