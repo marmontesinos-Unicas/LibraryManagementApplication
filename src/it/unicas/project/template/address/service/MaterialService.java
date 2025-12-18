@@ -4,7 +4,6 @@ import it.unicas.project.template.address.model.Material;
 import it.unicas.project.template.address.model.MaterialGenre;
 import it.unicas.project.template.address.model.dao.DAO;
 import it.unicas.project.template.address.model.dao.DAOException;
-import it.unicas.project.template.address.model.dao.mysql.MaterialDAOMySQLImpl;
 import it.unicas.project.template.address.model.dao.mysql.MaterialGenreDAOMySQLImpl;
 
 import java.util.List;

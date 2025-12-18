@@ -96,8 +96,6 @@ public class UserCatalogController {
         private String genres;
         private List<Material> materials;
         private boolean hasAvailable;
-        private boolean hasHolded;
-
         /**
          * Constructs a GroupedMaterial instance.
          *
